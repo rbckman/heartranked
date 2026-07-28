@@ -1,0 +1,16 @@
+$def with (uploaded)
+<div id="container">
+<div id="default">
+<br>
+<p>uploaded</p>
+<b>uploaded</b>
+<b>uploaded</b>
+<b>uploaded</b>
+<br>
+$for i in uploaded:
+    $i[0]/$i[1]
+    $if i[1][-4:] == 'jpeg':
+        <img src="/static/img/thumb/$i[1]"><br>
+        <a href="/static/upload/$i[0]/$i[1]">link</a><br>
+</div>
+</div>

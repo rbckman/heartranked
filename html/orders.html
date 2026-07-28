@@ -1,0 +1,83 @@
+$def with (payments,db,getinvoice,totsats,status,paid,unpaid,shipped,nonshipped,pickup,removed,thankyou,productname,getprice)
+$ link = ''
+<br>
+<h2>Orders</h2>
+<br>
+<p>unpaid $unpaid</p>
+<p>paid $paid</p>
+<p>shipped $shipped</p>
+<p>pickup $pickup</p>
+<p>removed $removed</p>
+<br>
+<b>waiting to be shipped $nonshipped</b>
+<br>
+<a href="?status=unpaid">unpaid</a> |
+<a href="?status=paid">paid</a> |
+<a href="?status=shipped">shipped</a> |
+<a href="?status=pickup">pickup</a> |
+<a href="?status=removed">removed</a> |
+<a href="?status=thankyou">thankyou</a> 
+<br>
+<br>
+$ id=0
+$ totsats=0
+$ toteuro=0
+$for i in payments:
+    $ id=id+1
+    $ toteuro = 0
+    $if i.status == status:
+        <div class="orders" id="$id">
+        <pre>
+        $if i.status != 'unpaid' and i.status != 'thankyou':
+            $ bag = db.query("SELECT * FROM paidbags WHERE sessionkey='" + i.invoice_key +"';")
+        $else:
+            $ bag = db.query("SELECT * FROM customerbag WHERE sessionkey='"+i.invoice_key+"';")
+        $ pending = db.select('pending', where="invoice_key='"+i.invoice_key+"'")[0]
+        $ invoice = db.select('invoices', where="invoice_key='"+i.invoice_key+"'")[0]
+        $if i.payment == 'Bitcoin':
+            $ link = "/paybtc/" + i.invoice_key
+        $elif i.payment == 'Bitcoin Lightning':
+            $ link = "/payln/" + i.invoice_key
+        $elif i.payment == 'Mobile Pay':
+            <b>order status: $i.status</b>
+            <a href=$link>$i.invoice_key</a>
+        $i.payment
+        in your order:<br> 
+        $ total = 0
+        $for b in bag: 
+            $ goodies = db.query("SELECT * FROM soundlink WHERE id='"+b.product+"';")
+            $code:
+                price = getprice(b.product)
+                quantity = b.quantity
+                p_totsats=b.quantity*price[0]
+                p_toteuro=b.quantity*price[1]
+            $b.quantity x $productname(b.product)
+            <a href="/dropitem/$b.product">X</a> $p_toteuro&euro;<br>
+            $for g in goodies:
+                $if g.soundname[-5:] == '.jpeg' or g.soundname[-4:] == '.png':
+                    <img src="/static/img/thumb/$g.soundname" style="width:120px"><br>
+            $code:
+                totsats += p_totsats
+                toteuro += p_toteuro
+        $if pending.country != None:
+            $ shippinginfo = db.select('shipping', where="country='" + pending.country + "'", what='price, days')[0]
+            Shipping cost to $pending.country is $(shippinginfo.price/100)&euro; <br>
+            Shipping estimate is $shippinginfo.days days<br>
+            $code:
+                toteuro += shippinginfo.price/100
+        $if totsats > 0:
+            total: $toteuro &euro;
+
+        order $i.timestamp
+        $pending.email
+        $pending.firstname $pending.lastname
+        $if pending.country != 'NO-SHIPPING':
+            $pending.address
+            $pending.postalcode
+            $pending.town
+        $pending.country
+        </pre>
+        <a href='/orders?status=thankyou&key=$i.invoice_key'>thank you</a> | <a href='/orders?status=shipped&key=$i.invoice_key'>shipped</a> | <a href='/orders?status=paid&key=$i.invoice_key'>paid</a> | <a href='/orders?status=pickup&key=$i.invoice_key'>pickup</a> |<a href='/orders?status=paynotice&key=$i.invoice_key'>payment notice</a> | <a href='/orders?status=removed&key=$i.invoice_key'>remove</a>
+        </div>
+        <br>
+

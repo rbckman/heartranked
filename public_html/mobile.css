@@ -1,0 +1,182 @@
+/* mobile styles */
+@font-face{
+    font-family: "Terminus-Bold";
+    src: url('../fonts/Terminus-Bold.ttf'),
+    url('../fonts/Terminus-Bold.ttf'); /* IE */
+    }
+
+@font-face{
+    font-family: "Terminus";
+    src: url('../fonts/Terminus.ttf'),
+    url('../fonts/Terminus.ttf'); /* IE */
+    }
+
+body
+{
+	margin:0px;
+	border:0px;
+	text-align: center; 
+	background-color:#440044;
+	background-repeat:no-repeat;
+	text-decoration: none;
+	font-style: normal;
+	color: #f4f4f4;
+	font-family: 'Terminus', sans-serif;
+	font-size: 18px;
+	-webkit-font-smoothing: antialiased;
+}
+
+
+a
+{
+	color:#fff;
+}
+
+
+div.story1
+{
+        background-color:#1D0E1D;
+        font-weight: normal;
+        font-style: normal; 
+        font-size: 16px;
+        height: auto;
+        margin-top: 7px;
+        margin-bottom: 1px;
+        padding-left: 2%;
+        padding-right: 2%;
+        border-radius:10px;
+        padding-bottom: 15px;
+}
+
+div.metawindow
+{
+        margin: 0px auto;
+        height: 40px;
+}
+
+video
+{
+        width: 100%;
+}
+
+#default
+{
+        padding-top: 50px;
+        margin:0 auto;
+        width:80%;
+        padding-bottom: 50px;
+}
+
+#navigation
+{	
+	background-color: #231f20;
+	position: fixed;
+   	font-weight: bold;
+	font-size: 15px;
+	text-align: center;
+	padding-top:10px;
+	padding-bottom: 10px;
+	top: 0px;
+	height: auto;
+	width: 100%;
+}
+
+#navigation ul
+{
+	margin: 0px auto;
+	padding: 0px;
+    text-align: center;
+    width: auto;
+}
+
+#navigation ul li
+{
+	list-style-type: none;
+	display: inline;
+	background-color: #231f20;
+	padding: 0px;
+	padding-bottom: 0px;
+	border-radius: 4px;
+}
+
+#navigation li a
+{
+	display: inline;
+	list-style: none;
+	padding: 4px;
+	color:##f4f4f4;
+	text-decoration: none;
+	border-radius: 4px;
+}
+
+#navigation li a:hover { background:#7A2939; }
+
+#container
+{
+	margin: 0px auto;
+	width:100%;
+}
+
+
+#top
+{
+	padding-top:60px;
+}
+
+#titel
+{
+	font-family: 'Terminus-Bold', sans-serif;
+	font-size: 35px;
+}
+
+#citat
+{
+	font-size: 15px;
+	padding-bottom: 20px;
+}
+
+#one, #two, #three, #four
+{
+	margin: 0 auto;
+	text-align: left;
+	width: 90%;
+	padding-top: 50px;
+	
+}
+
+
+img
+{
+    max-width: 100%;
+    height: auto;
+}
+
+#spacer
+{
+	height:100px;
+}
+
+#robin
+{
+	background-color:#3399FF;
+	padding-bottom: 20px;
+	margin: 0px auto;
+   	font-weight: normal;
+	text-align: center;
+}
+
+#footer
+{
+	margin: 0 auto;
+	background-color:#231f20;
+   	font-weight: normal;
+	font-size: 15px;
+	padding-top:5px;
+	height: auto;
+	width: 100%;
+    position: fixed;
+    bottom: 0px;
+
+}
+
+

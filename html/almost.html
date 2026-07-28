@@ -1,0 +1,80 @@
+$def with (products,bag,sessionkey,productname,inbag,db,getprice,getrate,category,markdown,visitors, total, unique, show)
+
+$ siteconfig = db.select('propaganda', what='id, name, description, description2')[0]
+
+<HEAD>
+    <meta charset="utf-8">
+    $#<title>$siteconfig.name | $siteconfig.description</title>
+    <title>Robin Bäckman | maker & baker</title>
+    <link rel="stylesheet" href="/static/splash.css?v=108" type="text/css" rel="stylesheet"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="cache-control" content="no-cache">
+</HEAD>
+
+<BODY>
+<div class="introtext">
+$if show == 'all':
+    $ goodies = db.query("SELECT * FROM propagandapics ORDER BY ID DESC LIMIT 1000;")
+    $#<a href="?show=">show less 📃</a> top 999!<br>
+$else:
+    $ goodies = db.query("SELECT * FROM propagandapics ORDER BY ID DESC LIMIT 3;")
+    $#<a href="?show=all">show more 📃</a> here latest<br>
+$for g in goodies:
+    <a href="/#$g.name">$g.name</a><br>
+<div id="visitors">
+last VISITS by COUNTRIES<br>
+$for i in visitors:
+    <img src="/static/flags/${i}.png"> 
+<br>
+$unique UNICORNS 🦄 PEACE! ☮️
+<br>
+</div>
+$#<h1>$siteconfig.name</h1>
+$#$:markdown.markdown(siteconfig.description)
+$:markdown.markdown(siteconfig.description)
+$:markdown.markdown(siteconfig.description2)
+~
+<br>
+<br>
+$ backlink = ''
+$ goodies = db.query("SELECT * FROM propagandapics;")
+$for g in goodies:
+    $if g.soundname[-5:] == '.jpeg' or g.soundname[-4:] == '.png':
+        <div id="$g.name">
+        ~*~
+        <br>
+        $if backlink != '':
+            <a href="/#">upp tibaks</a><br>
+        ~
+        <br>
+        <img src="/static/img/web/$g.soundname">
+        <br>
+        <br>
+        <br>
+        <br>
+        $:markdown.markdown(g.description)
+        <br>
+        <br>
+        $:markdown.markdown(g.description2)
+        <br>
+        ~
+        <br>
+        </div>
+        $ backlink = g.name
+<br>
+<br>
+robinbackman.com
+<br>
+Just Do Good
+<br>
+<a href="/#">back up?</a><br>
+</div>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+
+</BODY>

@@ -1,0 +1,22 @@
+$def with (tuningform, formfail, user, invites)
+<div id="container">
+    <div id="default">
+        <h2>Sup $user! <br>Skicka nu inbjudan ti kaverin</h2>
+
+    <form method="POST">
+    $:tuningform.render()
+    </form>
+    <h2>$formfail</h2>
+    <br>
+
+        <a href="/invites?render=yes">make new invite link</a>
+        <br>
+    $for i in invites:
+        $if i.accepted == '' or i.accepted == None:
+            <br><a href="/register?invite=$i.secretinvitation">$i.secretinvitation</a><br> created: $i.created.strftime('%d-%m-%y %H:%M') <br>
+        $else:
+            <br><a href="/register?invite=$i.secretinvitation">$i.secretinvitation</a><br> accepted $i.accepted.strftime('%d-%m-%y %H:%M') <br>
+
+    <a href="/heartranked"><-- back</a>
+    </div>
+</div>

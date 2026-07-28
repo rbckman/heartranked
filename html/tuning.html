@@ -1,0 +1,14 @@
+$def with (tuningform, formfail, user)
+<div id="container">
+    <div id="default">
+    <img src="static/users/$user/images/thumb/image_of_sarfar_rockin_.png">
+    <h3><a href="/upload/image_of_sarfar_rockin_">upload your image here</a></h3><br>
+    <h2>Tuuna ditt konto $user!</h2>
+    <form method="POST">
+    $:tuningform.render()
+    </form>
+    <h2>$formfail</h2>
+
+    <a href="/heartranked"><-- back</a>
+    </div>
+</div>

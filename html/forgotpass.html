@@ -1,0 +1,14 @@
+$def with (forgotpassform, fejl)
+<div id="container">
+    <div id="default">
+    <br>
+    <h2>Skicka nytt lösenord</h2>
+    <div id="addevent">
+    <form method="POST">
+    $:forgotpassform.render()
+    </form>
+    <h4>$fejl</h4>
+    </div>
+    <a href="/login"><---tibaks</a>
+    </div>
+</div>

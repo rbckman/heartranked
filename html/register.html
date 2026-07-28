@@ -1,0 +1,24 @@
+$def with (loginform, formfail, totusers)
+<div id="container">
+    <div id="default">
+    <br>
+    $if totusers > 1:
+        <h5>the social network</h5>
+        <h1>heart base</h1>
+        <h5>welcome</h5>
+        <p>❤️</p>
+    $else:
+        <h2>Registrera superadmin</h2>
+    <div id="addevent">
+    <form method="POST">
+    <small>
+    $:loginform.render()
+    <h2>$formfail</h2>
+    </form>
+    </small>
+    </div>
+    <br>
+    <a href="/heartranked"><-- back</a>
+    </div>
+    </div>
+</div>

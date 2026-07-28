@@ -1,0 +1,23 @@
+$def with (loginform, fejl, link)
+<div id="container">
+    <br>
+    <h3>LOGIN</h3>
+    <div id="addevent">
+    <form method="POST">
+    $:loginform.render()
+    </form>
+    <h4>$fejl</h4>
+    $if link == True:
+        <a href="/forgotpass">fuuu yeah na naa I forgot passcode</a>
+    </div>
+    <br>
+    <a href="javascript:history.back()"><-- back</a>
+    <br>
+    <br>
+    $#<h5><a href="/register">Don't have an account?</a></h5>
+    $#<br>
+    $#<h4><a href="/register">No need to worry!</a></h4>
+    $#<br>
+    $#<h6><a href="/register">Register to the Space Fleet, Now!</a></h6>
+    <br>
+</div>

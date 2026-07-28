@@ -1,0 +1,41 @@
+$def with (addproduct, listproducts, goodies, idvalue, nocache)
+<div id="container">
+<div id="default">
+<br>
+$for i in listproducts: 
+    <div class="editproduct" id="$i.id"><a href='/products/$i.id'>$i.name[:15]</a></div> 
+<br>
+$if idvalue == '':
+    <h2>Add product</h2>
+$else:
+    <h2>Edit product</h2>
+<div id="addevent">
+<form method="POST">
+$:addproduct.render()
+</form>
+<a href='/products/$idvalue?cmd=del&id=$idvalue'>remove product</a>
+<br>
+<hr>
+$if goodies != None:
+    $for i in goodies:
+        $if i.soundname[-5:] == '.jpeg' or i.soundname[-4:] == '.png':
+            <img src="/static/img/thumb/$i.soundname?nocache=$nocache">
+        $else:
+            <p>$i.soundname</p>
+        <br>
+        <a href='/products/$idvalue?cmd=flipleft&soundname=$i.soundname'>flip to left</a> | 
+        <a href='/products/$idvalue?cmd=remove&soundname=$i.soundname'>remove</a> | 
+        <a href='/products/$idvalue?cmd=flipright&soundname=$i.soundname'>flip to right</a>
+        <br>
+        <hr>
+$if idvalue != '':
+    <form method="POST" enctype="multipart/form-data" action="">
+    <input type="file" name="imgfile"/> <br>
+    <br/>
+    <input name="upload", type="submit" value="upload" />
+    </form>
+</div>
+
+</div>
+</div>
+</div>

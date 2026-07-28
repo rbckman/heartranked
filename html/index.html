@@ -1,0 +1,97 @@
+$def with (products,bag,sessionkey,productname,inbag,db,getprice,getrate,category,markdown)
+$ totsats = 0
+$ toteuro = 0
+$ x = 0
+$if sessionkey != 'empty':
+    <div id="bag">
+    <div id="insidebag">
+    in your cart:<br> 
+    $for i in bag: 
+        $code:
+            price = getprice(i.product)
+            quantity = i.quantity
+            p_totsats=i.quantity*price[0]
+            p_toteuro=i.quantity*price[1]
+        $i.quantity x $productname(i.product)
+        $p_toteuro&euro;
+        <a href="/dropitem/$i.product">remove</a>
+        <br>
+        $code:
+            totsats += p_totsats
+            toteuro += p_toteuro
+    $if totsats > 0:
+        total: $toteuro &euro;
+        <br>
+        <h5><a href="/checkout">Checkout 🛒 --></a></h5>
+        ~<br>
+    </div>
+    </div>
+
+$ siteconfig = db.select('siteconfig', what='id, name, description, description2')[0]
+$ categories = db.select('categories', what='id, category')
+
+<div id="container">
+<div class="intro">
+<img style="width:100px;" src="/static/img/thumb/logo.png">
+<br>
+~*~<br>
+<br>
+<br>
+<h1>$siteconfig.name</h1>
+$:markdown.markdown(siteconfig.description)
+$:markdown.markdown(siteconfig.description2)
+
+<div id="selectproducts">
+<b><a href="/shop#selectproducts">All</a>
+$for c in categories:
+    | <a href="?category=$c.category#selectproducts">$c.category</a>
+</b>
+</div>
+<br>
+</div>
+<div id="productlist">
+$for i in products:
+    $if category == i.category or category == None:
+        $if i.available > 0:
+            <div class="product" id="$i.id">
+            ~*~<br>
+            <h2>
+            $i.name
+            </h2>
+            $i.category<br>
+            <br>
+            <br>
+            $ goodies = db.query("SELECT * FROM soundlink WHERE id='" +i.id+"';")
+            $for g in goodies:
+                $if g.soundname[-5:] == '.jpeg' or g.soundname[-4:] == '.png':
+                    <a href="/bigpic/$g.id"><img class="imgprod" src="/static/img/thumb/$g.soundname"></a>
+            <br>
+            
+            <br>
+            $code:
+                sat, euro = getprice(i.id)
+            $:markdown.markdown(i.description)
+            product: $i.name
+            <br>
+            category: $i.category
+            <br>
+            <br>
+            $if i.available > 0:
+                Price $euro &euro; <a href="/shop?putinbag=$i.id#$i.id">add to cart</a><br>
+                Available $i.available pcs
+            $else:
+                SOLD OUT! check back later.
+            </div>
+            <br>
+            <small>~-~</small>
+            <br>
+</div>
+<br>
+<small>powered by <a href="https://dev.tarina.org/p/thiswebshoprules/">thiswebshoprules</a> and <a href="https://webpy.org">web.py </a></small>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>

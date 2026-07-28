@@ -1,0 +1,17 @@
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+
+# Make your settings here and change filename to settings.py
+
+#rpcauth 
+rpcauth = "http://rpcserver:secrethash@ip:port"
+rtl="https://ip:port/v1/"
+
+#mail to webmaster
+webmaster = "your@mail.com"
+
+baseurl = "https://url.com"
+
+#op
+allowed = (("admin", "secretpasscode"),)
+

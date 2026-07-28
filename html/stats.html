@@ -1,0 +1,64 @@
+$def with (visitors, total, unique, logfilter)
+$var visitors = visitors
+$var total = total
+$var unique = unique
+$ show = False
+$ count = 0
+<link rel="stylesheet" href="/static/splash.css?v=115" type="text/css" rel="stylesheet"/>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="cache-control" content="no-cache">
+<html>
+<head>
+<title>THE STATS</title>
+
+
+<a href="/dude">go back</a> | 
+<a href="?">no filter</a> | 
+<a href="?logfilter=bots">filter bots</a> | 
+<a href="?logfilter=botsandme">filter bots and me</a> 
+<br>
+total visits: $total <br>
+unique visits: $unique <br>
+<br>
+$ ip_filters = ['85.76.43.33', '85.76.65.220', '85.76.65.227','84.253.216.59', '83.245.233.58', '85.76.142.151']
+$ filters = ['SemrushBot', 'Windows NT', 'Applebot', 'Amazonbot', 'bingbot', 'ClaudeBot', 'MJ12bot', 'AhrefsBot', 'YisouSpider' 'spider','Twitterbot','Scanning-activity', 'web index', 'spider', 'Bot', 'Spider', 'Crawler', 'Odin', 'crawler', 'Go-http-client', 'robot']
+<div id="visitors">
+$for i in visitors:
+    $if logfilter == 'bots':
+        $for f in filters:
+            $if f in i.environ:
+                $ show = False
+                $ break
+            $else:
+                $ show = True
+        $if show == True:
+            <img src="/static/flags/${i.countrycode}.png"> | $i.country | $i.ip | $i.referer | $i.environ | $i.time <br>
+            $ count = count + 1
+            $ show = False
+    $elif logfilter == 'botsandme':
+        $for f in filters:
+            $if f in i.environ:
+                $ show = False
+                $ break
+            $else:
+                $ show = True
+            $for ip in ip_filters:
+                $if ip in i.ip:
+                    $ show = False
+                    $ break
+                $else:
+                    $ show = True
+        $if show == True:
+            <img src="/static/flags/${i.countrycode}.png"> | $i.country | $i.ip | $i.referer | $i.environ | $i.time <br>
+            $ count = count + 1
+            $ show = False
+    $else:
+        <img src="/static/flags/${i.countrycode}.png"> | $i.country | $i.ip | $i.referer | $i.environ | $i.time <br>
+        $ count = count + 1
+
+<br>
+total potential real visitors:
+$count
+</div>
+</head>
+</html>

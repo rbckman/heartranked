@@ -1,0 +1,36 @@
+$def with (lninvoice, invoice, bag, productname, float)
+$ qr = '/static/qr/' + lninvoice['label'] + '.png'
+<script>
+function copy() {
+  let textarea = document.getElementById("payreq");
+  textarea.select();
+  document.execCommand("copy");
+}
+</script>
+<meta http-equiv="refresh" content="60" />
+<h2>Thank you for you payment!</h2>
+in your order (click to remove):<br> 
+$for i in bag: 
+    $code:
+        price = i.quantity * float(i.price/100)
+    <a href="/dropitem/$i.product">$i.quantity x $productname(i.product)</a> $price&euro; <br>
+    <img src="/static/img/$i.product/thumb/000.jpeg" style="width:120px"><br>
+
+<h3>$float(invoice.amount/100)&euro;</h3>
+<h3>$invoice.totsats Satoshi</h3>
+<h3>$lninvoice['status']</h3>
+<br>
+<img src="$qr">
+<div id='hash'>
+<h4>id:</h4>
+<textarea id='payid'>
+$lninvoice['label']
+</textarea>
+<h4>bolt11:</h4>
+<textarea id='payreq'>
+$lninvoice['bolt11']
+</textarea>
+<br>
+<button id="copybutton" onclick="copy()">Copy</button>
+<button id="backbutton" autofocus onclick="parent.location='/paybtc/$invoice.invoice_key'">Pay with Bitcoin on-chain</button>
+</div>

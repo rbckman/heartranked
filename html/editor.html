@@ -1,0 +1,486 @@
+$def with (storage, text, text2, markdown, safe_filename, soundlink, public, logged, user, combine, remix) 
+
+<link rel="stylesheet" href="/static/splash.css?v=116" type="text/css" rel="stylesheet"/>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="cache-control" content="no-cache">
+<html>
+<head>
+    <title>HEART RANKED EDITOR</title>
+    <style>
+        #editor { width: 100%; height: 100px; }
+        #editor2 { width: 100%; height: 300px; }
+        #status { margin-top: 10px; font-style: italic; }
+        #drop-zone {
+          width: 450px;
+          height: auto;
+          border: 1px dashed #ccc;
+          border-radius: 12px;
+          text-align: center;
+          cursor: pointer;
+          transition: all 0.3s;
+        }
+        #drop-zone.dragover {
+          border-color: #007bff;
+          background: #e6f3ff;
+        }
+        #drop-zone p {
+          margin: 20px 0;
+          font-size: 18px;
+          color: #666;
+        }
+        #file-list {
+          margin-top: 20px;
+          max-height: 300px;
+          overflow-y: auto;
+        }
+        .file-item {
+          padding: 12px;
+          margin: 8px 0;
+          border-radius: 6px;
+          border: 1px solid #ddd;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+
+        }
+        .file-info {
+        flex: 1;
+        }
+        .progress-container {
+          height: 10px;
+          background: #eee;
+          border-radius: 4px;
+          overflow: hidden;
+          margin-top: 6px;
+        }
+        .progress-bar {
+          height: 100%;
+          background: linear-gradient(90deg, #007bff, #00c6ff);
+          width: 0%;
+          transition: width 0.3s ease;
+        }
+        .status {
+          font-size: 14px;
+          min-width: 90px;
+          text-align: right;
+        }
+        .success { color: green; }
+        .error   { color: red; }
+
+        .page-wrapper {
+          min-height: 100vh;           /* Optional: full height */
+          display: flex;
+          justify-content: center;     /* Centers horizontally */
+          padding: 20px 10px;
+        }
+
+        .wrapper {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 24px;
+          width: 100%;
+          max-width: 1200px;           /* Adjust this to control total width */
+          align-items: stretch;        /* Both columns same height */
+        }
+
+        .main {
+          flex: 1 1 50%;           /* Takes most of the space */
+          min-width: 400px;        /* Prevents it from becoming too narrow */
+          max-width: 450px;        /* Prevents it from becoming too narrow */
+          padding:10px;
+        }
+
+        #rendered {
+          flex: 0 0 50%px;         /* Fixed width when there's room */
+          min-width: 400px;        /* Prevents it from becoming too narrow */
+          max-width: 450px;        /* Minimum width before it wraps */
+          padding:10px;
+        }
+
+        /* Optional: Make it full-width on very small screens */
+        @media (max-width: 800px) {
+          .rendered {
+            flex: 1 1 100%;        /* Takes full width on mobile */
+          }
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="page-wrapper">
+<div class="wrapper">
+<div class="main">
+<div id="drop-zone">
+    <p>Drag & drop images jpg, gif, png <br>or documents pdf, md, txt, readme <br>files here or click to browse</p>
+    <input type="file" id="file-input" multiple style="display:none;">
+</div>
+
+<div id="file-list"></div>
+
+<script>
+/**
+ * Convert a filename into a web-safe version.
+ * 
+ * @param {string} name 
+ * @param {number} max_length 
+ * @param {string} replacement 
+ * @returns {string}
+ */
+function safeFilename(name, maxLength = 100, replacement = "-") {
+    if (!name || typeof name !== "string") {
+        return "file";
+    }
+
+    // Normalize unicode (é → e, etc.)
+    let normalized = name.normalize("NFKD");
+    
+    // Remove non-ASCII characters (equivalent to Python's encode('ascii', 'ignore'))
+    normalized = normalized.replace(/[^\x00-\x7F]/g, "");
+
+    // Replace spaces and underscores with replacement char
+    normalized = normalized.replace(/[\s_]+/g, replacement);
+
+    // Keep only alphanumeric, hyphen, underscore, and dot
+    normalized = normalized.replace(/[^a-zA-Z0-9.\-_]/g, "");
+
+    // Replace multiple replacement chars with single one
+    const esc = replacement.replace(/[.*+?^$${}()|[\]\\]/g, "\\$&");
+    normalized = normalized.replace(new RegExp(esc + "+", "g"), replacement);
+
+    // Remove leading/trailing replacement chars and dots
+    normalized = normalized.replace(new RegExp(`^[$${esc}.]+|[$${esc}.]+$$`, "g"), "");
+
+    // Prevent empty or hidden files
+    if (!normalized || normalized.startsWith(".")) {
+        normalized = "file" + normalized;
+    }
+
+    // Enforce max length (leave room for extension)
+    if (normalized.length > maxLength) {
+        normalized = normalized.substring(0, maxLength);
+    }
+
+    return normalized.toLowerCase();
+}
+
+
+const dropZone = document.getElementById('drop-zone');
+const fileInput = document.getElementById('file-input');
+const fileListEl = document.getElementById('file-list');
+
+dropZone.addEventListener('click', () => fileInput.click());
+
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('dragover');
+  handleFiles(e.dataTransfer.files);
+});
+
+fileInput.addEventListener('change', e => handleFiles(e.target.files));
+
+function handleFiles(files) {
+  fileListEl.innerHTML = '<code>Files to upload:</code>';
+
+  Array.from(files).forEach((file, index) => {
+    const id = 'file-' + index;
+    const item = document.createElement('div');
+    const filenamez = safeFilename(file.name);
+    item.className = 'file-item';
+    item.id = id;
+    item.innerHTML = `
+      <div class="file-info">
+        <strong>$${filenamez}</strong>
+        <small>($${(file.size / 1024 / 1024).toFixed(2)} MB)</small><br>
+        <a style="color: white;" class="insert-link" onclick="insertAtCursor('$${filenamez}')">insert</a>
+        <a style="color: white;" class="insert-link" onclick="rotateright('$${filenamez}')">↻</a>
+        <a style="color: white;" class="insert-link" onclick="rotateleft('$${filenamez}')">↺</a>
+        <div class="progress-container">
+          <div class="progress-bar" id="prog-$${id}"></div>
+        </div>
+      </div>
+      <span class="status" id="status-$${id}">Waiting...</span>
+    `;
+    fileListEl.appendChild(item);
+  });
+
+  uploadSequentially(Array.from(files));   // One by one with individual progress
+}
+
+async function uploadSequentially(files) {
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    const id = 'file-' + i;
+    const progressBar = document.getElementById(`prog-$${id}`);
+    const statusEl = document.getElementById(`status-$${id}`);
+
+    statusEl.textContent = 'Uploading...';
+
+    await uploadSingleFile(file, progressBar, statusEl);
+  }
+}
+
+function uploadSingleFile(file, progressBar, statusEl) {
+  return new Promise((resolve) => {
+    const formData = new FormData();
+    formData.append('files', file);   // same key as backend
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/upload', true);
+
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) {
+        const percent = Math.round((e.loaded / e.total) * 100);
+        progressBar.style.width = percent + '%';
+        statusEl.textContent = percent + '%';
+      }
+    };
+
+    xhr.onload = () => {
+      if (xhr.status === 200) {
+        progressBar.style.width = '100%';
+        statusEl.textContent = '✅ Done';
+        statusEl.classList.add('success');
+      } else {
+        statusEl.textContent = '❌ Failed';
+        statusEl.classList.add('error');
+      }
+      resolve();
+    };
+
+    xhr.onerror = () => {
+      statusEl.textContent = '❌ Error';
+      statusEl.classList.add('error');
+      resolve();
+    };
+
+    xhr.send(formData);
+  });
+}</script>
+
+
+<small><span style="color: yellow">#Heading1 ##Heading2 ###Heading3</span><span style="color: green"> **bold text**</span> <span style="color: magenta"> *italicized text*</span><span style="color: red"> > blockquote</span><span style="color: lime">  1. First item 2. Second item 3. Third item</span><span style="color: purple"> - First item - Second item - Third item</span><span style="color: cyan"> `code`</span><span style="color: orange"> line break --- </span><span style="color: silver"> link [title](https://robinbackman.com)</span></small><br>
+<br>
+<textarea id="editor">$text</textarea>
+<small id="count">255 characters remaining</small>
+<textarea id="editor2">$text2</textarea>
+$if soundlink:
+    <a href="https://robinbackman.com/editor?edit=$soundlink"><code>https://robinbackman.com/editor?edit=$soundlink</code></a></br>
+<div id="status"></div>
+<a id='back' href='/heartranked'>go back</a> 
+$if logged:
+    or <a id='publish' href='/editor?publish=yes'>publish</a>
+    or <a id='new' href='/editor?new=yes'>new</a>
+    <small>logged in as $user
+    $if combine:
+        this is a <a href="/heartranked?show=$combine">combined post</a>
+    $if remix:
+        this is a <a href="/heartranked?show=$remix">remix post</a></small>
+</div>
+<div style="text-align: left; width: 455px;" id="rendered">
+</div>
+<small>made with LOVE by King Robin. sorry only registered users can publish for now.</small>
+</div>
+
+<script>
+$if public == 'yes':
+    const link = document.getElementById('publish');
+    link.style.visibility = 'hidden';
+    
+let lastSaved = document.getElementById("editor").value;
+
+// Wait until the page is fully loaded
+document.addEventListener('DOMContentLoaded', () => {
+    
+    const texteditor = document.getElementById('editor');
+    const count     = document.getElementById('count');
+
+    // Safety check
+    if (!texteditor || !count) {
+        console.error('Element not found! Check your IDs.');
+        return;
+    }
+
+    texteditor.addEventListener('input', () => {
+        const remaining = 255 - texteditor.value.length;
+        if (remaining < 0) {
+            count.textContent = `$${remaining} TOO MANY CHARACTERS. CAN'T PUBLISH! KEEP IT SHORTER.`;
+            const link = document.getElementById('publish');
+            link.style.visibility = 'hidden';}
+        else {
+            count.textContent = `$${remaining} characters remaining`;
+            const link = document.getElementById('publish');
+            link.style.visibility = 'visible';}
+        
+        // Optional: Change color when getting low
+        if (remaining < 30) {
+            count.style.color = 'red';
+        } else if (remaining < 80) {
+            count.style.color = 'orange';
+        } else {
+            count.style.color = 'gray';
+        }
+    });
+
+    // Initial count
+    count.textContent = '255 characters remaining';
+});
+
+lastSaved = '';
+lastSaved2 = '';
+
+// Auto-save every 60 seconds
+async function autoSave() {
+    const textarea = document.getElementById("editor");
+    const currentText = textarea.value;
+    const textarea2 = document.getElementById("editor2");
+    const currentText2 = textarea2.value;
+    if (currentText === lastSaved && currentText2 === lastSaved2) return;
+
+    try {
+        const res = await fetch('/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: currentText , text2: currentText2 })
+        });
+
+        if (res.ok) {
+            lastSaved = currentText;
+            lastSaved2 = currentText2;
+            const link = document.getElementById('publish');
+            link.style.visibility = 'visible';
+            document.getElementById("status").innerHTML = 
+                `Saved at $${new Date().toLocaleTimeString()}`;
+        }
+    } catch (e) {
+        document.getElementById("status").innerHTML = "Save failed";
+    }
+
+    if (currentText === lastSaved2 && currentText2 === lastSaved2) return;
+
+}
+
+// Fetch rendered content from server
+async function updateRendered() {
+    const textarea = document.getElementById("editor");
+    const currentText = textarea.value;
+    const textarea2 = document.getElementById("editor2");
+    const currentText2 = textarea2.value;
+    if (currentText === lastSaved && currentText2 === lastSaved2) return;
+    try {
+        const res = await fetch('/rendered');
+        const text = await res.text();
+        if (text != 'None') {
+            document.getElementById("rendered").innerHTML = text;}
+    } catch (e) {
+        console.error("Failed to fetch rendered content");
+    }
+}
+
+// Set up intervals
+setInterval(autoSave, 5000);           // Auto-save every 60s
+setInterval(updateRendered, 5000);      // Update rendered every 5s
+
+// Manual save triggers
+document.getElementById("editor").addEventListener("blur", autoSave);
+document.addEventListener("keydown", e => {
+    if (e.ctrlKey && e.key === "s") {
+        e.preventDefault();
+        autoSave();
+    }
+});
+
+async function rotateright(text) {
+  try {
+    const res = await fetch('/imageapi', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: text , action: 'rotateright'})
+    });
+  } catch (e) {
+    console.error(e);
+    status.innerHTML = '<span style="color:red">❌ Failed to send</span>';
+  }
+}
+
+async function rotateleft(text) {  
+  try {
+    const res = await fetch('/imageapi', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: text , action: 'rotateleft'})
+    });
+  } catch (e) {
+    console.error(e);
+    status.innerHTML = '<span style="color:red">❌ Failed to send</span>';
+  }
+}
+
+let lastActiveTextarea = null;
+
+// Track which textarea was last focused
+function trackActive() {
+    const text1 = document.getElementById('editor');
+    const text2 = document.getElementById('editor2');
+
+    text1.addEventListener('focus', () => lastActiveTextarea = text1);
+    text2.addEventListener('focus', () => lastActiveTextarea = text2);
+}
+
+function isdocs(filename) {
+    const lower = filename.toLowerCase(); 
+    return lower.endsWith('.txt') ||
+           lower.endsWith('.pdf') ||
+           lower.endsWith('.md')  ||
+           lower.endsWith('.readme');
+}
+
+function isfilm(filename) {
+    const lower = filename.toLowerCase(); 
+    return lower.endsWith('.mpeg') ||
+           lower.endsWith('.mp4');
+}
+
+function insertAtCursor(text) {
+    if (!lastActiveTextarea) {
+        alert("Please click inside one of the textareas first!");
+        return;
+    }
+    const start = lastActiveTextarea.selectionStart;
+    const end = lastActiveTextarea.selectionEnd;
+    if (isdocs(text)) {
+        const insertlen = "["+text+"](/static/users/$user/docs/"+text+" '"+text+"')\n"; 
+        lastActiveTextarea.value = lastActiveTextarea.value.substring(0, start) 
+                             + insertlen
+                             + lastActiveTextarea.value.substring(end);
+    }
+    if (isfilm(text)) {
+        const insertlen = "<video controls='controls'><source src=/static/users/$user/films/"+text+"></video>\n";
+        lastActiveTextarea.value = lastActiveTextarea.value.substring(0, start) 
+                             + insertlen
+                             + lastActiveTextarea.value.substring(end);
+    } else {
+        const insertlen = "!["+text+"](/static/users/$user/images/web/"+text+" '"+text+"')\n";
+        lastActiveTextarea.value = lastActiveTextarea.value.substring(0, start) 
+                             + insertlen
+                             + lastActiveTextarea.value.substring(end);
+    }
+    // Move cursor after inserted text
+    lastActiveTextarea.selectionStart = lastActiveTextarea.selectionEnd = start + insertlen.length;
+    
+    // Focus it again so you can keep typing
+    lastActiveTextarea.focus();
+}
+// Initialize tracking
+window.onload = trackActive;
+
+// Initial load
+updateRendered();
+</script>
+</body>
+</html>
+
+
+

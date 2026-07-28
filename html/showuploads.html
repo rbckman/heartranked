@@ -1,0 +1,42 @@
+$def with (uploads, user, allowed, random)
+<div id="container">
+<a href="javascript:history.back()"><-- back</a>
+<br>
+
+$for i in uploads[:100]:
+    <code><a href="/static/users/$user/images/$i">/static/users/$user/images/web/$i</a></code>
+    <br>
+    $ nocache=random.choices(allowed, k=5)
+    <img src="/static/users/$user/images/web/$i?random=$nocache"><br>
+    <a style="color: white;" class="insert-link" onclick="rotateright('$i')">↻</a>
+    <a style="color: white;" class="insert-link" onclick="rotateleft('$i')">↺</a>
+    <code>![$i](/static/users/$user/images/web/$i '$i')</code>
+</div>
+
+<script>
+async function rotateright(text) {
+  try {
+    const res = await fetch('/imageapi', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: text , action: 'rotateright'})
+    });
+  } catch (e) {
+    console.error(e);
+    status.innerHTML = '<span style="color:red">❌ Failed to send</span>';
+  }
+}
+
+async function rotateleft(text) {  
+  try {
+    const res = await fetch('/imageapi', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: text , action: 'rotateleft'})
+    });
+  } catch (e) {
+    console.error(e);
+    status.innerHTML = '<span style="color:red">❌ Failed to send</span>';
+  }
+}
+</script>

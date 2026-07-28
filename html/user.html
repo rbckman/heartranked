@@ -1,0 +1,12 @@
+$def with (songs,credits,user,datetime,str,int)
+<a href="javascript:history.back()"><-- back</a>
+<br>
+
+$for i in songs:
+    <a href="/s/$user/$i.soundlink">$i.soundname</a>
+    <br>
+
+$for i in credits:
+    <a href="$i">$i</a><br>
+
+</div>
