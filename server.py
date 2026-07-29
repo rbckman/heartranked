@@ -119,15 +119,21 @@ def logged():
     else:
         return False
 
-def savefile(thename, thingstosaveinalist):
-    for thingstosaveinalist:
-        #full path to filename
-        #save to next line make an ID automatically, you have to check the save to know how to load it.
+def savetofile(thename, thingstosave, overwrite):
+    #full path to filename
+    #save to next line make an ID automatically, you have to check the save to know how to load it.
+    #loadfile check if record exist, first in line is the record hash and update if it exists
+    #make users in a folder as files first is username username will always be user record
+    #hearts will be files as usernames with timestamp in a hearts folder in post folder. be stored and checked in u/hearts and post/hearts
+    # be sure to add home domain setting to username
+    with open(thename, "w") as f:
+        for i in thingstosave:
+            f.write(str(i) + ',')
+        
 
-def loadfile(thename, thingstoloadinalist):
-    for thingstoloadinalist:
-        #full path to filename
-        #save to next line make an ID automatically, you have to check the save to know how to load it.
+def loadfile(thename, keyword):
+    #search for keyword to get the list
+
 
 def loadandcount(thename, thingstocount):
     #read file count lines return
@@ -139,13 +145,17 @@ def adduser(name, password, mail):
     salt = bcrypt.gensalt()
     password_hashed = bcrypt.hashpw(password, salt)
     #check user db, if empty create admin
-    users = db.query("SELECT COUNT(*) AS users FROM rymdadmin")[0]
-    tot = int(users.users)
+    #users = db.query("SELECT COUNT(*) AS users FROM rymdadmin")[0]
+    #tot = int(users.users)
+    tot = len(os.listdir(basedir+'users/'))
     print('users alltsomallt: ' + str(tot))
     if tot > 1:
-        db.insert('rymdadmin', name=name, displayname=originalname, password=password_hashed, mail=mail, subscribe='aldrig', adminlevel=3)
+        adminlevel=3
     else:
-        db.insert('rymdadmin', name=name, displayname=originalname, password=password_hashed, mail=mail, subscribe='aldrig', adminlevel=5)
+        adminlevel=5
+    #db.insert('rymdadmin', name=name, displayname=originalname, password=password_hashed, mail=mail, subscribe='aldrig', adminlevel=3)
+    savethis=[name,originalname, password_hashed, mail, adminlevel] #adminlevel
+    savefile(basedir+'users/'+name, savethis)
     print("new user added")
     return
 
@@ -155,7 +165,8 @@ def bildhistoriker():
     return bildhistoriker
 
 def adminlevel(user):
-    level = db.query("SELECT adminlevel FROM rymdadmin WHERE name='"+user+"';")[0]
+    #level = db.query("SELECT adminlevel FROM rymdadmin WHERE name='"+user+"';")[0]
+    level=loadfile(basedir+'users', user)
     #1 session logout, web.py bug
     #2 rights to see pics and comment
     #3 rights to upoload
