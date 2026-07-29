@@ -28,8 +28,6 @@ from mutagen.easyid3 import EasyID3
 from mutagen.oggvorbis import OggVorbis
 from PIL import Image
 from PIL import ImageSequence
-from forex_python.bitcoin import BtcConverter
-from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
 import settings
 
 urls = (
@@ -73,7 +71,6 @@ urls = (
     '/uploads?', 'uploads',
     '/config', 'config',
     '/payments?', 'payments',
-    '/cv', 'cv')
 
 bag = ''
 
@@ -121,6 +118,19 @@ def logged():
         return True
     else:
         return False
+
+def savefile(thename, thingstosaveinalist):
+    for thingstosaveinalist:
+        #full path to filename
+        #save to next line make an ID automatically, you have to check the save to know how to load it.
+
+def loadfile(thename, thingstoloadinalist):
+    for thingstoloadinalist:
+        #full path to filename
+        #save to next line make an ID automatically, you have to check the save to know how to load it.
+
+def loadandcount(thename, thingstocount):
+    #read file count lines return
 
 def adduser(name, password, mail):
     originalname=name
