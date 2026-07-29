@@ -135,9 +135,6 @@ def loadfile(thename, keyword):
     #search for keyword to get the list
 
 
-def loadandcount(thename, thingstocount):
-    #read file count lines return
-
 def adduser(name, password, mail):
     originalname=name
     name=safe_filename(name[:12])
@@ -154,15 +151,10 @@ def adduser(name, password, mail):
     else:
         adminlevel=5
     #db.insert('rymdadmin', name=name, displayname=originalname, password=password_hashed, mail=mail, subscribe='aldrig', adminlevel=3)
-    savethis=[name,originalname, password_hashed, mail, adminlevel] #adminlevel
+    savethis=[name,originalname, password_hashed, mail, adminlevel]
     savefile(basedir+'users/'+name, savethis)
     print("new user added")
     return
-
-def bildhistoriker():
-    #bildhistoriker = db.query("SELECT name, displayname, mail, password FROM rymdadmin")
-    bildhistoriker = db.select('rymdadmin')
-    return bildhistoriker
 
 def adminlevel(user):
     #level = db.query("SELECT adminlevel FROM rymdadmin WHERE name='"+user+"';")[0]
