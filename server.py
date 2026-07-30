@@ -35,12 +35,9 @@ urls = (
     '/?', 'almost',
     '/putinbag/(.*)', 'putinbag',
     '/dropitem/(.*)?', 'dropitem',
-    '/payln/(.*)', 'payln',
     '/paymobile/(.*)', 'paymobile',
     '/goodies/(.*)', 'goodies',
     "/stats?", "stats",
-    '/lightning?', 'lightning',
-    '/paybtc/(.*)', 'paybtc',
     '/payment/(.*)', 'payment',
     '/orders?', 'orders',
     '/checkout?', 'checkout',
@@ -60,7 +57,6 @@ urls = (
     '/bigpic/(.*)?', 'bigpic',
     '/categories?', 'categories',
     '/op', 'op',
-    '/bitcoin', 'bitcoin',
     '/shipping/(.*)', 'shipping',
     '/propaganda?', 'propaganda',
     '/editor?', 'editor',
@@ -76,8 +72,6 @@ bag = ''
 
 #Load from settings
 
-rtl = settings.rtl
-rpcauth = settings.rpcauth
 webmaster = settings.webmaster
 baseurl = settings.baseurl
 siteurl = baseurl
@@ -94,24 +88,9 @@ store = web.session.DiskStore(basedir + 'sessions')
 render = web.template.render(templatedir, base="base")
 renderop = web.template.render(templatedir, base="op")
 rendersplash = web.template.render(templatedir, base="splash")
-db = web.database(dbn='sqlite', db=basedir + "db/cyberpunkcafe.db", timeout=10)
 session = web.session.Session(app,store,initializer={'login':0, 'privilege':0, 'bag':[], 'sessionkey':'empty','soundlink':'','backurl':'','user':'','search':'', 'bildsida':'', 'feedbase':'', 'timebase':''})
 
 allowedchar = '_','-','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','1','2','3','4','5','6','7','8','9','0'
-
-#----------- Database setup -------------
-
-#Remeber to store Euros in cents
-
-#CREATE TABLE products (id integer PRIMARY KEY, name text NOT NULL, description text, price integer NOT NULL, available integer, sold integer, priority integer, dateadded integer, datelastsold integer, daterunout integer, dateavailable integer);
-
-#CREATE TABLE shipping (id integer PRIMARY KEY, country text NOT NULL, cost integer NOT NULL, days integer NOT NULL);
-
-#should rename to customer 
-#CREATE TABLE pending (id integer PRIMARY KEY, invoice_key text NOT NULL, country text NOT NULL, firstname text NOT NULL, lastname text NOT NULL, address text NOT NULL, town text NOT NULL, postalcode integer NOT NULL, email text NOT NULL, dateadded integer)
-
-#CREATE TABLE invoices (id INT AUTO_INCREMENT, invoice_key TEXT, btc TEXT, ln TEXT, products TEXT, payment TEXT, amount INT, totsats INT, timestamp TIMESTAMP, status TEXT, datepaid TIMESTAMP, dateshipped TIMESTAMP);
-
 
 def logged():
     if session.login > 0:
@@ -119,7 +98,7 @@ def logged():
     else:
         return False
 
-def savetofile(thename, thingstosave, overwrite):
+def savetofile(thename, thingstosave):
     #full path to filename
     #save to next line make an ID automatically, you have to check the save to know how to load it.
     #loadfile check if record exist, first in line is the record hash and update if it exists
@@ -130,10 +109,10 @@ def savetofile(thename, thingstosave, overwrite):
         for i in thingstosave:
             f.write(str(i) + ',')
         
-
-def loadfile(thename, keyword):
-    #search for keyword to get the list
-
+def loadfile(thename):
+    with open(thename, 'r') as f:
+        settings = f.read().split(',','')
+    return settings
 
 def adduser(name, password, mail):
     originalname=name
@@ -151,7 +130,7 @@ def adduser(name, password, mail):
     else:
         adminlevel=5
     #db.insert('rymdadmin', name=name, displayname=originalname, password=password_hashed, mail=mail, subscribe='aldrig', adminlevel=3)
-    savethis=[name,originalname, password_hashed, mail, adminlevel]
+    savethis=[name,originalname,password_hashed,mail,adminlevel]
     savefile(basedir+'users/'+name, savethis)
     print("new user added")
     return
@@ -168,29 +147,38 @@ def adminlevel(user):
 
 def stopresetpass(mail):
     t = None
-    try:
-        t = db.select('stopresetpass', where='mail="'+mail+'"', what='tid')[0]
-        print(t)
-    except Exception as e:
-        db.insert('stopresetpass', mail=mail, tid=time.time())
-        print(e)
-        return False
-    try:
-        db.update('stopresetpass', where='mail="'+mail+'"', tid=time.time())
-        print('okkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk')
-    except Exception as e:
-        print(e)
-    try:
-        senast = time.time() - t.tid
-        print(senast)
-        if senast < 600:
-            print('mail is in password reset spam filter')
-            return True
-        else:
-            return False
-    except Exception as e:
-        print(e)
+    if os.path.exists(basedir+'stopresetpass/'+mail) == True:
+        t=loadfile(basedir+'stopresetpass/'+mail)
+    else:
+        savethis=[time.time()]
+        savefile(basedir+'stopresetpass/'+mail, savethis)
+        return
+    savethis=[time.time()]
+    savefile(basedir+'stopresetpass/'+mail, savethis)
+    #try:
+    #    t = db.select('stopresetpass', where='mail="'+mail+'"', what='tid')[0]
+    #    print(t)
+    #except Exception as e:
+    #    db.insert('stopresetpass', mail=mail, tid=time.time())
+    #    print(e)
+    #    return False
+
+    #try:
+    #    db.update('stopresetpass', where='mail="'+mail+'"', tid=time.time())
+    #    print('okkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk')
+    #except Exception as e:
+    #    print(e)
+    #try:
+    senast = time.time() - t
+    print(senast)
+    if senast < 600:
+        print('mail is in password reset spam filter')
         return True
+    else:
+        return False
+    #except Exception as e:
+    #    print(e)
+    #    return True
 
 def stopflood(ip,referer):
     time.sleep(0.2)
