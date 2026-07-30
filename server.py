@@ -80,8 +80,8 @@ postadmin = settings.postadmin
 postadmin_signature = settings.postadmin_signature
 
 basedir = os.path.dirname(os.path.realpath(__file__))+'/'
-templatedir = basedir + 'public_html/templates/'
-staticdir = basedir + 'public_html/static/'
+templatedir = basedir + 'html/'
+staticdir = basedir + 'public_html/'
 web.config.debug = False
 app = web.application(urls, globals())
 store = web.session.DiskStore(basedir + 'sessions')
@@ -98,7 +98,7 @@ def logged():
     else:
         return False
 
-def savetofile(thename, thingstosave):
+def saverecord(thename, thingstosave):
     #full path to filename
     #save to next line make an ID automatically, you have to check the save to know how to load it.
     #loadfile check if record exist, first in line is the record hash and update if it exists
@@ -109,10 +109,13 @@ def savetofile(thename, thingstosave):
         for i in thingstosave:
             f.write(str(i) + ',')
         
-def loadfile(thename):
+def loadrecord(thename):
     with open(thename, 'r') as f:
         settings = f.read().split(',','')
     return settings
+
+def deleterecord(thefile):
+    os.system('rm '+thefile)
 
 def adduser(name, password, mail):
     originalname=name
@@ -120,24 +123,20 @@ def adduser(name, password, mail):
     password = password.encode("utf-8")
     salt = bcrypt.gensalt()
     password_hashed = bcrypt.hashpw(password, salt)
-    #check user db, if empty create admin
-    #users = db.query("SELECT COUNT(*) AS users FROM rymdadmin")[0]
-    #tot = int(users.users)
     tot = len(os.listdir(basedir+'users/'))
     print('users alltsomallt: ' + str(tot))
     if tot > 1:
         adminlevel=3
     else:
         adminlevel=5
-    #db.insert('rymdadmin', name=name, displayname=originalname, password=password_hashed, mail=mail, subscribe='aldrig', adminlevel=3)
     savethis=[name,originalname,password_hashed,mail,adminlevel]
-    savefile(basedir+'users/'+name, savethis)
+    saverecord(basedir+'users/'+name, savethis)
     print("new user added")
     return
 
 def adminlevel(user):
     #level = db.query("SELECT adminlevel FROM rymdadmin WHERE name='"+user+"';")[0]
-    level=loadfile(basedir+'users', user)
+    level=loadrecord(basedir+'users', user)
     #1 session logout, web.py bug
     #2 rights to see pics and comment
     #3 rights to upoload
@@ -148,69 +147,44 @@ def adminlevel(user):
 def stopresetpass(mail):
     t = None
     if os.path.exists(basedir+'stopresetpass/'+mail) == True:
-        t=loadfile(basedir+'stopresetpass/'+mail)
+        t=loadrecord(basedir+'stopresetpass/'+mail)
     else:
         savethis=[time.time()]
-        savefile(basedir+'stopresetpass/'+mail, savethis)
+        saverecord(basedir+'stopresetpass/'+mail, savethis)
         return
     savethis=[time.time()]
-    savefile(basedir+'stopresetpass/'+mail, savethis)
-    #try:
-    #    t = db.select('stopresetpass', where='mail="'+mail+'"', what='tid')[0]
-    #    print(t)
-    #except Exception as e:
-    #    db.insert('stopresetpass', mail=mail, tid=time.time())
-    #    print(e)
-    #    return False
-
-    #try:
-    #    db.update('stopresetpass', where='mail="'+mail+'"', tid=time.time())
-    #    print('okkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk')
-    #except Exception as e:
-    #    print(e)
-    #try:
-    senast = time.time() - t
-    print(senast)
-    if senast < 600:
+    saverecord(basedir+'stopresetpass/'+mail, savethis)
+    latest = time.time() - t
+    print(latest)
+    if latest < 600:
         print('mail is in password reset spam filter')
         return True
     else:
         return False
-    #except Exception as e:
-    #    print(e)
-    #    return True
 
 def stopflood(ip,referer):
-    time.sleep(0.2)
-    try:
-        t = db.select('stopflood', where='ip="'+ip+'"', what='tid')[0]
-    except:
-        print('notin in db about ip')
-        pass
-    try:
-        if t:
-            db.update('stopflood', where='ip="'+ip+'"', tid=time.time())
-            print('found ip, update stopflood time')
-    except:
-        db.insert('stopflood', ip=ip, tid=time.time())
-        print('no ip adding flood ban time')
-    try:
-        senast = time.time() - t.tid
-        print(senast)
-        if senast < 2:
-            #ban_for_flood(ip)
-            return True
-        else:
-            return False
-    except:
+    t = None
+    if os.path.exists(basedir+'stopflood/'+ip) == True:
+        t=loadrecord(basedir+'stopflood/'+ip)
+    else:
+        savethis=[time.time()]
+        saverecord(basedir+'stopflood/'+ip, savethis)
+        return
+    savethis=[time.time()]
+    saverecord(basedir+'stopflood/'+ip, savethis)
+    latest = time.time() - t
+    print(latest)
+    if latest < 1:
+        print('flooding recognized!')
+        return True
+    else:
         return False
 
 def getinvitation(secretinvitation):
-    invites=db.query("SELECT * FROM invites;")
-    for i in invites:
-        if i.secretinvitation == secretinvitation:
-            if i.accepted == None:
-                return True
+    invite=loadrecord(basedir+'invites/'+secretinvitation)
+    if invitation == secretinvitation:
+        if invite == '':
+            return True
     return False
 
 class login():
@@ -250,7 +224,7 @@ class login():
             if p.name.lower() == i.user.lower() or p.mail.lower() == i.user.lower():
                 try:
                     encodepass = p.password.encode("utf-8")
-                    print('nooooooooooooooooooooooooooooooooo')
+                    print('noooo')
                 except:
                     encodepass = p.password
                 if bcrypt.checkpw(i.password.encode('utf-8'), encodepass) == True:
@@ -301,8 +275,9 @@ class register():
             except:
                 pass
             #check user db, if empty create admin
-            users = db.query("SELECT COUNT(*) AS users FROM rymdadmin")[0]
-            totusers = int(users.users)
+            totusers = len(os.listdir(basedir+'users/'))
+            #users = db.query("SELECT COUNT(*) AS users FROM rymdadmin")[0]
+            #totusers = int(users.users)
             registerform.fill(user=urllib.parse.unquote_plus(n), mail=urllib.parse.unquote_plus(m), invite=w.invite)
             return render.register(registerform, formfail, totusers)
         else:
@@ -319,7 +294,8 @@ class register():
                 raise web.seeother('/register?invite='+i.invite+'&fail=notmail'+r)
             if len(i.password) < 5:
                 raise web.seeother('/register?invite='+i.invite+'&fail=kortlosen'+r)
-            rymdadmins = db.select('rymdadmin', what='name, mail')
+            #rymdadmins = db.select('rymdadmin', what='name, mail')
+            rymdadmins = os.listdir(basedir+'users/')
             for p in rymdadmins:
                 if p.name.lower() == i.user.lower():
                     raise web.seeother('/register?invite='+i.invite+'&fail=nametaken' +r)
@@ -353,10 +329,11 @@ class welcome():
 class like:
     def POST(self):
         if session.user != '':
-            i = web.input(unlike=None, like=None, hate=None, unhate=None, user=None, imghash=None)
+            i = web.input(unlike=None, like=None, hate=None, unhate=None, user=None, uniqueunicorn=None)
             user = i.user
-            imghash = i.imghash
-            l = db.query("SELECT * FROM likes WHERE bild='"+imghash+"' AND user='"+session.user+"';")
+            uniqueunicorn = i.uniqueunicorn
+            #l = db.query("SELECT * FROM likes WHERE bild='"+uniqueunicorn+"' AND user='"+session.user+"';")
+            l = loadrecord(basedir+'posts/'+uniqueunicorn+'/likes/'+session.user)
             print(session.user)
             print(session.user)
             print('fuuuuuuuuuuuuuuuuu')
@@ -365,12 +342,16 @@ class like:
             else:
                 user_likes = False
             if user_likes == False:
-                db.insert('likes', user=session.user, bild=imghash, datum=datetime.datetime.now())
+                #db.insert('likes', user=session.user, bild=uniqueunicorn, datum=datetime.datetime.now())
+                savethis=[datetime.datetime.now()]
+                saverecord(basedir+'posts/'+uniqueunicorn+'/likes/'+session.user, savethis)
                 user_likes = True
             elif user_likes == True:
-                db.query("DELETE FROM likes WHERE bild='"+imghash+"' AND user='"+session.user+"';")
+                #db.query("DELETE FROM likes WHERE bild='"+uniqueunicorn+"' AND user='"+session.user+"';")
+                deleterecord(basedir+'posts/'+uniqueunicorn+'/likes/'+session.user)
                 user_likes = False
-            likes = db.query("SELECT Count(*) AS likes FROM likes WHERE bild='"+imghash+"';")[0]
+            #likes = db.query("SELECT Count(*) AS likes FROM likes WHERE bild='"+uniqueunicorn+"';")[0]
+            load
             # Example: Update like count in your database
             # This is a placeholder; replace with your database logic
             # Return JSON response
@@ -1570,8 +1551,8 @@ class propaganda:
             print("filename is " + imgname + " filetype is " + filetype + " soundname is " + soundname + " trying to upload file from: " + filepath)
             #if filetype != 'wav' or 'ogg' or 'flac' or 'jpeg' or 'jpg' or 'mp3':
             #    web.seeother('/upload?fail=notsupported')
-            #imghash = hashlib.md5(str(random.getrandbits(256)).encode('utf-8')).hexdigest()
-            #imgname = imghash
+            #uniqueunicorn = hashlib.md5(str(random.getrandbits(256)).encode('utf-8')).hexdigest()
+            #imgname = uniqueunicorn
             #imgname = str(len(os.listdir(imgdir))).zfill(3) + '.jpeg'
             soundlink = hashlib.sha256(str(random.getrandbits(256)).encode('utf-8')).hexdigest()[9:36]
             imgdir = staticdir+'upload/'+soundlink+'/'
@@ -2343,8 +2324,8 @@ class config:
                 print("filename is " + imgname + " filetype is " + filetype + " soundname is " + soundname + " trying to upload file from: " + filepath)
                 #if filetype != 'wav' or 'ogg' or 'flac' or 'jpeg' or 'jpg' or 'mp3':
                 #    web.seeother('/upload?fail=notsupported')
-                #imghash = hashlib.md5(str(random.getrandbits(256)).encode('utf-8')).hexdigest()
-                #imgname = imghash
+                #uniqueunicorn = hashlib.md5(str(random.getrandbits(256)).encode('utf-8')).hexdigest()
+                #imgname = uniqueunicorn
                 #imgname = str(len(os.listdir(imgdir))).zfill(3) + '.jpeg'
                 soundlink = hashlib.sha256(str(random.getrandbits(256)).encode('utf-8')).hexdigest()[9:36]
                 imgdir = staticdir+'upload/'
@@ -2510,8 +2491,8 @@ class products:
                 print("filename is " + imgname + " filetype is " + filetype + " soundname is " + soundname + " trying to upload file from: " + filepath)
                 #if filetype != 'wav' or 'ogg' or 'flac' or 'jpeg' or 'jpg' or 'mp3':
                 #    web.seeother('/upload?fail=notsupported')
-                #imghash = hashlib.md5(str(random.getrandbits(256)).encode('utf-8')).hexdigest()
-                #imgname = imghash
+                #uniqueunicorn = hashlib.md5(str(random.getrandbits(256)).encode('utf-8')).hexdigest()
+                #imgname = uniqueunicorn
                 #imgname = str(len(os.listdir(imgdir))).zfill(3) + '.jpeg'
                 soundlink = hashlib.sha256(str(random.getrandbits(256)).encode('utf-8')).hexdigest()[9:36]
                 imgdir = staticdir+'upload/'+soundlink+'/'
