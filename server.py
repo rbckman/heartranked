@@ -129,8 +129,8 @@ def adduser(name, password, mail):
         adminlevel=3
     else:
         adminlevel=5
-    savethis=[name,originalname,password_hashed,mail,adminlevel]
-    saverecord(basedir+'users/'+name, savethis)
+    savelist=[name,originalname,password_hashed,mail,adminlevel]
+    saverecord(basedir+'users/'+name, savelist)
     print("new user added")
     return
 
@@ -149,11 +149,11 @@ def stopresetpass(mail):
     if os.path.exists(basedir+'stopresetpass/'+mail) == True:
         t=loadrecord(basedir+'stopresetpass/'+mail)
     else:
-        savethis=[time.time()]
-        saverecord(basedir+'stopresetpass/'+mail, savethis)
+        savelist=[time.time()]
+        saverecord(basedir+'stopresetpass/'+mail, savelist)
         return
-    savethis=[time.time()]
-    saverecord(basedir+'stopresetpass/'+mail, savethis)
+    savelist=[time.time()]
+    saverecord(basedir+'stopresetpass/'+mail, savelist)
     latest = time.time() - t
     print(latest)
     if latest < 600:
@@ -167,11 +167,11 @@ def stopflood(ip,referer):
     if os.path.exists(basedir+'stopflood/'+ip) == True:
         t=loadrecord(basedir+'stopflood/'+ip)
     else:
-        savethis=[time.time()]
-        saverecord(basedir+'stopflood/'+ip, savethis)
+        savelist=[time.time()]
+        saverecord(basedir+'stopflood/'+ip, savelist)
         return
-    savethis=[time.time()]
-    saverecord(basedir+'stopflood/'+ip, savethis)
+    savelist=[time.time()]
+    saverecord(basedir+'stopflood/'+ip, savelist)
     latest = time.time() - t
     print(latest)
     if latest < 1:
@@ -343,8 +343,8 @@ class like:
                 user_likes = False
             if user_likes == False:
                 #db.insert('likes', user=session.user, bild=uniqueunicorn, datum=datetime.datetime.now())
-                savethis=[datetime.datetime.now()]
-                saverecord(basedir+'posts/'+uniqueunicorn+'/likes/'+session.user, savethis)
+                savelist=[datetime.datetime.now()]
+                saverecord(basedir+'posts/'+uniqueunicorn+'/likes/'+session.user, savelist)
                 user_likes = True
             elif user_likes == True:
                 #db.query("DELETE FROM likes WHERE bild='"+uniqueunicorn+"' AND user='"+session.user+"';")
