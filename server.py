@@ -351,22 +351,24 @@ class like:
                 deleterecord(basedir+'posts/'+uniqueunicorn+'/likes/'+session.user)
                 user_likes = False
             #likes = db.query("SELECT Count(*) AS likes FROM likes WHERE bild='"+uniqueunicorn+"';")[0]
-            load
+            likes = len(os.listdir(basedir+'posts/'+uniqueunicorn+'/likes/'))
             # Example: Update like count in your database
             # This is a placeholder; replace with your database logic
             # Return JSON response
             web.header('Content-Type', 'application/json')
-            return json.dumps({'likes': likes.likes, 'user_likes': user_likes })
+            return json.dumps({'likes': likes, 'user_likes': user_likes })
 
 class user():
     def GET(self, user):
         data = web.input(soundname=None, onair=None, public=None, showuploads=None)
         if user == session.user:
             if data.public and data.soundname:
-                db.update('published', where="soundlink='" + data.soundname +"'", public=data.public)
+                #db.update('published', where="soundlink='" + data.soundname +"'", public=data.public)
+                savelist=[data.public]
+                saverecord(basedir+'posts/'+uniqueunicorn+'/public')
             elif data.showuploads=='yes':
                 uploads = []
-                uploads = get_files_by_modtime(basedir+'public_html/static/users/' + user + '/images/web/',newest_first=True)
+                uploads = get_files_by_modtime(basedir+'public_html/u/' + user + '/images/web/',newest_first=True)
                 return render.showuploads(uploads,user,allowedchar, random)
             elif data.onair and data.soundname:
                 db.update('published', where="soundlink='" + data.soundname +"'", playing=data.onair)
