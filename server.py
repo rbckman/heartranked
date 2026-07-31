@@ -98,20 +98,21 @@ def logged():
     else:
         return False
 
-def saverecord(thename, thingstosave):
+def saverecord(thename, thedict):
     #full path to filename
     #save to next line make an ID automatically, you have to check the save to know how to load it.
     #loadfile check if record exist, first in line is the record hash and update if it exists
     #make users in a folder as files first is username username will always be user record
     #hearts will be files as usernames with timestamp in a hearts folder in post folder. be stored and checked in u/hearts and post/hearts
     # be sure to add home domain setting to username
+    #make save list a dict use same names
     with open(thename, "w") as f:
-        for i in thingstosave:
-            f.write(str(i) + ',')
+        #f.write(str(i) + ',')
+        json.dumps(thedict,f)
         
 def loadrecord(thename):
     with open(thename, 'r') as f:
-        settings = f.read().split(',','')
+        settings = json.load(f)
     return settings
 
 def deleterecord(thefile):
@@ -129,8 +130,8 @@ def adduser(name, password, mail):
         adminlevel=3
     else:
         adminlevel=5
-    savelist=[name,originalname,password_hashed,mail,adminlevel]
-    saverecord(basedir+'users/'+name, savelist)
+    savedict={'name':name, 'originalname':originalname, 'password':password, 'hashed':hashed,'mail':mail,'adminlevel':adminlevel}
+    saverecord(basedir+'users/'+name, savedict)
     print("new user added")
     return
 
@@ -274,10 +275,7 @@ class register():
                     formfail = 'Too shoort passcode. Min 5 char.'
             except:
                 pass
-            #check user db, if empty create admin
             totusers = len(os.listdir(basedir+'users/'))
-            #users = db.query("SELECT COUNT(*) AS users FROM rymdadmin")[0]
-            #totusers = int(users.users)
             registerform.fill(user=urllib.parse.unquote_plus(n), mail=urllib.parse.unquote_plus(m), invite=w.invite)
             return render.register(registerform, formfail, totusers)
         else:
@@ -371,13 +369,17 @@ class user():
                 uploads = get_files_by_modtime(basedir+'public_html/u/' + user + '/images/web/',newest_first=True)
                 return render.showuploads(uploads,user,allowedchar, random)
             elif data.onair and data.soundname:
-                db.update('published', where="soundlink='" + data.soundname +"'", playing=data.onair)
+                #db.update('published', where="soundlink='" + data.soundname +"'", playing=data.onair)
+                savelist=[data.onair]
+                saverecord(basedir+'posts/'+uniqueunicorn+'/playing')
             #soundname='aurora_ruderalis-greatful_bread'
             #filetype='flac'
             #soundlink = hashlib.md5(str(random.getrandbits(256)).encode('utf-8')).hexdigest()
             #db.insert('sound', soundlink=soundlink, filename=soundname, sort=filetype, title=soundname, uploaddate=datetime.datetime.now(), uppladdare=user, lastmod=datetime.datetime.now(), moddedby=user)
-            usersounds = db.query("SELECT * FROM published WHERE creator='"+user+"' ORDER BY timeadded DESC;")
-            sounds = db.select('published')
+            #usersounds = db.query("SELECT * FROM published WHERE creator='"+user+"' ORDER BY timeadded DESC;")
+            usersound=loadrecord(basedir+'posts/')
+            #sounds = db.select('published')
+            sounds=os.listdir(basedir+'posts/')
             creditsounds = []
             for i in sounds:
                 try:
