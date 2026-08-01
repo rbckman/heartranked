@@ -98,7 +98,19 @@ def logged():
     else:
         return False
 
-def saverecord(thename, thedict):
+class creatpost:
+    def __init__(self, name, value):
+        self.name = name
+        self.value = value
+
+def loadpost(thename):
+    with open(thename, 'r') as f:
+        settings = json.load(f)
+        for key, i in settings.items():
+            postmeta=creatpost(key,i)
+    return postmeta
+
+def savepost(thename, thelist):
     #full path to filename
     #save to next line make an ID automatically, you have to check the save to know how to load it.
     #loadfile check if record exist, first in line is the record hash and update if it exists
@@ -106,14 +118,13 @@ def saverecord(thename, thedict):
     #hearts will be files as usernames with timestamp in a hearts folder in post folder. be stored and checked in u/hearts and post/hearts
     # be sure to add home domain setting to username
     #make save list a dict use same names
+    postmeta=loadpost(thename)
+    for i in thelist:
+        createpost
+        
     with open(thename, "w") as f:
         #f.write(str(i) + ',')
         json.dumps(thedict,f)
-        
-def loadrecord(thename):
-    with open(thename, 'r') as f:
-        settings = json.load(f)
-    return settings
 
 def deleterecord(thefile):
     os.system('rm '+thefile)
@@ -131,13 +142,13 @@ def adduser(name, password, mail):
     else:
         adminlevel=5
     savedict={'name':name, 'originalname':originalname, 'password':password, 'hashed':hashed,'mail':mail,'adminlevel':adminlevel}
-    saverecord(basedir+'users/'+name, savedict)
+    savepost(basedir+'users/'+name, savedict)
     print("new user added")
     return
 
 def adminlevel(user):
     #level = db.query("SELECT adminlevel FROM rymdadmin WHERE name='"+user+"';")[0]
-    level=loadrecord(basedir+'users', user)
+    level=loadpost(basedir+'users', user)
     #1 session logout, web.py bug
     #2 rights to see pics and comment
     #3 rights to upoload
@@ -148,13 +159,13 @@ def adminlevel(user):
 def stopresetpass(mail):
     t = None
     if os.path.exists(basedir+'stopresetpass/'+mail) == True:
-        t=loadrecord(basedir+'stopresetpass/'+mail)
+        t=loadpost(basedir+'stopresetpass/'+mail)
     else:
-        savelist=[time.time()]
-        saverecord(basedir+'stopresetpass/'+mail, savelist)
+        savedict={'timeadded':time.time()}
+        savepost(basedir+'stopresetpass/'+mail, savedict)
         return
-    savelist=[time.time()]
-    saverecord(basedir+'stopresetpass/'+mail, savelist)
+    savedict={'timeadded':time.time()}
+    savepost(basedir+'stopresetpass/'+mail, savedict)
     latest = time.time() - t
     print(latest)
     if latest < 600:
@@ -166,13 +177,13 @@ def stopresetpass(mail):
 def stopflood(ip,referer):
     t = None
     if os.path.exists(basedir+'stopflood/'+ip) == True:
-        t=loadrecord(basedir+'stopflood/'+ip)
+        t=loadpost(basedir+'stopflood/'+ip)
     else:
-        savelist=[time.time()]
-        saverecord(basedir+'stopflood/'+ip, savelist)
+        savedict={'timeadded':time.time()}
+        savepost(basedir+'stopflood/'+ip, savedict)
         return
-    savelist=[time.time()]
-    saverecord(basedir+'stopflood/'+ip, savelist)
+    savedict={'timeadded':time.time()}
+    savepost(basedir+'stopflood/'+ip, savedict)
     latest = time.time() - t
     print(latest)
     if latest < 1:
@@ -182,7 +193,7 @@ def stopflood(ip,referer):
         return False
 
 def getinvitation(secretinvitation):
-    invite=loadrecord(basedir+'invites/'+secretinvitation)
+    invite=loadpost(basedir+'invites/'+secretinvitation)
     if invitation == secretinvitation:
         if invite == '':
             return True
@@ -331,7 +342,7 @@ class like:
             user = i.user
             uniqueunicorn = i.uniqueunicorn
             #l = db.query("SELECT * FROM likes WHERE bild='"+uniqueunicorn+"' AND user='"+session.user+"';")
-            l = loadrecord(basedir+'posts/'+uniqueunicorn+'/likes/'+session.user)
+            l = loadpost(basedir+'posts/'+uniqueunicorn+'/likes/'+session.user)
             print(session.user)
             print(session.user)
             print('fuuuuuuuuuuuuuuuuu')
@@ -341,8 +352,8 @@ class like:
                 user_likes = False
             if user_likes == False:
                 #db.insert('likes', user=session.user, bild=uniqueunicorn, datum=datetime.datetime.now())
-                savelist=[datetime.datetime.now()]
-                saverecord(basedir+'posts/'+uniqueunicorn+'/likes/'+session.user, savelist)
+                savedict={'timeadded':datetime.datetime.now()}
+                savepost(basedir+'posts/'+uniqueunicorn+'/likes/'+session.user, savedict)
                 user_likes = True
             elif user_likes == True:
                 #db.query("DELETE FROM likes WHERE bild='"+uniqueunicorn+"' AND user='"+session.user+"';")
@@ -362,22 +373,22 @@ class user():
         if user == session.user:
             if data.public and data.soundname:
                 #db.update('published', where="soundlink='" + data.soundname +"'", public=data.public)
-                savelist=[data.public]
-                saverecord(basedir+'posts/'+uniqueunicorn+'/public')
+                public=data.public
+                savepost([public])
             elif data.showuploads=='yes':
                 uploads = []
                 uploads = get_files_by_modtime(basedir+'public_html/u/' + user + '/images/web/',newest_first=True)
                 return render.showuploads(uploads,user,allowedchar, random)
             elif data.onair and data.soundname:
                 #db.update('published', where="soundlink='" + data.soundname +"'", playing=data.onair)
-                savelist=[data.onair]
-                saverecord(basedir+'posts/'+uniqueunicorn+'/playing')
+                onair=data.onair
+                savepost([onair])
             #soundname='aurora_ruderalis-greatful_bread'
             #filetype='flac'
             #soundlink = hashlib.md5(str(random.getrandbits(256)).encode('utf-8')).hexdigest()
             #db.insert('sound', soundlink=soundlink, filename=soundname, sort=filetype, title=soundname, uploaddate=datetime.datetime.now(), uppladdare=user, lastmod=datetime.datetime.now(), moddedby=user)
             #usersounds = db.query("SELECT * FROM published WHERE creator='"+user+"' ORDER BY timeadded DESC;")
-            usersound=loadrecord(basedir+'posts/')
+            usersound=loadpost(basedir+'posts/')
             #sounds = db.select('published')
             sounds=os.listdir(basedir+'posts/')
             creditsounds = []
