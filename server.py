@@ -102,6 +102,7 @@ class creatpost:
     def __init__(self, name, value):
         self.name = name
         self.value = value
+        return self
 
 def loadpost(thename):
     with open(thename, 'r') as f:
@@ -110,7 +111,7 @@ def loadpost(thename):
             postmeta=creatpost(key,i)
     return postmeta
 
-def savepost(thename, thelist):
+def savepost(thename, thedict):
     #full path to filename
     #save to next line make an ID automatically, you have to check the save to know how to load it.
     #loadfile check if record exist, first in line is the record hash and update if it exists
@@ -118,15 +119,15 @@ def savepost(thename, thelist):
     #hearts will be files as usernames with timestamp in a hearts folder in post folder. be stored and checked in u/hearts and post/hearts
     # be sure to add home domain setting to username
     #make save list a dict use same names
-    postmeta=loadpost(thename)
-    for i in thelist:
-        createpost
+    #postmeta=loadpost(thename)
+    for key, i in thedict.items():
+        postmeta=createpost(key,i)
         
     with open(thename, "w") as f:
         #f.write(str(i) + ',')
         json.dumps(thedict,f)
 
-def deleterecord(thefile):
+def deletepost(thefile):
     os.system('rm '+thefile)
 
 def adduser(name, password, mail):
@@ -354,10 +355,12 @@ class like:
                 #db.insert('likes', user=session.user, bild=uniqueunicorn, datum=datetime.datetime.now())
                 savedict={'timeadded':datetime.datetime.now()}
                 savepost(basedir+'posts/'+uniqueunicorn+'/likes/'+session.user, savedict)
+                savepost(basedir+'u/'+session.user+'/likes/'+session.user, savedict)
                 user_likes = True
             elif user_likes == True:
                 #db.query("DELETE FROM likes WHERE bild='"+uniqueunicorn+"' AND user='"+session.user+"';")
-                deleterecord(basedir+'posts/'+uniqueunicorn+'/likes/'+session.user)
+                deletepost(basedir+'posts/'+uniqueunicorn+'/likes/'+session.user)
+                deletepost(basedir+'u/'+session.user+'/likes/'+session.user)
                 user_likes = False
             #likes = db.query("SELECT Count(*) AS likes FROM likes WHERE bild='"+uniqueunicorn+"';")[0]
             likes = len(os.listdir(basedir+'posts/'+uniqueunicorn+'/likes/'))
@@ -374,7 +377,8 @@ class user():
             if data.public and data.soundname:
                 #db.update('published', where="soundlink='" + data.soundname +"'", public=data.public)
                 public=data.public
-                savepost([public])
+                savedict={'timeadded':datetime.datetime.now()}
+                savepost(basedir+'posts/'+uniqueunicorn+'/meta')
             elif data.showuploads=='yes':
                 uploads = []
                 uploads = get_files_by_modtime(basedir+'public_html/u/' + user + '/images/web/',newest_first=True)
