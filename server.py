@@ -84,14 +84,14 @@ class creatpost:
         self.value = value
         return self
 
-def load(basedir+thename):
-    with open(thename, 'r') as f:
+def load(thename):
+    with open(basedir+thename, 'r') as f:
         settings = json.load(f)
         for key, i in settings.items():
             postmeta=creatpost(key,i)
     return postmeta
 
-def save(basedir+thename, thedict):
+def save(thename, thedict):
     #full path to filename
     #save to next line make an ID automatically, you have to check the save to know how to load it.
     #loadfile check if record exist, first in line is the record hash and update if it exists
@@ -103,7 +103,7 @@ def save(basedir+thename, thedict):
     for key, i in thedict.items():
         postmeta=createpost(key,i)
         
-    with open(thename, "w") as f:
+    with open(basedir+thename, "w") as f:
         #f.write(str(i) + ',')
         json.dumps(thedict,f)
 
@@ -319,29 +319,29 @@ class welcome():
 class like:
     def POST(self):
         if session.user != '':
-            i = web.input(unlike=None, like=None, hate=None, unhate=None, user=None, uniqueunicorn=None)
+            i = web.input(unlike=None, like=None, hate=None, unhate=None, user=None, postid=None)
             user = i.user
-            uniqueunicorn = i.uniqueunicorn
-            #l = db.query("SELECT * FROM likes WHERE bild='"+uniqueunicorn+"' AND user='"+session.user+"';")
-            l = load('posts/'+uniqueunicorn+'/likes/'+session.user)
+            postid = i.postid
+            #l = db.query("SELECT * FROM likes WHERE bild='"+postid+"' AND user='"+session.user+"';")
+            l = load('posts/'+postid+'/likes/'+session.user)
             print(session.user)
             if l:
                 user_likes = True
             else:
                 user_likes = False
             if user_likes == False:
-                #db.insert('likes', user=session.user, bild=uniqueunicorn, datum=datetime.datetime.now())
+                #db.insert('likes', user=session.user, bild=postid, datum=datetime.datetime.now())
                 savedict={'timeadded':datetime.datetime.now()}
-                save('posts/'+uniqueunicorn+'/hearts/'+session.user, savedict)
+                save('posts/'+postid+'/hearts/'+session.user, savedict)
                 save('u/'+session.user+'/hearts/'+session.user, savedict)
                 user_likes = True
             elif user_likes == True:
-                #db.query("DELETE FROM likes WHERE bild='"+uniqueunicorn+"' AND user='"+session.user+"';")
-                deletepost(basedir+'posts/'+uniqueunicorn+'/hearts/'+session.user)
+                #db.query("DELETE FROM likes WHERE bild='"+postid+"' AND user='"+session.user+"';")
+                deletepost(basedir+'posts/'+postid+'/hearts/'+session.user)
                 deletepost(basedir+'u/'+session.user+'/hearts/'+session.user)
                 user_likes = False
-            #likes = db.query("SELECT Count(*) AS likes FROM likes WHERE bild='"+uniqueunicorn+"';")[0]
-            likes = len(os.listdir(basedir+'posts/'+uniqueunicorn+'/hearts/'))
+            #likes = db.query("SELECT Count(*) AS likes FROM likes WHERE bild='"+postid+"';")[0]
+            likes = len(os.listdir(basedir+'posts/'+postid+'/hearts/'))
             # Example: Update like count in your database
             # This is a placeholder; replace with your database logic
             # Return JSON response
@@ -356,7 +356,7 @@ class user():
                 #db.update('published', where="soundlink='" + data.soundname +"'", public=data.public)
                 public=data.public
                 savedict={'timeadded':datetime.datetime.now()}
-                save('posts/'+uniqueunicorn+'/meta')
+                save('posts/'+postid+'/meta')
             elif data.showuploads=='yes':
                 uploads = []
                 uploads = get_files_by_modtime('public_html/u/' + user + '/images/web/',newest_first=True)
@@ -364,7 +364,7 @@ class user():
             elif data.onair and data.soundname:
                 #db.update('published', where="soundlink='" + data.soundname +"'", playing=data.onair)
                 onair={"onair":data.onair}
-                save('posts/'+uniqueunicorn+'/meta')
+                save('posts/'+postid+'/meta')
             #soundname='aurora_ruderalis-greatful_bread'
             #filetype='flac'
             #soundlink = hashlib.md5(str(random.getrandbits(256)).encode('utf-8')).hexdigest()
@@ -656,14 +656,14 @@ def safe_filename(name: str, max_length: int = 100, replacement: str = "-") -> s
 
 #-------------Get files and sort em by date modified---------------
 
-def get_files_by_modtime(basedir+directory: str = ".", newest_first: bool = True):
+def get_files_by_modtime(directory: str = ".", newest_first: bool = True):
     """
     Returns a list of file names in the directory sorted by last modified time.
     
     - newest_first=True  → Newest files first (most recent modification)
     - newest_first=False → Oldest files first
     """
-    path = Path(directory) 
+    path = Path(basedir+directory) 
     #Get all files (exclude directories and hidden files if you want)
     files = [f for f in path.iterdir() if f.is_file()]
     #Sort by modification time
@@ -764,18 +764,18 @@ class logout:
         session.user = None
         raise web.seeother('/heartranked')
 
-def getlikes(uniqueunicorn, user):
+def getlikes(postid, user):
     user_likes = False
     #l = db.query("SELECT Count(*) AS likes FROM likes WHERE bild='"+postid+"';")[0]
-    l=len(os.listdir('posts/'+uniqueunicorn+'/hearts/')
+    l=len(os.listdir('posts/'+postid+'/hearts/')
     #db.update('published', where='soundlink="'+postid+'"', hearts=l.likes)
     thedict={'hearts:'l}
-    save('posts/'+uniqueunicorn+'/meta',thedict)
-    thedict={'uniqueunicorn:'uniqueunicorn}
+    save('posts/'+postid+'/meta',thedict)
+    thedict={'postid:'postid}
     save('heartranked/'+str(l),thedict)
     if user:
         #m = db.query("SELECT * FROM likes WHERE bild='"+postid+"' AND user='"+user+"';")
-        m=load('posts/'+uniqueunicorn+'/hearts/'+user)
+        m=load('posts/'+postid+'/hearts/'+user)
         if m:
             user_likes = True
         else:
@@ -839,6 +839,7 @@ def getfeed():
     now = datetime.datetime.now()
     #HEARTS
     #SAVE HEARTRANKING EVERY MINUTE CHECK BOTH USER LIKES AND POST LIKES IF IT CHECKS OUT GOOD IT NOT WRITE ERROR AT LEAST (A BACKEND PROGRAM, RUNS EVERY MINUTE AND COUNTS LIKES AND WRITES THE HEARTRANKING FOR TODAY. HEARTRANKING STAYES SAVED FOREVER IN FOLDERS BY DAYS. IT IS A FOLDER WITH NUMBERS. starting with 0000000000000001 pointing to postid. simple. effective.
+    #backend program will also sync posts and likes to trustees
     if feedbase == "heart" and timebase == "today":
         now = datetime.datetime.now()
         one_day_before = now - datetime.timedelta(days=1)
