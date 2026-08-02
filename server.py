@@ -104,14 +104,14 @@ class creatpost:
         self.value = value
         return self
 
-def loadpost(thename):
+def load(thename):
     with open(thename, 'r') as f:
         settings = json.load(f)
         for key, i in settings.items():
             postmeta=creatpost(key,i)
     return postmeta
 
-def savepost(thename, thedict):
+def save(basedir+thename, thedict):
     #full path to filename
     #save to next line make an ID automatically, you have to check the save to know how to load it.
     #loadfile check if record exist, first in line is the record hash and update if it exists
@@ -119,7 +119,7 @@ def savepost(thename, thedict):
     #hearts will be files as usernames with timestamp in a hearts folder in post folder. be stored and checked in u/hearts and post/hearts
     # be sure to add home domain setting to username
     #make save list a dict use same names
-    #postmeta=loadpost(thename)
+    #postmeta=load(thename)
     for key, i in thedict.items():
         postmeta=createpost(key,i)
         
@@ -143,13 +143,13 @@ def adduser(name, password, mail):
     else:
         adminlevel=5
     savedict={'name':name, 'originalname':originalname, 'password':password, 'hashed':hashed,'mail':mail,'adminlevel':adminlevel}
-    savepost(basedir+'users/'+name, savedict)
+    save('users/'+name, savedict)
     print("new user added")
     return
 
 def adminlevel(user):
     #level = db.query("SELECT adminlevel FROM rymdadmin WHERE name='"+user+"';")[0]
-    level=loadpost(basedir+'users', user)
+    level=load(basedir+'users', user)
     #1 session logout, web.py bug
     #2 rights to see pics and comment
     #3 rights to upoload
@@ -160,13 +160,13 @@ def adminlevel(user):
 def stopresetpass(mail):
     t = None
     if os.path.exists(basedir+'stopresetpass/'+mail) == True:
-        t=loadpost(basedir+'stopresetpass/'+mail)
+        t=load(basedir+'stopresetpass/'+mail)
     else:
         savedict={'timeadded':time.time()}
-        savepost(basedir+'stopresetpass/'+mail, savedict)
+        save('stopresetpass/'+mail, savedict)
         return
     savedict={'timeadded':time.time()}
-    savepost(basedir+'stopresetpass/'+mail, savedict)
+    save('stopresetpass/'+mail, savedict)
     latest = time.time() - t
     print(latest)
     if latest < 600:
@@ -178,13 +178,13 @@ def stopresetpass(mail):
 def stopflood(ip,referer):
     t = None
     if os.path.exists(basedir+'stopflood/'+ip) == True:
-        t=loadpost(basedir+'stopflood/'+ip)
+        t=load(basedir+'stopflood/'+ip)
     else:
         savedict={'timeadded':time.time()}
-        savepost(basedir+'stopflood/'+ip, savedict)
+        save('stopflood/'+ip, savedict)
         return
     savedict={'timeadded':time.time()}
-    savepost(basedir+'stopflood/'+ip, savedict)
+    save('stopflood/'+ip, savedict)
     latest = time.time() - t
     print(latest)
     if latest < 1:
@@ -194,7 +194,7 @@ def stopflood(ip,referer):
         return False
 
 def getinvitation(secretinvitation):
-    invite=loadpost(basedir+'invites/'+secretinvitation)
+    invite=load(basedir+'invites/'+secretinvitation)
     if invitation == secretinvitation:
         if invite == '':
             return True
@@ -343,10 +343,8 @@ class like:
             user = i.user
             uniqueunicorn = i.uniqueunicorn
             #l = db.query("SELECT * FROM likes WHERE bild='"+uniqueunicorn+"' AND user='"+session.user+"';")
-            l = loadpost(basedir+'posts/'+uniqueunicorn+'/likes/'+session.user)
+            l = load(basedir+'posts/'+uniqueunicorn+'/likes/'+session.user)
             print(session.user)
-            print(session.user)
-            print('fuuuuuuuuuuuuuuuuu')
             if l:
                 user_likes = True
             else:
@@ -354,8 +352,8 @@ class like:
             if user_likes == False:
                 #db.insert('likes', user=session.user, bild=uniqueunicorn, datum=datetime.datetime.now())
                 savedict={'timeadded':datetime.datetime.now()}
-                savepost(basedir+'posts/'+uniqueunicorn+'/likes/'+session.user, savedict)
-                savepost(basedir+'u/'+session.user+'/likes/'+session.user, savedict)
+                save('posts/'+uniqueunicorn+'/likes/'+session.user, savedict)
+                save('u/'+session.user+'/likes/'+session.user, savedict)
                 user_likes = True
             elif user_likes == True:
                 #db.query("DELETE FROM likes WHERE bild='"+uniqueunicorn+"' AND user='"+session.user+"';")
@@ -378,21 +376,21 @@ class user():
                 #db.update('published', where="soundlink='" + data.soundname +"'", public=data.public)
                 public=data.public
                 savedict={'timeadded':datetime.datetime.now()}
-                savepost(basedir+'posts/'+uniqueunicorn+'/meta')
+                save('posts/'+uniqueunicorn+'/meta')
             elif data.showuploads=='yes':
                 uploads = []
                 uploads = get_files_by_modtime(basedir+'public_html/u/' + user + '/images/web/',newest_first=True)
                 return render.showuploads(uploads,user,allowedchar, random)
             elif data.onair and data.soundname:
                 #db.update('published', where="soundlink='" + data.soundname +"'", playing=data.onair)
-                onair=data.onair
-                savepost([onair])
+                onair={"onair":data.onair}
+                save('posts/'+uniqueunicorn+'/meta')
             #soundname='aurora_ruderalis-greatful_bread'
             #filetype='flac'
             #soundlink = hashlib.md5(str(random.getrandbits(256)).encode('utf-8')).hexdigest()
             #db.insert('sound', soundlink=soundlink, filename=soundname, sort=filetype, title=soundname, uploaddate=datetime.datetime.now(), uppladdare=user, lastmod=datetime.datetime.now(), moddedby=user)
             #usersounds = db.query("SELECT * FROM published WHERE creator='"+user+"' ORDER BY timeadded DESC;")
-            usersound=loadpost(basedir+'posts/')
+            usersound=load(basedir+'posts/')
             #sounds = db.select('published')
             sounds=os.listdir(basedir+'posts/')
             creditsounds = []
@@ -413,29 +411,36 @@ class invites():
     web.form.Button('Skicka'))
     def GET(self):
         if session.login > 2:
-            user = db.select('rymdadmin', where='name="'+session.user+'"')[0]
-            invites = db.select('invites', where='createdby="'+session.user+'"')
+            #user = db.select('rymdadmin', where='name="'+session.user+'"')[0]
+            user = load(basedir+'users/'+session.user)
+            #invites = db.select('invites', where='createdby="'+session.user+'"')
+            invites = load(basedir+'invites/'+session.user)
             tuningform = self.form()
             w = web.input(epost=None, render=None)
             formfail = ''
             if w.epost == '':
                 formfail = formfail + 'you have to put your email in'
             if w.render == 'yes':
-                secret_invite = hashlib.md5(str(random.getrandbits(256)).encode('utf-8')).hexdigest()
-                db.insert('invites', secretinvitation=secret_invite, created=datetime.datetime.now(), createdby=session.user)
+                secretinvitekey = hashlib.md5(str(random.getrandbits(256)).encode('utf-8')).hexdigest()
+                #db.insert('invites', secretinvitation=secretinvitekey, created=datetime.datetime.now(), createdby=session.user)
+                thedict={"secretinvitekey":secretinvitekey,"timeadded":datetime.datetime.now(),"creator":session.user)
+                save('invites/'+session.user, thedict)
             return render.invites(tuningform, formfail, user.name, invites)
     def POST(self):
         if session.login > 2:
-            user = db.select('rymdadmin', where='name="'+session.user+'"')[0]
+            #user = db.select('rymdadmin', where='name="'+session.user+'"')[0]
+            user = load(basedir+'users/'+session.user)
             tuningform = self.form()
             i = web.input()
             if i.mail == '':
                 raise web.seeother('/invites?fail=nomail')
             if '@' not in i.mail:
                 raise web.seeother('/tuning?fail=notmail') 
-            secret_invite = hashlib.md5(str(random.getrandbits(256)).encode('utf-8')).hexdigest()
-            db.insert('invites', secretinvitation=secret_invite, created=datetime.datetime.now(), createdby=session.user)
-            msg = "YO! You are the One! " + user.name + " is your Morpheous. Follow this rabbit https://robinbackman.com/register?invite="+secret_invite 
+            secretinvitekey = hashlib.md5(str(random.getrandbits(256)).encode('utf-8')).hexdigest()
+            #db.insert('invites', secretinvitation=secretinvitekey, created=datetime.datetime.now(), createdby=session.user)
+            thedict={"secretinvitekey":secretinvitekey,"timeadded":datetime.datetime.now(),"creator":session.user)
+            save('invites/'+session.user, thedict)
+            msg = "YO! You are the One! " + user.name + " is your Morpheous. Follow this rabbit https://robinbackman.com/register?invite="+secretinvitekey 
             sendmail(i.mail, 'Invitation to HEART RANKED!', msg)
         return web.seeother('/heartranked')
 
@@ -450,7 +455,8 @@ class tuning():
     def GET(self):
         if session.login > 2:
             print('asdfasdfasdf')
-            user = db.select('rymdadmin', where='name="'+session.user+'"')[0]
+            #user = db.select('rymdadmin', where='name="'+session.user+'"')[0]
+            user = load(basedir+'users/'+session.user)
             tuningform = self.form()
             w = web.input(namn=None,epost=None,fail=None,upd=None)
             print('asdfasdfasdfkdakkakka')
@@ -507,12 +513,16 @@ class tuning():
                                 password = i.newpassword.encode("utf-8")
                                 salt = bcrypt.gensalt()
                                 password_hashed = bcrypt.hashpw(password, salt)
-                                db.update('rymdadmin', where='name="'+session.user+'"', displayname=i.user, password=password_hashed, mail=i.mail.lower())
+                                #db.update('rymdadmin', where='name="'+session.user+'"', displayname=i.user, password=password_hashed, mail=i.mail.lower())
+                                thedict={'displayname':i.user,'password':password_hashed,'mail':i.mail.lower()}
+                                save('users/'+session.user, thedict)
                                 return web.seeother('/tuning?upd=yes')
                         if '@' not in i.mail:
                             raise web.seeother('/tuning?fail=notmail')
                         #update without passwordchange
-                        db.update('rymdadmin', where='name="'+session.user+'"', displayname=i.user, mail=i.mail.lower())
+                        #db.update('rymdadmin', where='name="'+session.user+'"', displayname=i.user, mail=i.mail.lower())
+                        thedict={'displayname':i.user,'mail':i.mail.lower()}
+                        save('users/'+session.user, thedict)
                         return web.seeother('/tuning?upd=yes')
                     else:
                         raise web.seeother('/tuning?fail=wrongpass')
@@ -561,7 +571,9 @@ class forgotpass():
                     password = unencrypted_password.encode("utf-8")
                     salt = bcrypt.gensalt()
                     password_hashed = bcrypt.hashpw(password, salt)
-                    db.update('rymdadmin', where='name="'+p.name+'"', password=password_hashed)
+                    #db.update('rymdadmin', where='name="'+p.name+'"', password=password_hashed)
+                    thedict={'password':password_hashed}
+                    save('users/'+p.name, thedict)
                     print("lösenordet uppdaterat!")
                     msg = "Your new passcode is: " + unencrypted_password + ' , once you logg in with this enter a new passcode by pressin your name, it a um link. Take care now bye bye then.'
                     sendmail(p.mail, 'Heart Ranked Passcode', msg)
@@ -630,7 +642,8 @@ def save_new_gif(new_frames, old_gif_information, new_path):
 
 def getdisplayname(user):
     try:
-        displayname = db.query("SELECT displayname FROM rymdadmin WHERE name='"+user+"';")[0]
+        #displayname = db.query("SELECT displayname FROM rymdadmin WHERE name='"+user+"';")[0]
+        displayname = load('users/'+session.user)
         displayname = displayname.displayname
     except:
         displayname = user
@@ -742,262 +755,6 @@ def getnewaddr():
 def callsubprocess(cmd):
     subprocess.call(cmd.split())
 
-def dropitems(d):
-    i = getproduct(d)
-    try:
-        product = db.query("SELECT * FROM customerbag WHERE sessionkey='" + session.sessionkey +"' AND product='"+str(i.id)+"';")[0]
-    except:
-        return 'empty'
-    if product.quantity > 1:
-        db.update('customerbag', where="sessionkey='" + session.sessionkey +"' and product='"+str(i.id)+"'", quantity=product.quantity-1)
-        db.update('products', where="id='"+str(i.id)+"'", available=i.available+1)
-    else:
-        db.query("DELETE FROM customerbag WHERE sessionkey='" + session.sessionkey +"' AND product='"+str(i.id)+"';")
-        db.update('products', where="id='"+str(i.id)+"'", available=i.available+1)
-        return 'empty'
-
-def addtobag(p):
-    i = getproduct(p)
-    if i.available > 0:
-        #session.bag += (i.name, i.price, i.id),
-        db.update('products', where="id='"+str(i.id)+"'", available=i.available-1)
-        product = db.query("SELECT * FROM customerbag WHERE sessionkey='" + session.sessionkey +"' AND product='"+str(i.id)+"';")
-        if product:
-            product = product[0]
-            print(product)
-            db.update('customerbag', where="sessionkey='" + session.sessionkey +"' and product='"+str(i.id)+"'", quantity=product.quantity+1)
-            print('gwtdafaakouttahere')
-        else:
-            db.insert('customerbag', sessionkey=session.sessionkey, product=i.id, type=i.type, currency=i.currency, price=i.price, quantity=1, timeadded=datetime.datetime.now())
-
-def productname(productid):
-    try:
-        name = db.query("SELECT name FROM products WHERE id='"+str(productid)+"';")[0]
-    except:
-        return ''
-    return name.name
-
-def getproduct(productid):
-    try:
-        product = db.query("SELECT * FROM products WHERE id='"+str(productid)+"';")[0]
-    except:
-        return ''
-    return product
-
-def getcategories():
-    try:
-        categories = db.query("SELECT * FROM categories;")[0]
-    except:
-        return ''
-    return categories
-
-def ordertype():
-    physical=False
-    bag = db.query("SELECT * FROM customerbag WHERE sessionkey='" + session.sessionkey +"';")
-    for b in bag:
-        if b.type=='physical':
-            return 'physical'
-    return 'digital'
-
-def getavailable(productid):
-    try:
-        name = db.query("SELECT available FROM products WHERE id='"+str(productid)+"';")[0]
-    except:
-        return ''
-    return name.available
-
-def getbtcrate():
-    btc_to_euro = db.select("btcrate", where="currency='EUR'")
-    #shippinginfo = db.select('shipping', where="country='" + pendinginfo.country + "'", what='price, days')[0]
-    btcrate = 65619         
-    return btcrate
-    try:
-        if time.time() - btc_to_euro[0].timeadded > 6000:
-            btcrate = 64485
-            b = BtcConverter()
-            btcrate = int(b.get_latest_price('EUR'))
-            db.update('btcrate', where='currency="EUR"', rate=btcrate, timeadded=time.time())
-        else:
-            btc_to_euro = db.select("btcrate", where="currency='EUR'")
-            btcrate = btc_to_euro[0].rate
-    except:
-        db.insert('btcrate', currency='EUR', rate=64485, timeadded=time.time())
-
-def getbtcratetime():
-    btc_to_euro = db.select("btcrate", where="currency='EUR'")
-    btctime = btc_to_euro[0].timeadded
-    return datetime.datetime.fromtimestamp(btctime).strftime('%c')
-
-def getprice(productid):
-    p = db.query("SELECT * FROM products WHERE id='"+str(productid)+"';")[0]
-    #b = BtcConverter()
-    btcrate=getbtcrate()
-    if p.currency=='euro':
-        sat = 1/btcrate*(p.price/100) * 100000000
-        #sat = b.convert_to_btc(p.price/100, 'EUR') * 100000000
-        euro = p.price/100
-    if p.currency=='bitcoin':
-        euro = btcrate*p.price/100000000
-        #euro = b.convert_btc_to_cur(p.price/100000000,'EUR')
-        sat = p.price
-    return int(sat), round(euro,2)
-
-def btc_to_eur(amount):
-    #b = BtcConverter()
-    btcrate=getbtcrate()
-    #euro = round(b.convert_btc_to_cur(amount/100000000,'EUR'),2)
-    euro = round(btcrate*amount/100000000)
-    return euro
-
-def eur_to_sat(amount):
-    btcrate=getbtcrate()
-    #b = BtcConverter()
-    #btc = b.convert_to_btc(amount/100, 'EUR')
-    btc = 1/btcrate*(amount/100)
-    sat=btc*100000000
-    return int(sat)
-
-def getrate():
-    #b = BtcConverter()
-    btcrate=getbtcrate()
-    #return int(b.get_latest_price('EUR'))
-    return int(btcrate)
-
-def checkforoldbags():
-    print('checking for old bags')
-    bags = db.select('customerbag')
-    for bag in bags:
-        if datetime.datetime.now() - bag.timeadded > datetime.timedelta(minutes=6000):
-            print(datetime.datetime.now() - bag.timeadded)
-            print(datetime.timedelta(hours=1))
-            print("Fuck")
-            product = getproduct(bag.product)
-            try:
-                print('found a bag at door! goddamit, got to put ' + str(bag.quantity) + ' x '  + product.name + ' back on the shelf')
-                if product.available > 1:
-                    q = product.available + bag.quantity
-                else:
-                    q = bag.quantity
-                db.update('products', where="id='"+str(bag.product)+"'", available=str(q))
-                db.query("DELETE FROM customerbag WHERE sessionkey='" + bag.sessionkey + "'")
-            except:
-                pass
-
-def checkavailable():
-    print('check items from availability')
-    bag = db.query("SELECT * FROM customerbag WHERE sessionkey='" + session.sessionkey + "'")
-    for i in bag:
-        q = getavailable(i.product)
-        soldout = q - i.quantity
-        if soldout < 0:
-            web.seeother('/?error=soldout&prod='+str(i.product))
-        else:
-            return
-
-def sold():
-    print('remove items from availability')
-    bag = db.query("SELECT * FROM customerbag WHERE sessionkey='" + session.sessionkey + "'")
-    for i in bag:
-        q = getavailable(i.product)
-        soldout = q - i.quantity
-        if soldout < 0:
-            web.seeother('/?error=soldout')
-        else:
-            db.update('products', where="id='"+str(i.product)+"'", available=str(q - i.quantity))
-
-
-def organizepics(product):
-    imgdir = basedir+'public_html/static/img/' + str(product) + '/'
-    imgdirlist = [imgdir, imgdir + 'web/', imgdir + 'thumb/']
-    for d in imgdirlist:
-        pics = next(os.walk(d))[2]
-        organized_nr = 0
-        for s in sorted(pics):
-            if '.jpeg' in s:
-                #print(s)
-                unorganized_nr = int(s[0:3])
-                if organized_nr == unorganized_nr:
-                    print('correcto pic numbering')
-                    pass
-                if organized_nr != unorganized_nr:
-                    print('false, correcting pic from ' + str(unorganized_nr) + ' to ' + str(organized_nr))
-                    mv = 'mv ' + d + str(unorganized_nr).zfill(3) + '.jpeg'
-                    mv2 = ' ' + d + str(organized_nr).zfill(3) + '.jpeg'
-                    os.system(mv + mv2)
-                organized_nr += 1
-
-def getpendinginfo():
-    try:
-        pendinginfo = db.select('pending', where="invoice_key='" + session.sessionkey + "'", what='country, firstname, lastname, address, town, postalcode, email')[0]
-    except:
-        pendinginfo = ''
-    return pendinginfo
-
-class index():
-    def GET(self):
-        ip = web.ctx['ip']
-        referer = web.ctx.env.get('HTTP_REFERER', 'none')
-        environ = web.ctx.env.get('HTTP_USER_AGENT', 'dunno')
-        visitorlog(ip,referer,environ)
-        checkforoldbags()
-        i = web.input(dropitem=None, putinbag=None,error=None,prod=None,category=None)
-        if session.sessionkey == 'empty':
-            session.sessionkey = hashlib.sha256(str(random.getrandbits(256)).encode('utf-8')).hexdigest()[15:35]
-        if i.dropitem != None:
-            session.bag = dropitems(i.dropitem)
-            print(session.bag)
-        if i.putinbag != None:
-            addtobag(i.putinbag)
-            return web.seeother('/shop#' + i.putinbag)
-        print('Cyberpunk cafe')
-        #print(session.bag)
-        products = db.query("SELECT * FROM products ORDER BY priority DESC")
-        try:
-            bag = db.query("SELECT * FROM customerbag WHERE sessionkey='" + session.sessionkey +"';")
-        except:
-            bag = None
-        try:
-            inbag = db.query("SELECT COUNT(*) AS inbag FROM customerbag where sessionkey='" + session.sessionkey +"';")[0]
-            inbag = int(inbag.inbag)
-        except:
-            inbag = None
-        if inbag < 1:
-            session.sessionkey = 'empty'
-        return render.index(products,bag,session.sessionkey,productname,inbag,db,getprice,getrate,i.category, markdown)
-
-class almost():
-    def GET(self):
-        ip = web.ctx['ip']
-        referer = web.ctx.env.get('HTTP_REFERER', 'none')
-        environ = web.ctx.env.get('HTTP_USER_AGENT', 'dunno')
-        visitorlog(ip,referer,environ)
-        visitors, total, unique = getvisits()
-        checkforoldbags()
-        i = web.input(dropitem=None, putinbag=None,error=None,prod=None,category=None,show=None)
-        if session.sessionkey == 'empty':
-            session.sessionkey = hashlib.sha256(str(random.getrandbits(256)).encode('utf-8')).hexdigest()[15:35]
-        if i.dropitem != None:
-            session.bag = dropitems(i.dropitem)
-            print(session.bag)
-        if i.putinbag != None:
-            addtobag(i.putinbag)
-            return web.seeother('/#' + i.putinbag)
-        print('Cyberpunk cafe')
-        #print(session.bag)
-        products = db.query("SELECT * FROM products ORDER BY priority DESC")
-        try:
-            bag = db.query("SELECT * FROM customerbag WHERE sessionkey='" + session.sessionkey +"';")
-        except:
-            bag = None
-        try:
-            inbag = db.query("SELECT COUNT(*) AS inbag FROM customerbag where sessionkey='" + session.sessionkey +"';")[0]
-            inbag = int(inbag.inbag)
-        except:
-            inbag = None
-        if inbag < 1:
-            session.sessionkey = 'empty'
-        return rendersplash.almost(products,bag,session.sessionkey,productname,inbag,db,getprice,getrate,i.category, markdown, visitors, total, unique, i.show)
-
 def visitorlog(ip, referer, environ):
     last = db.query('SELECT ip AS ip FROM visitors WHERE id=(SELECT MAX(id) FROM visitors)')
     try:
@@ -1044,561 +801,11 @@ class stats:
         visitors, total, unique = getvisitors()
         return rendersplash.stats(visitors, total, unique, p.logfilter)
 
-class putinbag:
-    def GET(self, p):
-        addtobag(p)
-        raise web.seeother('/')
-
-class dropitem():
-    def GET(self, d):
-        referer = web.ctx.env.get('HTTP_REFERER', 'none')
-        p = web.input()
-        i = 0
-        empty=dropitems(d)
-        if empty=='empty':
-            return web.seeother('/shop?#'+d)
-        return web.seeother(referer)
-
-class bigpic():
-    def GET(self, i):
-        print('faaaakyeee ' + i)
-        p = web.input(pic=None)
-        name=productname(i)
-        goodies = db.query("SELECT * FROM soundlink WHERE id='"+i+"';")
-        #if p.pic != None:
-        return render.bigpic(i,name,goodies)
-
-class checkout():
-    t = []
-    shippingcountries = db.select('shipping', what='country', order='country ASC')
-    shippingcountries = list(shippingcountries)
-    #t.append('Finland')
-    for i in shippingcountries:
-        if i.country != 'NO-SHIPPING':
-            t.append(i.country)
-    shipping = web.form.Form(
-    web.form.Textbox('email', web.form.notnull, description="Email:"),
-    web.form.Dropdown('country', t, web.form.notnull, description="Country"),
-    web.form.Textbox('firstname', web.form.notnull, description="First Name:"),
-    web.form.Textbox('lastname', web.form.notnull, description="Last Name:"),
-    web.form.Textbox('address', web.form.notnull, description="Shipping Address:"),
-    web.form.Textbox('town', web.form.notnull, description="Town / City:"),
-    web.form.Textbox('postalcode', web.form.notnull, description="Postalcode / zip"),
-    web.form.Button('Calculate shipping cost'))
-    email = web.form.Form(
-    web.form.Textbox('email', web.form.notnull, description="Email:"),
-    web.form.Button('Okey, lets do it!'))
-    def GET(self):
-        i = web.input(error=None)
-        pendinginfo = getpendinginfo()
-        if ordertype()=='digital':
-            checkoutform = self.email()
-            if pendinginfo:
-                checkoutform.fill(email=pendinginfo.email)
-        if ordertype()=='physical':
-            checkoutform = self.shipping()
-            if pendinginfo:
-                checkoutform.fill(country=pendinginfo.country, firstname=pendinginfo.firstname, lastname=pendinginfo.lastname, address=pendinginfo.address, town=pendinginfo.town, postalcode=pendinginfo.postalcode, email=pendinginfo.email)
-        errormsg=''
-        if i.error == 'mail':
-            errormsg = 'Check your mail!'
-        if i.error == 'shipping':
-            errormsg = 'Check your shipping address!'
-        bag = db.query("SELECT * FROM customerbag WHERE sessionkey='" + session.sessionkey +"';")
-        return render.checkout(checkoutform,bag,productname,errormsg,db,getprice)
-    def POST(self):
-        physical=False
-        bag = db.query("SELECT * FROM customerbag WHERE sessionkey='" + session.sessionkey +"';")
-        checkoutform = self.email()
-        for b in bag:
-            if b.type=='physical':
-                checkoutform = self.shipping()
-                physical=True
-                break
-        errormsg=''
-        pendinginfo = getpendinginfo()
-        i = web.input()
-        if pendinginfo:
-            if physical==True:
-                db.update('pending', where="invoice_key='"+session.sessionkey+"'", invoice_key=session.sessionkey, country=i.country, firstname=i.firstname, lastname=i.lastname, address=i.address, town=i.town, postalcode=str(i.postalcode), email=i.email, dateadded=datetime.datetime.now())
-            else:
-                db.update('pending', where="invoice_key='"+session.sessionkey+"'", invoice_key=session.sessionkey, email=i.email, dateadded=datetime.datetime.now())
-        else:
-            if physical==True:
-                db.insert('pending', invoice_key=session.sessionkey, country=i.country, firstname=i.firstname, lastname=i.lastname, address=i.address, town=i.town, postalcode=str(i.postalcode), email=i.email, dateadded=datetime.datetime.now())
-            else:
-                db.insert('pending', invoice_key=session.sessionkey, email=i.email, dateadded=datetime.datetime.now())
-        if '@' not in i.email:
-            web.seeother('/checkout?error=mail')
-        elif not checkoutform.validates():
-            return web.seeother('/checkout?error=shipping')
-        else:
-            return web.seeother('/pending')
-
-class pending:
-    #form = web.form.Form(
-    #web.form.Dropdown('payment', ['Bitcoin Lightning', 'Bitcoin'], web.form.notnull, description="Select payment method"),
-    #web.form.Button('Pay'))
-    form = web.form.Form(
-    web.form.Button('Pay'))
-    def GET(self):
-        pendingform = self.form()
-        pendinginfo = getpendinginfo()
-        bag = db.query("SELECT * FROM customerbag WHERE sessionkey='" + session.sessionkey +"';")
-        return render.pending(session.sessionkey,pendingform,pendinginfo,bag,productname,db,getprice,eur_to_sat,ordertype)
-    def POST(self):
-        pendingform = self.form()
-        pendinginfo = getpendinginfo()
-        i = web.input()
-
-        #Calculate total amount of bag
-        totalamount = 0
-        description = ''
-        bag = db.query("SELECT * FROM customerbag WHERE sessionkey='" + session.sessionkey +"';")
-        comma = ''
-        for s in bag:
-            totalamount += getprice(s.product)[0] * s.quantity
-            description += comma + str(s.quantity) + ' x ' + productname(s.product)
-            comma = ', '
-        if ordertype()=='physical':
-            shippinginfo = db.select('shipping', where="country='" + pendinginfo.country + "'", what='price, days')[0]
-            totalamount += eur_to_sat(shippinginfo.price)
-        totsats=totalamount
-        totbtc=totsats/100000000
-
-        #make lightning invoice
-        
-        #print(str(totalamount) + ' | ' +  description)
-        #print(str(totsats) + ' | ' +  description)
-        #label = hashlib.sha256(str(random.getrandbits(64)).encode('utf-8')).hexdigest()[15:35]
-        #invoice = createinvoice(totsats, description, label)
-        #time.sleep(1)
-        
-        #print(invoice)
-        #callsubprocess('qrencode -s 3 -o '+ staticdir + 'qr/' + session.sessionkey+'.png '+invoice['bolt11'])
-        #make bitcoin address
-        #bitcoinrpc = AuthServiceProxy(rpcauth)
-        #newaddress = bitcoinrpc.getnewaddress('Tarina Shop Butik')
-        #bitcoinrpc = None
-        #btcuri = 'bitcoin:' + newaddress + '?amount=' + str(totbtc) + '&label=' + description
-        #callsubprocess('qrencode -s 5 -o '+ staticdir + 'qr/' + newaddress +'.png ' + btcuri)
-        #try:
-        #    db.query("DELETE FROM invoices WHERE invoice_key='"+session.sessionkey+"';")
-        #except:
-        #    print('no old invoices to delete')
-        db.insert('invoices', invoice_key=session.sessionkey, products=description, amount=totalamount, totsats=totsats, status='unpaid', timestamp=time.strftime('%Y-%m-%d %H:%M:%S'))
-        msg="sup Robin? wowoweewaa! someone made an order."
-        sendmail('me@robinbackman.com', 'A message from Robins webshop', msg)
-        return web.seeother('/paymobile/' + session.sessionkey)
-
-class paymobile:
-    def GET(self, invoice_key):
-        digitalkey = None
-        invoice = db.select('invoices', where="invoice_key='"+invoice_key+"'")[0]
-        lninvoice=''
-        #lninvoice = getinvoice(invoice['ln'])
-        if invoice.status == 'paid' and session.sessionkey != 'empty':
-            bag = db.query("SELECT * FROM customerbag WHERE sessionkey='"+invoice_key+"';")
-            customer = db.select('pending', where="invoice_key='"+invoice_key+"'")[0]
-            db.query("INSERT INTO paidbags SELECT * FROM customerbag WHERE sessionkey='" + invoice_key + "'")
-            db.query("DELETE FROM customerbag WHERE sessionkey='" + invoice_key + "'")
-            db.update("invoices",where='invoice_key="'+invoice_key+'"', status='paid')
-            digitalkey=hashlib.sha256(str(random.getrandbits(256)).encode('utf-8')).hexdigest()[15:35]
-            db.insert('digitalkey', invoice_key=invoice_key, digitalkey=digitalkey, email=customer.email)
-            session.sessionkey = 'empty'
-            # send mail to op
-            if ordertype()=='physical':
-                msg = 'You got a new order, from ' + customer.firstname + ' ' + customer.lastname + ' from ' + customer.country + ' email: ' + customer.email + ' this dude wantz ' + invoice.products
-            else:
-                msg='sup?'
-            sendmail(webmaster, 'Robs Shop', msg)
-            # send mail to customer
-            if ordertype()=='physical':
-                msg = "Thank you for order " + invoice.products + " at Robins webshop, we'll be processing your order as soon as possible and send it to " + customer.firstname + ' ' + customer.lastname + ', ' + customer.address + ', ' + str(customer.postalcode) + ', ' + customer.town + ', ' + customer.country + '. To pay/view status or take a look at the digital goodies of your order please visit ' + baseurl + '/goodies/'+digitalkey
-            else:
-                msg="sup? thanks! here's a link to the digital goodies "+baseurl+'/goodies/'+digitalkey
-            sendmail(customer.email, 'A message from Robins webshop', msg)
-            web.seeother('/paymobile/'+invoice_key)
-        elif invoice.status == 'paid':
-            bag = db.query("SELECT * FROM paidbags WHERE sessionkey='"+invoice_key+"';")
-            digitalkey = db.select('digitalkey', where="invoice_key='"+invoice_key+"'")[0]
-        elif invoice.status != 'paid':
-            bag = db.query("SELECT * FROM customerbag WHERE sessionkey='"+invoice_key+"';")
-        pendinginfo = getpendinginfo()
-        return render.paymobile(lninvoice,invoice,bag,productname,digitalkey,db,getprice,getrate,ordertype,pendinginfo,eur_to_sat)
-
-class payln:
-    def GET(self, invoice_key):
-        digitalkey = None
-        invoice = db.select('invoices', where="invoice_key='"+invoice_key+"'")[0]
-        lninvoice = getinvoice(invoice['ln'])
-        if lninvoice['status'] == 'paid' and session.sessionkey != 'empty':
-            bag = db.query("SELECT * FROM customerbag WHERE sessionkey='"+invoice_key+"';")
-            customer = db.select('pending', where="invoice_key='"+invoice_key+"'")[0]
-            db.query("INSERT INTO paidbags SELECT * FROM customerbag WHERE sessionkey='" + invoice_key + "'")
-            db.query("DELETE FROM customerbag WHERE sessionkey='" + invoice_key + "'")
-            db.update("invoices",where='invoice_key="'+invoice_key+'"', status='paid')
-            digitalkey=hashlib.sha256(str(random.getrandbits(256)).encode('utf-8')).hexdigest()[15:35]
-            db.insert('digitalkey', invoice_key=invoice_key, digitalkey=digitalkey, email=customer.email)
-            session.sessionkey = 'empty'
-            # send mail to op
-            if ordertype()=='physical':
-                msg = 'You got a new order, from ' + customer.firstname + ' ' + customer.lastname + ' from ' + customer.country + ' email: ' + customer.email + ' this dude wantz ' + lninvoice['description']
-            else:
-                msg='sup?'
-            sendmail(webmaster, 'Robs Shop', msg)
-            # send mail to customer
-            if ordertype()=='physical':
-                msg = "Thank you for order " + lninvoice['description'] + " at Robins webshop, we'll be processing your order as soon as possible and send it to " + customer.firstname + ' ' + customer.lastname + ', ' + customer.address + ', ' + str(customer.postalcode) + ', ' + customer.town + ', ' + customer.country + '. To pay/view status or take a look at the digital goodies of your order please visit ' + baseurl + '/goodies/'+digitalkey
-            else:
-                msg="sup? thanks! here's a link to the digital goodies "+baseurl+'/goodies/'+digitalkey
-            sendmail(customer.email, 'A message from Robins webshop', msg)
-            web.seeother('/payln/'+invoice_key)
-        if lninvoice['status'] == 'paid':
-            bag = db.query("SELECT * FROM paidbags WHERE sessionkey='"+invoice_key+"';")
-            digitalkey = db.select('digitalkey', where="invoice_key='"+invoice_key+"'")[0]
-        if lninvoice['status'] != 'paid':
-            bag = db.query("SELECT * FROM customerbag WHERE sessionkey='"+invoice_key+"';")
-        pendinginfo = getpendinginfo()
-        return render.payln(lninvoice,invoice,bag,productname,digitalkey,db,getprice,getrate,ordertype,pendinginfo,eur_to_sat)
-
-class goodies():
-    def GET(self, digitalkey):
-        digitalkey = db.select('digitalkey', where="digitalkey='"+digitalkey+"'")[0]
-        #digitalkeys = db.select('digitalkey', where="email='"+digitalkey.email+"'")
-        digitalkeys = db.query("SELECT * FROM digitalkey WHERE email='"+digitalkey.email+"' ORDER BY timeadded DESC;")
-        return render.goodies(digitalkey,digitalkeys,productname,db,getprice)
-        #check all puraches with same email fuck ye
-
-class paybtc:
-    def GET(self, invoice_key):
-        invoice = db.select('invoices', where="invoice_key='" + invoice_key + "'", what='invoice_key, btc, ln, products, payment, amount, totsats, timestamp, status, datepaid, dateshipped')[0]
-        totbtc = float(invoice.totsats * 0.00000001)
-        btcaddress = invoice.btc
-        btcuri = 'bitcoin:' + btcaddress + '?amount=' + str(totbtc) + '&label=' + invoice.products
-        bitcoinrpc = AuthServiceProxy(rpcauth)
-        showpayment = bitcoinrpc.listreceivedbyaddress(0, True, True, btcaddress)
-        bitcoinrpc = None
-        if showpayment:
-            for i in showpayment:
-                confirmations = int(i['confirmations'])
-                print(str(confirmations))
-            if invoice.datepaid == None and confirmations > 6:
-                msg = 'Robins webshop order update! someone sent you Bitcoin! ' + baseurl + '/paybtc/' + invoice.invoice_key
-                print(msg)
-                sendmail(webmaster, 'Robs Shop', msg)
-                db.update('invoices', where="invoice_key='" + invoice.invoice_key + "'", status='paid', datepaid=time.strftime('%Y-%m-%d %H:%M:%S'))
-        pendinginfo = getpendinginfo()
-        bag = db.query("SELECT * FROM customerbag WHERE sessionkey='"+invoice_key+"';")
-        return render.paybtc(invoice, btcaddress, btcuri, showpayment, bag, productname, db, getprice, getrate, ordertype, pendinginfo, eur_to_sat)
-
-class orders():
-    def GET(self):
-        if logged():
-            referer = web.ctx.env.get('HTTP_REFERER', 'none')
-            listpayments=[]
-            i=web.input(key=None,status=None)
-            if i.key != None and i.status != None:
-                db.update('invoices', where="invoice_key='" + i.key + "'", status=i.status)
-                #get the right invoice send mail
-                customer = db.select('pending', where="invoice_key='" + i.key + "'", what='country, firstname, lastname, address, town, postalcode, email')[0]
-                payment = db.select('invoices', where="invoice_key='" + i.key + "'", what='btc, ln, invoice_key, products, payment, amount, totsats, timestamp, status, datepaid, dateshipped')[0]
-                if payment.payment == 'Bitcoin':
-                    paylink = 'paybtc/'
-                elif payment.payment == 'Bitcoin Lightning':
-                    paylink = 'payln/'
-                elif payment.payment == 'Mobile Pay':
-                    paylink = 'paymobile/'
-                if i.status == 'thankyou':
-                    msg="Hi " + customer.email + ", thank you for your order! You can track the status of your order at "+baseurl+'/'+paylink+i.key
-                    sendmail(customer.email, 'Robs Shop, a thank you!', msg)
-                elif i.status == 'shipped':
-                    digitalkey = db.query("SELECT * FROM digitalkey WHERE email='"+customer.email+"' ORDER BY timeadded ASC;")[0]
-                    # send mail to customer
-                    try:
-                        msg = "Your order at Robins webshop has been shipped to " + customer.firstname + ' ' + customer.lastname + ', ' + customer.address + ', ' + str(customer.postalcode) + ', ' + customer.town + ', ' + customer.country + '. To pay/view status or take a look at the digital goodies of your order please visit ' + baseurl + '/goodies/'+digitalkey.digitalkey
-                    except:
-                        msg = "Hi " + customer.email + ". To pay/view status or take a look at the digital goodies of your order please visit " + baseurl + '/goodies/'+digitalkey.digitalkey
-                    sendmail(customer.email, 'Rob Shop, your order has been shipped!', msg)
-                elif i.status == 'paynotice':
-                    msg="Hi " + customer.email + ", we noticed you have an unpaid order in our shop, thank you. You can track the status of your order at " + baseurl + paylink + payment.invoice_key
-                    sendmail(customer.email, 'Rob Shop, order waiting for payment!', msg)
-                elif i.status == 'paid':
-                    digitalkey = db.query("SELECT * FROM digitalkey WHERE email='"+customer.email+"' ORDER BY timeadded ASC;")[0]
-                    # send mail to customer
-                    msg="Hi " + customer.email + ", thank you! payment received. You can track the status of your order and view the status or take a look at the digital goodies of your order at " + baseurl + '/goodies/'+digitalkey.digitalkey
-                    sendmail(customer.email, 'Rob Shop, order payment received', msg)
-                raise web.seeother(referer)
-            payments = db.select('invoices', what='btc, ln, invoice_key, products, payment, amount, totsats, timestamp, status, datepaid, dateshipped', order='timestamp DESC')
-            if i.key == None and i.status != None:
-                status = i.status
-            else:
-                status = ''
-            totsats = 0
-            paid = 0
-            unpaid = 0
-            shipped = 0
-            nonshipped = 0
-            pickup = 0
-            removed=0
-            thankyou=0
-            for i in payments:
-                if i.status == 'paid':
-                    paid=paid+1
-                    nonshipped=nonshipped+1
-                elif i.status == 'unpaid':
-                    unpaid=unpaid+1
-                    nonshipped=nonshipped+1
-                elif i.status == 'shipped':
-                    shipped=shipped+1
-                elif i.status == 'paid':
-                    nonshipped=nonshipped+1
-                elif i.status == 'pickup':
-                    pickup=pickup+1
-                elif i.status == "removed":
-                    removed=removed+1
-                elif i.status != "thankyou":
-                    thankyou=thankyou+1
-            payments = db.select('invoices', order='timestamp DESC')
-            return renderop.orders(payments,db,getinvoice,totsats,status,paid,unpaid,shipped,nonshipped,pickup,removed,thankyou,productname,getprice)
-        else:
-            raise web.seeother('/login')
-
-class ordersbtcold():
-    def GET(self):
-        referer = web.ctx.env.get('HTTP_REFERER', 'none')
-        listpayments=[]
-        i=web.input(key=None,status=None)
-        if i.key != None and i.status != None:
-            db.update('invoices', where="invoice_key='" + i.key + "'", status=i.status)
-            #get the right invoice send mail
-            customer = db.select('pending', where="invoice_key='" + i.key + "'", what='country, firstname, lastname, address, town, postalcode, email')[0]
-            payment = db.select('invoices', where="invoice_key='" + i.key + "'", what='btc, ln, invoice_key, products, payment, amount, totsats, timestamp, status, datepaid, dateshipped')[0]
-            if payment.payment == 'Bitcoin':
-                paylink = 'paybtc/'
-            elif payment.payment == 'Bitcoin Lightning':
-                paylink = 'payln/'
-            if i.status == 'thankyou':
-                msg="Hi " + customer.email + ", thank you for your order! You can track the status of your order at "+baseurl+'/'+paylink+i.key
-                sendmail(customer.email, 'Robs Shop, a thank you!', msg)
-            elif i.status == 'shipped':
-                msg="Hi " + customer.email + ", your order has been shipped!. You can track the status of your order at "+baseurl+'/'+paylink+i.key
-                sendmail(customer.email, 'Rob Shop, your order has been shipped!', msg)
-            elif i.status == 'paynotice':
-                msg="Hi " + customer.email + ", we noticed you have an unpaid order in our shop, thank you. You can track the status of your order at " + baseurl + paylink + payment.invoice_key
-                sendmail(customer.email, 'Rob Shop, order waiting for payment!', msg)
-            elif i.status == 'paid':
-                msg="Hi " + customer.email + ", thank you! payment received. You can track the status of your order at " + baseurl + paylink + payment.invoice_key
-                sendmail(customer.email, 'Rob Shop, order payment received', msg)
-            raise web.seeother(referer)
-        payments = db.select('invoices', what='btc, ln, invoice_key, products, payment, amount, totsats, timestamp, status, datepaid, dateshipped', order='timestamp DESC')
-        if i.key == None and i.status != None:
-            status = i.status
-        else:
-            status = ''
-        totsats = 0
-        paid = 0
-        unpaid = 0
-        shipped = 0
-        nonshipped = 0
-        pickup = 0
-        removed=0
-        for i in payments:
-            ln = getinvoice(i.ln)
-            print(ln)
-            if ln['status'] == 'paid':
-                totsats=totsats+ln['amount_msat']
-                paid=paid+1
-                s = db.select('invoices', where="invoice_key='"+i.invoice_key+"'", what='status')[0]
-                if s.status == None:
-                    db.update('invoices', where="invoice_key='"+i.invoice_key+"'", status='paid', datepaid=time.strftime('%Y-%m-%d %H:%M:%S'))
-                if i.status == 'shipped':
-                    shipped=shipped+1
-                if i.status == 'paid':
-                    nonshipped=nonshipped+1
-                if i.status == 'pickup':
-                    pickup=pickup+1
-                if i.status == "removed":
-                    removed=removed+1
-            else:
-                s = db.select('invoices', where="invoice_key='"+i.invoice_key+"'", what='status')[0]
-                if s.status == None:
-                    db.update('invoices', where="invoice_key='"+i.invoice_key+"'", status='unpaid', datepaid=time.strftime('%Y-%m-%d %H:%M:%S'))
-                if i.status != "removed":
-                    unpaid=unpaid+1
-                if i.status == "removed":
-                    removed=removed+1
-        payments = db.select('invoices', order='timestamp DESC')
-        return renderop.orders(payments,db,getinvoice,totsats,status,paid,unpaid,shipped,nonshipped,pickup,removed,productname,getprice)
-
-class payment:
-    def GET(self, invoice_key):
-        id = db.where('invoices', invoice_key=invoice_key)[0]['ln']
-        invoice = getinvoice(id)
-        return render.payment(invoice)
-
-class thankyou:
-    def GET(self, id):
-        return render.thankyou(id)
-
-class loginold:
-    form = web.form.Form(
-    web.form.Textbox('user', web.form.notnull, description="User"),
-    web.form.Password('password', web.form.notnull, description="Passcode"),
-    web.form.Button('Login'))
-    def GET(self):
-        if not logged():
-            loginform = self.form()
-            return render.login(loginform)
-        else:
-            raise web.seeother('/op')
-    def POST(self):
-        loginform = self.form()
-        if not loginform.validates():
-            return render.login(loginform)
-        else:
-            i = web.input()
-            if (i.user,i.password) in allowed:
-                session.login = 1
-                raise web.seeother('/op')
-            else:
-                return render.login(loginform)
-
 class logout:
     def GET(self):
         session.login = 0
         session.user = None
         raise web.seeother('/heartranked')
-
-class op:
-    def GET(self):
-        if logged():
-            return renderop.operator()
-        else:
-            raise web.seeother('/login')
-
-class propaganda:
-    form = web.form.Form(
-    web.form.Textbox('name', web.form.notnull, description="site name"),
-    web.form.Textarea('description', web.form.notnull, description="write here"),
-    web.form.Textarea('description2', web.form.notnull, description="write more here"),
-    web.form.Button('Save'))
-    picform = web.form.Form(
-    web.form.Textbox('name', web.form.notnull, description="upload images"),
-    web.form.Textarea('description', web.form.notnull, description="write even more here"),
-    web.form.Textarea('description2', web.form.notnull, description="write even here more"),
-    web.form.Textarea('id', web.form.notnull, description="id:"),
-    web.form.Button('Save'))
-    def GET(self):
-        if logged():
-            i = web.input(cmd=None,soundname=None)
-            nocache = hashlib.sha256(str(random.getrandbits(256)).encode('utf-8')).hexdigest()[11:15]
-            story = None
-            if i.cmd == 'remove' and i.soundname != None:
-                try:
-                    os.remove(staticdir+'/img/thumb/'+i.soundname)
-                    os.remove(staticdir+'/img/web/'+i.soundname)
-                except:
-                    print('notin to delete')
-                goodies = db.query("DELETE FROM propagandapics WHERE soundname='"+i.soundname+"';")
-                raise web.seeother('/propaganda')
-            elif i.cmd == 'flipright' and i.soundname != None:
-                original_thumb = Image.open(staticdir+'/img/thumb/'+i.soundname) 
-                original_web = Image.open(staticdir+'/img/web/'+i.soundname) 
-                o_thumb=original_thumb.rotate(270)
-                o_web=original_web.rotate(270)
-                o_thumb.save(staticdir+'/img/thumb/'+i.soundname)
-                o_web.save(staticdir+'/img/web/'+i.soundname)
-                raise web.seeother('/propaganda')
-            elif i.cmd == 'flipleft' and i.soundname != None:
-                original_thumb = Image.open(staticdir+'/img/thumb/'+i.soundname) 
-                original_web = Image.open(staticdir+'/img/web/'+i.soundname) 
-                o_thumb=original_thumb.rotate(90)
-                o_web=original_web.rotate(90)
-                o_thumb.save(staticdir+'/img/thumb/'+i.soundname)
-                o_web.save(staticdir+'/img/web/'+i.soundname)
-                raise web.seeother('/propaganda')
-            elif i.soundname != None:
-                story = db.query("SELECT * FROM propagandapics WHERE soundlink='"+i.soundname+"';")
-            goodies = db.query("SELECT * FROM propagandapics;")
-            configsite = self.form()
-            picturetext = self.picform()
-            try:
-                oldsiteconfig = db.select('propaganda', what='id, name, description, description2')[0]
-                configsite.fill(name=oldsiteconfig.name, description=oldsiteconfig.description, description2=oldsiteconfig.description2)
-            except:
-                print('no non no')
-            bilder_totalt = db.query("SELECT COUNT(*) AS stories FROM propagandapics")[0]
-            return renderop.propaganda(configsite, picturetext, goodies, nocache, story)
-        else:
-            raise web.seeother('/login')
-    def POST(self):
-        addcategory = self.form()
-        i = web.input(imgfile={}, name=None, id=None)
-        if i.id != None:
-            db.update('propagandapics', where='soundlink="'+i.id+'"', name=i.name, description=i.description, description2=i.description2, soundlink=i.id)
-            raise web.seeother('/propaganda')
-        if i.name != None:
-            #db.insert('propaganda', name=i.name, description=i.description, description2=i.description2 )
-            db.update('propaganda', where='id=1', name=i.name, description=i.description, description2=i.description2 )
-        if i.imgfile != {}:
-            if i.imgfile.filename == '':
-                print('hmmm... no image to upload')
-                raise web.seeother('/config/')
-            print('YEAH, Upload image!')
-            ##---------- UPLOAD IMAGE ----------
-            filepath=i.imgfile.filename.replace('\\','/') # replaces the windows-style slashes with linux ones.
-            #split and only take the filename with extension
-            #soundpath=filepath.split('/')[-1]
-            #if soundpath == '':
-            #    return render.nope("strange, no filename found!")
-            #get filetype, last three 
-            imgname=filepath.split('/')[-1] # splits the and chooses the last part (the filename with extension)
-            filetype = imgname.split('.')[-1].lower()
-            if filetype == 'jpg':
-                filetype = 'jpeg'
-            soundname = imgname.split('.')[0]
-            #lets remove unwanted characters yes please!
-            sound = ''
-            for p in soundname.lower():
-                if p in allowedchar:
-                    sound = sound + p
-            if sound == '':
-                raise web.seeother('/upload?fail=wierdname')
-            soundname = sound + '_Gonzo_Pi.' + filetype
-            print(soundname)
-            print("filename is " + imgname + " filetype is " + filetype + " soundname is " + soundname + " trying to upload file from: " + filepath)
-            #if filetype != 'wav' or 'ogg' or 'flac' or 'jpeg' or 'jpg' or 'mp3':
-            #    web.seeother('/upload?fail=notsupported')
-            #uniqueunicorn = hashlib.md5(str(random.getrandbits(256)).encode('utf-8')).hexdigest()
-            #imgname = uniqueunicorn
-            #imgname = str(len(os.listdir(imgdir))).zfill(3) + '.jpeg'
-            soundlink = hashlib.sha256(str(random.getrandbits(256)).encode('utf-8')).hexdigest()[9:36]
-            imgdir = staticdir+'upload/'+soundlink+'/'
-            os.system('mkdir -p ' + imgdir)
-            fout = open(imgdir + soundname,'wb') # creates the file where the uploaded file should be stored
-            fout.write(i.imgfile.file.read()) # writes the uploaded file to the newly created file.
-            fout.close() # closes the file, upload complete. 
-            db.insert('propagandapics', soundlink=soundlink, soundname=soundname, name='', description='', description2='',timeadded=datetime.datetime.now())
-            if filetype == 'jpeg' or filetype == 'png':
-                ##---------- OPEN FILE & CHEKC IF JPEG --------
-                image = Image.open(imgdir + soundname)
-                #if image.format != 'JPEG':
-                #    os.remove(imgdir +'/'+ soundname)
-                #    raise web.seeother('/products/' + idvalue)
-
-                ##---------- RESIZE IMAGE SAVE TO PRODUCT-----------
-                imgdir=staticdir+'img'
-                try:
-                    os.makedirs(imgdir + '/web/', exist_ok=True)
-                    os.makedirs(imgdir + '/thumb/', exist_ok=True)
-                except:
-                    print('Folders is')
-                image.resize((1500,1500), Image.LANCZOS)
-                image.save(imgdir + '/web/'+soundname)
-                image.resize((500,500), Image.LANCZOS)
-                image.save(imgdir + '/thumb/'+soundname) 
-        raise web.seeother('/propaganda')
 
 def word_break(text: str, width: int = 140) -> str:
     """
@@ -2183,16 +1390,13 @@ class upload:
     def POST(self):
         if logged():
             saved_files = []
-            
             try:
                 # Best way for multiple files in web.py
                 input_data = web.webapi.rawinput()
                 uploaded = input_data.get('files')
-                
                 # Make sure it's always a list
                 if not isinstance(uploaded, list):
                     uploaded = [uploaded] if uploaded else []
-                
                 for f in uploaded:
                     if f and hasattr(f, 'filename') and f.filename:
                         # Sanitize filename a bit
@@ -2203,9 +1407,7 @@ class upload:
         
                         with open(filepath, 'wb') as out:
                             out.write(f.file.read())  # Important: use .file.read()
-                        
                         saved_files.append(safe_name)
-
                         ##---------- UPLOAD SOUND ----------
                         imgname=filepath.split('/')[-1] # splits the and chooses the last part (the filename with extension)
                         filetype = imgname.split('.')[-1].lower()
@@ -2273,11 +1475,9 @@ class upload:
                         print(f"✅ Saved: {safe_name}")  # This will show in console for debugging
                     else:
                         print("⚠️ Skipped invalid file object")
-                        
             except Exception as e:
                 print("Upload error:", str(e))
                 return f"❌ Error: {str(e)}"
-            
             if saved_files:
                 return f"✅ Successfully uploaded {len(saved_files)} file(s): {', '.join(saved_files)}"
             else:
@@ -2288,314 +1488,5 @@ class uploads:
         if logged():
             uploaded = getfiles(staticdir+'upload/')
             return render.uploads(uploaded)
-
-class config:
-    form = web.form.Form(
-    web.form.Textbox('name', web.form.notnull, description="Site name:"),
-    web.form.Textarea('description', web.form.notnull, description="Slogan:"),
-    web.form.Textarea('description2', web.form.notnull, description="Description:"),
-    web.form.Button('Save'))
-    def GET(self):
-        if logged():
-            configsite = self.form()
-            try:
-                oldsiteconfig = db.select('siteconfig', what='id, name, description, description2')[0]
-                configsite.fill(name=oldsiteconfig.name, description=oldsiteconfig.description, description2=oldsiteconfig.description2)
-            except:
-                print('no non no')
-            return renderop.config(configsite)
-        else:
-            raise web.seeother('/login')
-    def POST(self):
-        if logged():
-            addcategory = self.form()
-            i = web.input(imgfile={}, name=None)
-            if i.name != None:
-                db.update('siteconfig', where='id=1', name=i.name, description=i.description, description2=i.description2 )
-            if i.imgfile != {}:
-                if i.imgfile.filename == '':
-                    print('hmmm... no image to upload')
-                    raise web.seeother('/config/')
-                print('YEAH, Upload image!')
-
-                ##---------- UPLOAD IMAGE ----------
-
-                filepath=i.imgfile.filename.replace('\\','/') # replaces the windows-style slashes with linux ones.
-                #split and only take the filename with extension
-                #soundpath=filepath.split('/')[-1]
-                #if soundpath == '':
-                #    return render.nope("strange, no filename found!")
-                #get filetype, last three 
-                imgname=filepath.split('/')[-1] # splits the and chooses the last part (the filename with extension)
-                filetype = imgname.split('.')[-1].lower()
-                if filetype == 'jpg':
-                    filetype = 'jpeg'
-                soundname = imgname.split('.')[0]
-                #lets remove unwanted characters yes please!
-                sound = ''
-                for p in soundname.lower():
-                    if p in allowedchar:
-                        sound = sound + p
-                if sound == '':
-                    raise web.seeother('/upload?fail=wierdname')
-                soundname = 'logo.' + filetype
-                print(soundname)
-                print("filename is " + imgname + " filetype is " + filetype + " soundname is " + soundname + " trying to upload file from: " + filepath)
-                #if filetype != 'wav' or 'ogg' or 'flac' or 'jpeg' or 'jpg' or 'mp3':
-                #    web.seeother('/upload?fail=notsupported')
-                #uniqueunicorn = hashlib.md5(str(random.getrandbits(256)).encode('utf-8')).hexdigest()
-                #imgname = uniqueunicorn
-                #imgname = str(len(os.listdir(imgdir))).zfill(3) + '.jpeg'
-                soundlink = hashlib.sha256(str(random.getrandbits(256)).encode('utf-8')).hexdigest()[9:36]
-                imgdir = staticdir+'upload/'
-                os.system('mkdir -p ' + imgdir)
-                fout = open(imgdir + soundname,'wb') # creates the file where the uploaded file should be stored
-                fout.write(i.imgfile.file.read()) # writes the uploaded file to the newly created file.
-                fout.close() # closes the file, upload complete.
-                
-                if filetype == 'jpeg' or filetype == 'png':
-                    ##---------- OPEN FILE & CHEKC IF JPEG --------
-
-                    image = Image.open(imgdir + soundname)
-                    #if image.format != 'JPEG':
-                    #    os.remove(imgdir +'/'+ soundname)
-                    #    raise web.seeother('/products/' + idvalue)
-
-                    ##---------- RESIZE IMAGE SAVE TO PRODUCT-----------
-
-                    imgdir=staticdir+'img'
-                    try:
-                        os.makedirs(imgdir + '/web/', exist_ok=True)
-                        os.makedirs(imgdir + '/thumb/', exist_ok=True)
-                    except:
-                        print('Folders is')
-                    image.resize((900,900), Image.LANCZOS)
-                    image.save(imgdir + '/web/'+soundname)
-                    image.resize((300,300), Image.LANCZOS)
-                    image.save(imgdir + '/thumb/'+soundname) 
-            raise web.seeother('/config')
-        else:
-            raise web.seeother('/login')
-
-class categories:
-    form = web.form.Form(
-    web.form.Textbox('category', web.form.notnull, description="Add Category:"),    
-    web.form.Button('Add'))
-    def GET(self):
-        if logged():
-            i = web.input(delete=None)
-            if i.delete:
-                db.delete('categories', where='id='+i.delete)
-            listcategories = db.query("SELECT * FROM categories ORDER BY id DESC")
-            addcategory = self.form()
-            return renderop.categories(listcategories,addcategory)
-        else:
-            raise web.seeother('/login')
-    def POST(self):
-        addcategory = self.form()
-        i = web.input()
-        db.insert('categories', category=i.category)
-        raise web.seeother('/categories')
-
-
-class products:
-    listcategories = db.query("SELECT * FROM categories ORDER BY id DESC")
-    p = []
-    for i in listcategories:
-        p.append(i.category)
-    #p = listcategories[0]
-    form = web.form.Form(
-    web.form.Dropdown('category', p, web.form.notnull, description="Category:"),
-    web.form.Textbox('name', web.form.notnull, description="Name:"),
-    web.form.Textarea('description', web.form.notnull, description="Description:"),
-    web.form.Radio('type', ['digital', 'physical'],description="Type:"),
-    web.form.Radio('currency', ['euro', 'bitcoin'],description="Currency:"),
-    web.form.Textbox('price', web.form.notnull, description="Price:"),
-    web.form.Textbox('available', web.form.notnull, web.form.regexp(r'\d+', 'number dumbass!'), description="Available"),
-    web.form.Textbox('priority', web.form.notnull, web.form.regexp(r'\d+', 'number dumbass!'), description="Priority (high value more priority)"),
-    web.form.Button('Save'))
-    def GET(self, idvalue):
-        if logged():
-            i = web.input(cmd=None,soundname=None)
-            nocache = hashlib.sha256(str(random.getrandbits(256)).encode('utf-8')).hexdigest()[11:15]
-            if i.cmd == 'del':
-                db.delete('products', where='id="'+idvalue+'"')
-                imgdir = staticdir + 'img/' + idvalue
-                try:
-                    shutil.rmtree(imgdir,ignore_errors=True,onerror=None)
-                except:
-                    print('no picture folder, nothing to remove...')
-                    pass
-                raise web.seeother('/products/')
-            if i.cmd == 'remove' and i.soundname != None:
-                try:
-                    os.remove(staticdir+'/img/thumb/'+i.soundname)
-                    os.remove(staticdir+'/img/web/'+i.soundname)
-                except:
-                    print('notin to delete')
-                goodies = db.query("DELETE FROM soundlink WHERE id='"+idvalue+"' AND soundname='"+i.soundname+"';")
-                raise web.seeother('/products/' + idvalue)
-            if i.cmd == 'flipright' and i.soundname != None:
-                original_thumb = Image.open(staticdir+'/img/thumb/'+i.soundname) 
-                original_web = Image.open(staticdir+'/img/web/'+i.soundname) 
-                o_thumb=original_thumb.rotate(270)
-                o_web=original_web.rotate(270)
-                o_thumb.save(staticdir+'/img/thumb/'+i.soundname)
-                o_web.save(staticdir+'/img/web/'+i.soundname)
-                raise web.seeother('/products/' + idvalue)
-            if i.cmd == 'flipleft' and i.soundname != None:
-                original_thumb = Image.open(staticdir+'/img/thumb/'+i.soundname) 
-                original_web = Image.open(staticdir+'/img/web/'+i.soundname) 
-                o_thumb=original_thumb.rotate(90)
-                o_web=original_web.rotate(90)
-                o_thumb.save(staticdir+'/img/thumb/'+i.soundname)
-                o_web.save(staticdir+'/img/web/'+i.soundname)
-                raise web.seeother('/products/' + idvalue)
-            addproduct = self.form()
-            addproduct.fill(available='1', priority='1', type='physical',currency='euro')
-            goodies = None
-            if idvalue:
-                oldinfo = db.query("SELECT * FROM products WHERE id='"+idvalue+"';")[0]
-                addproduct.fill(name=oldinfo.name, description=oldinfo.description, type=oldinfo.type, currency=oldinfo.currency, price=oldinfo.price, available=oldinfo.available, priority=oldinfo.priority, category=oldinfo.category)
-                goodies = db.query("SELECT * FROM soundlink WHERE id='"+idvalue+"';")
-            listproducts = db.query("SELECT * FROM products ORDER BY priority DESC")
-            return renderop.products(addproduct, listproducts, goodies, idvalue, nocache)
-        else:
-            raise web.seeother('/login') 
-    def POST(self, idvalue):
-        listproducts = db.query("SELECT * FROM products ORDER BY priority DESC")
-        addproduct = self.form()
-        if logged():
-            i = web.input(imgfile={},name=None,description=None,price=1,available=1)
-            #for p in i:q
-            #    print(p)
-            if i.name != None:
-                if idvalue:
-                    db.update('products', where='id="'+idvalue+'"', category=i.category,name=i.name,description=i.description,type=i.type,currency=i.currency,price=i.price,available=i.available,priority=i.priority,dateadded=datetime.datetime.now())
-                else:
-                    idvalue = hashlib.sha256(str(random.getrandbits(256)).encode('utf-8')).hexdigest()[11:36]
-                    db.insert('products', id=idvalue, category=i.category, name=i.name, description=i.description, type=i.type,currency=i.currency, price=i.price, available=i.available, sold=0, priority=i.priority, dateadded=datetime.datetime.now())
-            if i.imgfile != {}:
-                if idvalue == '':
-                    print('cant upload a picture to a non existing product')
-                    raise web.seeother('/products/')
-                print(i.imgfile.filename)
-                if i.imgfile.filename == '':
-                    print('hmmm... no image to upload')
-                    raise web.seeother('/products/' + idvalue)
-                print('YEAH, Upload image!')
-
-                ##---------- UPLOAD IMAGE ----------
-
-                filepath=i.imgfile.filename.replace('\\','/') # replaces the windows-style slashes with linux ones.
-                #split and only take the filename with extension
-                #soundpath=filepath.split('/')[-1]
-                #if soundpath == '':
-                #    return render.nope("strange, no filename found!")
-                #get filetype, last three 
-                imgname=filepath.split('/')[-1] # splits the and chooses the last part (the filename with extension)
-                filetype = imgname.split('.')[-1].lower()
-                if filetype == 'jpg':
-                    filetype = 'jpeg'
-                soundname = imgname.split('.')[0]
-                #lets remove unwanted characters yes please!
-                sound = ''
-                for p in soundname.lower():
-                    if p in allowedchar:
-                        sound = sound + p
-                if sound == '':
-                    raise web.seeother('/upload?fail=wierdname')
-                soundname = sound + '.' + filetype
-                print(soundname)
-                print("filename is " + imgname + " filetype is " + filetype + " soundname is " + soundname + " trying to upload file from: " + filepath)
-                #if filetype != 'wav' or 'ogg' or 'flac' or 'jpeg' or 'jpg' or 'mp3':
-                #    web.seeother('/upload?fail=notsupported')
-                #uniqueunicorn = hashlib.md5(str(random.getrandbits(256)).encode('utf-8')).hexdigest()
-                #imgname = uniqueunicorn
-                #imgname = str(len(os.listdir(imgdir))).zfill(3) + '.jpeg'
-                soundlink = hashlib.sha256(str(random.getrandbits(256)).encode('utf-8')).hexdigest()[9:36]
-                imgdir = staticdir+'upload/'+soundlink+'/'
-                os.system('mkdir -p ' + imgdir)
-                fout = open(imgdir + soundname,'wb') # creates the file where the uploaded file should be stored
-                fout.write(i.imgfile.file.read()) # writes the uploaded file to the newly created file.
-                fout.close() # closes the file, upload complete.
-                
-                    ##----------CHECK IF SAME NAME THEN UPDATE-------
-                slink = db.query("SELECT * FROM soundlink WHERE id='"+idvalue+"' AND soundname='"+soundname+"';")
-                if slink:
-                    db.update('soundlink', where='"id='+idvalue+'"', soundlink=soundlink, soundname=soundname, timeadded=datetime.datetime.now())
-                else:
-                    db.insert('soundlink', id=idvalue, soundlink=soundlink, soundname=soundname, timeadded=datetime.datetime.now())
-
-                if filetype == 'jpeg' or filetype == 'png':
-                    ##---------- OPEN FILE & CHEKC IF JPEG --------
-
-                    image = Image.open(imgdir +'/'+ soundname)
-                    #if image.format != 'JPEG':
-                    #    os.remove(imgdir +'/'+ soundname)
-                    #    raise web.seeother('/products/' + idvalue)
-
-                    ##---------- RESIZE IMAGE SAVE TO PRODUCT-----------
-
-                    imgdir=staticdir+'img'
-                    try:
-                        os.makedirs(imgdir + '/web/', exist_ok=True)
-                        os.makedirs(imgdir + '/thumb/', exist_ok=True)
-                    except:
-                        print('Folders is')
-                    image.resize((900,900), Image.LANCZOS)
-                    image.save(imgdir + '/web/'+soundname)
-                    image.resize((300,300), Image.LANCZOS)
-                    image.save(imgdir + '/thumb/'+soundname) 
-
-            return web.seeother('/products/' + idvalue)
-        else:
-            return web.seeother('/login')
-
-class shipping:
-    form = web.form.Form(
-    web.form.Textbox('country', web.form.notnull, description="Country:"),
-    web.form.Textbox('price', web.form.regexp(r'\d+', 'number thanx!'), web.form.notnull, description="Price in cents"),
-    web.form.Textbox('days', web.form.regexp(r'\d+', 'number thanx!'), web.form.notnull, description="Shipping in days"),
-    web.form.Button('Add shipping country'))
-    def GET(self, idvalue):
-        if logged():
-            addcountry = self.form()
-            if idvalue:
-                oldinfo = db.select('shipping', where="id='"+idvalue+"'", what='country, price, days')
-                oldinfo = oldinfo[0]
-                addcountry.fill(country=oldinfo.country, price=oldinfo.price, days=oldinfo.days)
-            listcountries = db.query("SELECT * FROM shipping ORDER BY country DESC")
-            return renderop.shipping(addcountry, listcountries)
-        else:
-            raise web.seeother('/login')
-    def POST(self, idvalue):
-        if logged():
-            addcountry = self.form()
-            if not addcountry.validates():
-                listcountries = db.query("SELECT * FROM shipping ORDER BY country DESC")
-                return renderop.shipping(addcountry, listcountries)
-            else:
-                i = web.input()
-                if idvalue:
-                    db.update('shipping', where='id="'+idvalue+'"', country=i.country, price=i.price, days=i.days)
-                else:
-                    db.insert('shipping', country=i.country, price=i.price, days=i.days)
-                raise web.seeother('/shipping/')
-        else:
-            raise web.seeother('/login')
-
-class cv:
-    def GET(self):
-        return render.cv()
-
-class bitcoin:
-    def GET(self):
-        if logged():
-            bitcoinrpc = AuthServiceProxy(rpcauth)
-            wallet = bitcoinrpc.getwalletinfo()
-            bitcoinrpc = None
-            return renderop.bitcoin(wallet)
-
 
 application = app.wsgifunc()
