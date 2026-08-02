@@ -31,18 +31,8 @@ from PIL import ImageSequence
 import settings
 
 urls = (
-    '/shop?', 'index',
-    '/?', 'almost',
-    '/putinbag/(.*)', 'putinbag',
-    '/dropitem/(.*)?', 'dropitem',
-    '/paymobile/(.*)', 'paymobile',
-    '/goodies/(.*)', 'goodies',
+    '/?','heartranked',
     "/stats?", "stats",
-    '/payment/(.*)', 'payment',
-    '/orders?', 'orders',
-    '/checkout?', 'checkout',
-    '/pending', 'pending',
-    '/thankyou', 'thankyou',
     "/login?", "login",
     "/logout", "logout",
     "/invites?", "invites",
@@ -53,22 +43,12 @@ urls = (
     "/forgotpass?", "forgotpass",
     "/register?", "register",
     "/tuning?", "tuning",
-    '/products/(.*)?', 'products',
-    '/bigpic/(.*)?', 'bigpic',
-    '/categories?', 'categories',
-    '/op', 'op',
-    '/shipping/(.*)', 'shipping',
-    '/propaganda?', 'propaganda',
     '/editor?', 'editor',
-    '/heartranked?','heartranked',
-    '/save', 'save',
+    '/save', 'savepost',
     '/upload', 'upload',
     '/rendered', 'rendered',
     '/uploads?', 'uploads',
     '/config', 'config',
-    '/payments?', 'payments',
-
-bag = ''
 
 #Load from settings
 
@@ -104,7 +84,7 @@ class creatpost:
         self.value = value
         return self
 
-def load(thename):
+def load(basedir+thename):
     with open(thename, 'r') as f:
         settings = json.load(f)
         for key, i in settings.items():
@@ -149,7 +129,7 @@ def adduser(name, password, mail):
 
 def adminlevel(user):
     #level = db.query("SELECT adminlevel FROM rymdadmin WHERE name='"+user+"';")[0]
-    level=load(basedir+'users', user)
+    level=load('users', user)
     #1 session logout, web.py bug
     #2 rights to see pics and comment
     #3 rights to upoload
@@ -160,7 +140,7 @@ def adminlevel(user):
 def stopresetpass(mail):
     t = None
     if os.path.exists(basedir+'stopresetpass/'+mail) == True:
-        t=load(basedir+'stopresetpass/'+mail)
+        t=load('stopresetpass/'+mail)
     else:
         savedict={'timeadded':time.time()}
         save('stopresetpass/'+mail, savedict)
@@ -178,7 +158,7 @@ def stopresetpass(mail):
 def stopflood(ip,referer):
     t = None
     if os.path.exists(basedir+'stopflood/'+ip) == True:
-        t=load(basedir+'stopflood/'+ip)
+        t=load('stopflood/'+ip)
     else:
         savedict={'timeadded':time.time()}
         save('stopflood/'+ip, savedict)
@@ -194,7 +174,7 @@ def stopflood(ip,referer):
         return False
 
 def getinvitation(secretinvitation):
-    invite=load(basedir+'invites/'+secretinvitation)
+    invite=load('invites/'+secretinvitation)
     if invitation == secretinvitation:
         if invite == '':
             return True
@@ -343,7 +323,7 @@ class like:
             user = i.user
             uniqueunicorn = i.uniqueunicorn
             #l = db.query("SELECT * FROM likes WHERE bild='"+uniqueunicorn+"' AND user='"+session.user+"';")
-            l = load(basedir+'posts/'+uniqueunicorn+'/likes/'+session.user)
+            l = load('posts/'+uniqueunicorn+'/likes/'+session.user)
             print(session.user)
             if l:
                 user_likes = True
@@ -390,7 +370,7 @@ class user():
             #soundlink = hashlib.md5(str(random.getrandbits(256)).encode('utf-8')).hexdigest()
             #db.insert('sound', soundlink=soundlink, filename=soundname, sort=filetype, title=soundname, uploaddate=datetime.datetime.now(), uppladdare=user, lastmod=datetime.datetime.now(), moddedby=user)
             #usersounds = db.query("SELECT * FROM published WHERE creator='"+user+"' ORDER BY timeadded DESC;")
-            usersound=load(basedir+'posts/')
+            usersound=load('posts/')
             #sounds = db.select('published')
             sounds=os.listdir(basedir+'posts/')
             creditsounds = []
@@ -412,9 +392,9 @@ class invites():
     def GET(self):
         if session.login > 2:
             #user = db.select('rymdadmin', where='name="'+session.user+'"')[0]
-            user = load(basedir+'users/'+session.user)
+            user = load('users/'+session.user)
             #invites = db.select('invites', where='createdby="'+session.user+'"')
-            invites = load(basedir+'invites/'+session.user)
+            invites = load('invites/'+session.user)
             tuningform = self.form()
             w = web.input(epost=None, render=None)
             formfail = ''
@@ -429,7 +409,7 @@ class invites():
     def POST(self):
         if session.login > 2:
             #user = db.select('rymdadmin', where='name="'+session.user+'"')[0]
-            user = load(basedir+'users/'+session.user)
+            user = load('users/'+session.user)
             tuningform = self.form()
             i = web.input()
             if i.mail == '':
@@ -456,7 +436,7 @@ class tuning():
         if session.login > 2:
             print('asdfasdfasdf')
             #user = db.select('rymdadmin', where='name="'+session.user+'"')[0]
-            user = load(basedir+'users/'+session.user)
+            user = load('users/'+session.user)
             tuningform = self.form()
             w = web.input(namn=None,epost=None,fail=None,upd=None)
             print('asdfasdfasdfkdakkakka')
@@ -655,31 +635,23 @@ def safe_filename(name: str, max_length: int = 100, replacement: str = "-") -> s
     """
     if not name:
         return "file"
-
-    # Normalize unicode (é → e, etc.)
+    #Normalize unicode (é → e, etc.)
     name = unicodedata.normalize('NFKD', name)
     name = name.encode('ascii', 'ignore').decode('ascii')
-
-    # Replace spaces and common separators with the replacement char
+    #Replace spaces and common separators with the replacement char
     name = re.sub(r'[\s_]+', replacement, name)
-
-    # Remove any character that is not alphanumeric, hyphen, underscore, or dot
+    #Remove any character that is not alphanumeric, hyphen, underscore, or dot
     name = re.sub(r'[^a-zA-Z0-9.\-_]', '', name)
-
-    # Replace multiple replacement chars with single one
+    #Replace multiple replacement chars with single one
     name = re.sub(re.escape(replacement) + r'+', replacement, name)
-
-    # Remove leading/trailing replacement chars and dots
+    #Remove leading/trailing replacement chars and dots
     name = name.strip(replacement + '.')
-
-    # Prevent empty or hidden files
+    #Prevent empty or hidden files
     if not name or name.startswith('.'):
         name = "file" + name
-
-    # Enforce max length (leave room for extension)
+    #Enforce max length (leave room for extension)
     if len(name) > max_length:
         name = name[:max_length]
-
     return name.lower()
 
 #-------------Get files and sort em by date modified---------------
@@ -691,12 +663,10 @@ def get_files_by_modtime(directory: str = ".", newest_first: bool = True):
     - newest_first=True  → Newest files first (most recent modification)
     - newest_first=False → Oldest files first
     """
-    path = Path(directory)
-    
-    # Get all files (exclude directories and hidden files if you want)
+    path = Path(directory) 
+    #Get all files (exclude directories and hidden files if you want)
     files = [f for f in path.iterdir() if f.is_file()]
-    
-    # Sort by modification time
+    #Sort by modification time
     sorted_files = sorted(
         files,
         key=lambda f: f.stat().st_mtime,   # last modified timestamp
@@ -704,7 +674,6 @@ def get_files_by_modtime(directory: str = ".", newest_first: bool = True):
     ) 
     # Return just the file names (as strings)
     return [f.name for f in sorted_files]
-
 
 def getfiles(filmfolder):
     #get a list of films, in order of settings.p file last modified
@@ -721,36 +690,6 @@ def getfiles(filmfolder):
             films_sorted.append((i,f,0))
     films_sorted = sorted(films_sorted, key=lambda tup: tup[2], reverse=True)
     return films_sorted
-
-def getmacaroon():
-    with open(basedir+'access.macaroon', 'rb') as f:
-        m = f.read()
-    #m = binascii.hexlify(m).decode()
-    m = base64.b64encode(m).decode()
-    return m
-
-def createinvoice(amount, description, label):
-    #Cents to EUR
-    amount = str(amount*1000)
-    invoice_details = {"amount":amount, "description": description, "label": label}
-    print(invoice_details)
-    macaroon = getmacaroon()
-    headers = {'macaroon': macaroon} 
-    resp = requests.post(rtl+'invoice/genInvoice', json=invoice_details, headers=headers,verify=False)
-    print(resp.json())
-    return resp.json()
-
-def getinvoice(label):
-    macaroon = getmacaroon()
-    headers = {'macaroon': macaroon}
-    resp = requests.get(rtl+'invoice/listInvoices?label='+label, headers=headers, verify=False)
-    return resp.json()['invoices'][0]
-
-def getnewaddr():
-    macaroon = getmacaroon()
-    headers = {'macaroon': macaroon}
-    resp = requests.get(rtl+'invoice/newaddr', headers=headers, verify=False)
-    return resp.json()['address'][0]
 
 def callsubprocess(cmd):
     subprocess.call(cmd.split())
@@ -1214,7 +1153,6 @@ class editor:
             else:
                 text = ''
                 text2 = ''
-
             if i.new == 'yes':
                 session.soundlink = ''
                 raise web.seeother('/editor')
@@ -1269,7 +1207,7 @@ class editor:
                 #db.insert('pawning', pawning=i.remix, name=session.user, timeadded=datetime.datetime.now())
             return rendersplash.editor(storage, text, text2, markdown, safe_filename, session.soundlink, i.public, logged(), session.user, i.combine, i.remix)
 
-class save:
+class savepost:
     def POST(self):
         data = json.loads(web.data())
         text = data.get("text", "")
