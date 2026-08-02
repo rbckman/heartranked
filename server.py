@@ -332,16 +332,16 @@ class like:
             if user_likes == False:
                 #db.insert('likes', user=session.user, bild=uniqueunicorn, datum=datetime.datetime.now())
                 savedict={'timeadded':datetime.datetime.now()}
-                save('posts/'+uniqueunicorn+'/likes/'+session.user, savedict)
-                save('u/'+session.user+'/likes/'+session.user, savedict)
+                save('posts/'+uniqueunicorn+'/hearts/'+session.user, savedict)
+                save('u/'+session.user+'/hearts/'+session.user, savedict)
                 user_likes = True
             elif user_likes == True:
                 #db.query("DELETE FROM likes WHERE bild='"+uniqueunicorn+"' AND user='"+session.user+"';")
-                deletepost(basedir+'posts/'+uniqueunicorn+'/likes/'+session.user)
-                deletepost(basedir+'u/'+session.user+'/likes/'+session.user)
+                deletepost(basedir+'posts/'+uniqueunicorn+'/hearts/'+session.user)
+                deletepost(basedir+'u/'+session.user+'/hearts/'+session.user)
                 user_likes = False
             #likes = db.query("SELECT Count(*) AS likes FROM likes WHERE bild='"+uniqueunicorn+"';")[0]
-            likes = len(os.listdir(basedir+'posts/'+uniqueunicorn+'/likes/'))
+            likes = len(os.listdir(basedir+'posts/'+uniqueunicorn+'/hearts/'))
             # Example: Update like count in your database
             # This is a placeholder; replace with your database logic
             # Return JSON response
@@ -359,7 +359,7 @@ class user():
                 save('posts/'+uniqueunicorn+'/meta')
             elif data.showuploads=='yes':
                 uploads = []
-                uploads = get_files_by_modtime(basedir+'public_html/u/' + user + '/images/web/',newest_first=True)
+                uploads = get_files_by_modtime('public_html/u/' + user + '/images/web/',newest_first=True)
                 return render.showuploads(uploads,user,allowedchar, random)
             elif data.onair and data.soundname:
                 #db.update('published', where="soundlink='" + data.soundname +"'", playing=data.onair)
@@ -656,7 +656,7 @@ def safe_filename(name: str, max_length: int = 100, replacement: str = "-") -> s
 
 #-------------Get files and sort em by date modified---------------
 
-def get_files_by_modtime(directory: str = ".", newest_first: bool = True):
+def get_files_by_modtime(basedir+directory: str = ".", newest_first: bool = True):
     """
     Returns a list of file names in the directory sorted by last modified time.
     
@@ -684,6 +684,7 @@ def getfiles(filmfolder):
         uploaded = os.listdir(filmfolder + i + '/')
         for f in uploaded:
             if os.path.isfile(filmfolder + i + '/'+f) == True:
+                #DUUUUUUDE HERE CHECK IF OLDER THAN
                 lastupdate = os.path.getmtime(filmfolder + i + '/' + f)
                 films_sorted.append((i,f,lastupdate))
         else:
@@ -695,11 +696,9 @@ def callsubprocess(cmd):
     subprocess.call(cmd.split())
 
 def visitorlog(ip, referer, environ):
-    last = db.query('SELECT ip AS ip FROM visitors WHERE id=(SELECT MAX(id) FROM visitors)')
-    try:
-        lastip = last[0].ip
-    except:
-        lastip = 'none'
+    #last = db.query('SELECT ip AS ip FROM visitors WHERE id=(SELECT MAX(id) FROM visitors)')
+    last = get_files_by_modtime('visitors/'+ip,newest_first=True)
+    lastip=load('visitors/'+last[0])
     if lastip != ip:
         country = ''
         country = os.popen('geoiplookup '+ip).read()
@@ -708,7 +707,9 @@ def visitorlog(ip, referer, environ):
         country = country.split(':')[1].split(',')[1].strip()
         #print('fuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu: '+ country)
         try:
-            db.insert('visitors', ip=ip, referer=referer, environ=environ, country=country,  countrycode=countrycode, time=datetime.datetime.now())
+            #db.insert('visitors', ip=ip, referer=referer, environ=environ, country=country,  countrycode=countrycode, time=datetime.datetime.now())
+            thedict={'ip':ip,'referer':referer,'environ':environ,'country':country,'countrycode':countrycode,'time':datetime.datetime.now()}
+            save('visitors/'+ip,thedict)
         except:
             pass
         print("added to visitor log")
@@ -716,23 +717,40 @@ def visitorlog(ip, referer, environ):
 
 def getvisitors():
     #visitors = db.select('visitors')
-    visitors = db.query('SELECT * FROM visitors ORDER BY time DESC LIMIT 10000')
-    total = db.query('SELECT COUNT(*) AS total_visits FROM visitors')
-    unique = db.query('SELECT COUNT(DISTINCT ip) AS unique_visits FROM visitors')
-    return visitors, total[0].total_visits, unique[0].unique_visits
+    #visitors = db.query('SELECT * FROM visitors ORDER BY time DESC LIMIT 10000')
+    visitors = get_files_by_modtime('visitors/'+ip,newest_first=True) 
+    #total = db.query('SELECT COUNT(*) AS total_visits FROM visitors')
+    total=len(os.listdir('visitors/'))
+    #unique = db.query('SELECT COUNT(DISTINCT ip) AS unique_visits FROM visitors')
+    unique=[]
+    for i in visitors:
+        for p in visitors:
+            if i == p:
+                unique.append(i)
+    uniquevisits=len(unique)
+    return visitors, total, uniquevisits
 
 def getvisits():
-    limit=100
-    visits = db.query("SELECT * FROM visitors ORDER BY time DESC LIMIT " + str(limit))
-    visitors = db.select('visitors')
-    total = db.query('SELECT COUNT(*) AS total_visits FROM visitors')
-    unique = db.query('SELECT COUNT(DISTINCT ip) AS unique_visits FROM visitors')
+    #limit=100
+    #visits = db.query("SELECT * FROM visitors ORDER BY time DESC LIMIT " + str(limit))
+    visits=load('visitors/')
+    #visitors = db.select('visitors')
+    visitors=load('visitors/')
+    #total = db.query('SELECT COUNT(*) AS total_visits FROM visitors')
+    total=len(os.listdir('visitors/'))
+    #unique = db.query('SELECT COUNT(DISTINCT ip) AS unique_visits FROM visitors')
+    unique=[]
+    for i in visitors:
+        for p in visitors:
+            if i == p:
+                unique.append(i)
+    uniquevisits=len(unique)
     countrylist=[]
     for i in visits:
         if i.countrycode not in countrylist:
             countrylist.append(i.countrycode)
             #print('fuuuuuuuuuuuuuuu: '+i.countrycode)
-    return countrylist, total[0].total_visits, unique[0].unique_visits
+    return countrylist, total, uniquevisits
 
 class stats:
     def GET(self):
@@ -746,51 +764,18 @@ class logout:
         session.user = None
         raise web.seeother('/heartranked')
 
-def word_break(text: str, width: int = 140) -> str:
-    """
-    Breaks text into lines at word boundaries, with max line length = width.
-    Returns a single string with '\n' inserted.
-    """
-    if not text:
-        return ""
-    
-    words = text.split()
-    if not words:
-        return ""
-    
-    lines = []
-    current_line = []
-    current_length = 0
-    
-    for word in words:
-        # Length if we add this word (+ space if not first word in line)
-        word_len = len(word)
-        if current_line:
-            added_len = word_len + 1  # +1 for space
-        else:
-            added_len = word_len
-        
-        if current_length + added_len > width:
-            # Finish current line and start new one
-            lines.append(" ".join(current_line))
-            current_line = [word]
-            current_length = word_len
-        else:
-            current_line.append(word)
-            current_length += added_len
-    
-    # Don't forget the last line
-    if current_line:
-        lines.append(" ".join(current_line))
-    
-    return "\n".join(lines)
-
-def getlikes(postid, user):
+def getlikes(uniqueunicorn, user):
     user_likes = False
-    l = db.query("SELECT Count(*) AS likes FROM likes WHERE bild='"+postid+"';")[0]
-    db.update('published', where='soundlink="'+postid+'"', hearts=l.likes)
+    #l = db.query("SELECT Count(*) AS likes FROM likes WHERE bild='"+postid+"';")[0]
+    l=len(os.listdir('posts/'+uniqueunicorn+'/hearts/')
+    #db.update('published', where='soundlink="'+postid+'"', hearts=l.likes)
+    thedict={'hearts:'l}
+    save('posts/'+uniqueunicorn+'/meta',thedict)
+    thedict={'uniqueunicorn:'uniqueunicorn}
+    save('heartranked/'+str(l),thedict)
     if user:
-        m = db.query("SELECT * FROM likes WHERE bild='"+postid+"' AND user='"+user+"';")
+        #m = db.query("SELECT * FROM likes WHERE bild='"+postid+"' AND user='"+user+"';")
+        m=load('posts/'+uniqueunicorn+'/hearts/'+user)
         if m:
             user_likes = True
         else:
@@ -808,7 +793,8 @@ def getlikes(postid, user):
 def postexist(postid):
     return False
     try:
-        l = db.select('published', where="soundlink='"+postid+"'")[0]
+        #l = db.select('published', where="soundlink='"+postid+"'")[0]
+        l=load('posts/'+postid+'/meta')
     except:
         return False
     try:
@@ -821,20 +807,24 @@ def postexist(postid):
     return False
 
 def getcombines(postid):
-    l = db.query("SELECT Count(*) AS combines FROM published WHERE combine='"+postid+"';")[0]
+    #l = db.query("SELECT Count(*) AS combines FROM published WHERE combine='"+postid+"';")[0]
+    l=len(os.listdir('post/'+postid+'/combines/'))
     #m = db.query("SELECT * FROM likes WHERE bild='"+postid+"' AND user='"+user+"';")
     #db.update('published', where='soundlink="'+postid+'"', combines=0)
     if l.combines > 0:
-            return "⚭ " + str(l.combines)
+            return "⚭ " + str(l)
     else:
         return ''
 
 def pushcombines(postid):
-    l = db.query("SELECT Count(*) AS combines FROM published WHERE soundlink='"+postid+"';")[0]
+    #l = db.query("SELECT Count(*) AS combines FROM published WHERE soundlink='"+postid+"';")[0]
+    l=len(os.listdir('post/'+postid+'/combines/'))
     #m = db.query("SELECT * FROM likes WHERE bild='"+postid+"' AND user='"+user+"';")
-    db.update('published', where='soundlink="'+postid+'"', combines=l.combines)
+    #db.update('published', where='soundlink="'+postid+'"', combines=l.combines)
+    thedict={'combines':l}
+    save('posts/'+postid+'/meta',thedict)
     if l.combines >= 0:
-            return "⚭ " + str(l.combines)
+            return "⚭ " + str(l)
     else:
         return ''
 
@@ -848,12 +838,25 @@ def getfeed():
         feedbase = 'time'
     now = datetime.datetime.now()
     #HEARTS
+    #SAVE HEARTRANKING EVERY MINUTE CHECK BOTH USER LIKES AND POST LIKES IF IT CHECKS OUT GOOD IT NOT WRITE ERROR AT LEAST (A BACKEND PROGRAM, RUNS EVERY MINUTE AND COUNTS LIKES AND WRITES THE HEARTRANKING FOR TODAY. HEARTRANKING STAYES SAVED FOREVER IN FOLDERS BY DAYS. IT IS A FOLDER WITH NUMBERS. starting with 0000000000000001 pointing to postid. simple. effective.
     if feedbase == "heart" and timebase == "today":
         now = datetime.datetime.now()
         one_day_before = now - datetime.timedelta(days=1)
         now = now.strftime('%Y-%m-%d %H:%M:%S')
         one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
-        goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY hearts DESC LIMIT 1000;")
+        #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY hearts DESC LIMIT 1000;")
+        #posts=os.listdir('posts/')
+        #make function get_files_by_modtime newest_first and by today week month year
+        posts = get_files_by_modtime_today('posts/',newest_first=True)
+        #posts=os.listdir('heartranked/')
+        goodies=[]
+        goodies2=[]
+        for p in posts:
+            l=load('posts/'+g)
+            goodies.append(l)
+        for g in goodies:
+            goodies2.append(g.postid)
+        print(goodies2)
     elif feedbase == "heart" and timebase == "week":
         now = datetime.datetime.now()
         one_day_before = now - datetime.timedelta(weeks=1)
