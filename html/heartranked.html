@@ -1,4 +1,4 @@
-$def with (markdown,visitors, total, unique, logged, rights, namn, getlikes, formattime, feedbase, totbilder, limit, offset, bildpersida, search, bilder, searchform, getcombines, timebase, getfeed, getcombofeed, userimage, postexist, show)
+$def with (markdown,visitors, total, unique, logged, rights, namn, getlikes, formattime, feedbase, totbilder, limit, offset, bildpersida, search, bilder, searchform, getcombines, timebase, getfeed, getcombofeed, userimage, postexist, show, loadjson, loadtext, print)
 
 <HEAD>
     <meta charset="utf-8">
@@ -8,6 +8,7 @@ $def with (markdown,visitors, total, unique, logged, rights, namn, getlikes, for
     <meta name="viewport" content="width=device-width, initial-scale=1">
 </HEAD>
 
+$print('fak fak fak')
 <BODY>
 <div class="introtext">
 <a href="/">go back</a> 
@@ -22,7 +23,7 @@ $unique UNICORNS 🦄 PEACE! ☮️
 <br>
 <div id="mod">
 $if rights=='mod' or rights=='admin':
-    $ #displayname = db.query("SELECT displayname FROM rymdadmin WHERE name='"+namn+"';")[0]
+    $#displayname = db.query("SELECT displayname FROM rymdadmin WHERE name='"+namn+"';")[0]
     $ displayname=loadjson('r/users/'+session.user)
     hey <b><a href="/tuning">$displayname.displayname</a></b>, <a href="/invites">invite</a> or <a href="/editor?new=yes">write</a>
     <br>
@@ -49,11 +50,11 @@ $if search != '':
             <small>by $g.creator $formattime(g.timeadded)</small><br>
             $getcombines(g.postid)
             $if g.combine:
-                $ #combined = db.select('published', where="postid='"+g.combine+"'")[0]
+                $#combined = db.select('published', where="postid='"+g.combine+"'")[0]
                 $ combined=loadjson('p/posts/'+g.combine+/meta')
                 <small>combo with <a href="/?show=$combined.postid">$combined.soundname</a></small><br>
             $if g.remix:
-                $ #remixed = db.select('published', where="postid='"+g.remix+"'")[0]
+                $#remixed = db.select('published', where="postid='"+g.remix+"'")[0]
                 $ combined=loadjson('p/posts/'+g.remix+/meta')
                 <small>remixed <a href="/?show=$remixed.postid">$remixed.soundname</a></small><br>
             $if loadtext('p/posts/'+g.postid+'/post') != '':
@@ -94,7 +95,7 @@ $else:
                     <small>combo with <a href="/?show=$combined.postid">$combined.soundname</a></small><br>
             $if g.remix:
                 $if postexist(g.remix):
-                    $ #remixed = db.select('published', where="postid='"+g.remix+"'")
+                    $#remixed = db.select('published', where="postid='"+g.remix+"'")
                     $ remixed=loadjson('p/posts/'+g.remix+/meta')
                     <small>remixed <a href="/?show=$remixed.postid">$remixed[0].soundname</a></small><br>
             $if (loadtext('p/posts/'+g.postid+'/post') != '':
@@ -113,7 +114,7 @@ $else:
             </div>
             </div>
     $else:
-        $ #goodies = db.select('published', where="postid='"+show+"'")
+        $#goodies = db.select('published', where="postid='"+show+"'")
         $ goodies=loadjson('p/posts/'+show+'/meta')
         $for g in goodies:
             <a href="/#$g.soundname">back</a> 
@@ -134,11 +135,11 @@ $else:
             <small>by $g.creator $formattime(g.timeadded)</small><br>
             $getcombines(g.postid)
             $if g.combine:
-                $ #combined = db.select('published', where="postid='"+g.combine+"'")[0]
+                $#combined = db.select('published', where="postid='"+g.combine+"'")[0]
                 $ combined=loadjson('p/posts/'+g.combine+/meta')
                 <small>combo with <a href="/?show=$combined.postid">$combined.soundname</a></small><br>
             $if g.remix:
-                $ #remixed = db.select('published', where="postid='"+g.remix+"'")[0]
+                $#remixed = db.select('published', where="postid='"+g.remix+"'")[0]
                 $ remixed=loadjson('p/posts/'+g.remix+/meta')
                 <small>remixed <a href="/?show=$remixed.postid">$remixed.soundname</a></small><br>
             and <a href="/#$g.soundname">back</a> 
@@ -171,10 +172,12 @@ $else:
             <small>by $c.creator $formattime(c.timeadded)</small><br>
             $getcombines(c.postid)
             $if c.combine:
-                $ combined = db.select('published', where="postid='"+c.combine+"'")[0]
+                $#combined = db.select('published', where="postid='"+c.combine+"'")[0]
+                $ combined=loadjson('p/posts/'+c.combine+/meta')
                 <small>combo with <a href="/?show=$combined.postid">$combined.soundname</a></small><br>
             $if c.remix:
-                $ remixed = db.select('published', where="postid='"+c.remix+"'")[0]
+                $#remixed = db.select('published', where="postid='"+c.remix+"'")[0]
+                $ remixed=loadjson('p/posts/'+c.remix+/meta')
                 <small>remixed <a href="/?show=$remixed.postid">$remixed.soundname</a></small><br>
             <a href="/?show=$c.postid">more</a>
             or <a href="/#$c.soundname">back</a>

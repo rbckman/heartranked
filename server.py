@@ -75,6 +75,8 @@ def runfirst():
     os.makedirs(basedir+'u/',exist_ok=True)
     os.makedirs(basedir+'r/',exist_ok=True)
     os.makedirs(basedir+'r/visitors',exist_ok=True)
+    os.makedirs(basedir+'r/users',exist_ok=True)
+    os.makedirs(basedir+'r/stopflood',exist_ok=True)
 
 runfirst()
 
@@ -84,11 +86,10 @@ def logged():
     else:
         return False
 
-class creatpost:
+class createpost:
     def __init__(self, name, value):
         self.name = name
         self.value = value
-        return self
 
 def savetext(thename, description):
     with open(basedir+thename, "w") as f:
@@ -107,19 +108,21 @@ def savejson(thename, thedict):
     #hearts will be files as usernames with timestamp in a hearts folder in post folder. be stored and checked in u/hearts and post/hearts
     # be sure to add home domain setting to username
     #make save list a dict use same names
-    #postmeta=loadjson(thename)
-    for key, i in thedict.items():
-        postmeta=createpost(key,i)        
+    if os.path.exists(thename):
+        p=loadjson(thename)
+        thedict.update(p)
+    #for key, i in thedict.items():
+    #    createpost(key,i)        
     with open(basedir+thename, "w") as f:
         #f.write(str(i) + ',')
-        json.dumps(thedict,f)
+        json.dump(thedict,f)
 
 def loadjson(thename):
     with open(basedir+thename, 'r') as f:
-        settings = json.loadjson(f)
-        for key, i in settings.items():
-            postmeta=creatpost(key,i)
-    return postmeta
+        settings = json.load(f)
+        #for key, i in settings.items():
+        #    createpost(key,i)
+    return settings
 
 def deletepost(thefile):
     os.system('rm '+thefile)
@@ -136,10 +139,35 @@ def adduser(name, password, mail):
         adminlevel=3
     else:
         adminlevel=5
-    savedict={'name':name, 'originalname':originalname, 'password':password, 'hashed':hashed,'mail':mail,'adminlevel':adminlevel}
+    savedict={'name':name, 'originalname':originalname, 'password':password_hashed,'mail':mail,'adminlevel':adminlevel}
     savejson('r/users/'+name, savedict)
     print("new user added")
     return
+
+def safe_filename(name: str, max_length: int = 100, replacement: str = "-") -> str:
+    """
+    Convert a filename into a web-safe version.
+    """
+    if not name:
+        return "file"
+    #Normalize unicode (é → e, etc.)
+    name = unicodedata.normalize('NFKD', name)
+    name = name.encode('ascii', 'ignore').decode('ascii')
+    #Replace spaces and common separators with the replacement char
+    name = re.sub(r'[\s_]+', replacement, name)
+    #Remove any character that is not alphanumeric, hyphen, underscore, or dot
+    name = re.sub(r'[^a-zA-Z0-9.\-_]', '', name)
+    #Replace multiple replacement chars with single one
+    name = re.sub(re.escape(replacement) + r'+', replacement, name)
+    #Remove leading/trailing replacement chars and dots
+    name = name.strip(replacement + '.')
+    #Prevent empty or hidden files
+    if not name or name.startswith('.'):
+        name = "file" + name
+    #Enforce max length (leave room for extension)
+    if len(name) > max_length:
+        name = name[:max_length]
+    return name.lower()
 
 def adminlevel(user):
     #level = db.query("SELECT adminlevel FROM rymdadmin WHERE name='"+user+"';")[0]
@@ -170,7 +198,7 @@ def stopresetpass(mail):
         return False
 
 def stopflood(ip,referer):
-    t = None
+    t = 0
     if os.path.exists(basedir+'r/stopflood/'+ip) == True:
         t=loadjson('r/stopflood/'+ip)
     else:
@@ -179,8 +207,12 @@ def stopflood(ip,referer):
         return
     savedict={'timeadded':time.time()}
     savejson('r/stopflood/'+ip, savedict)
-    latest = time.time() - t
-    print(latest)
+    try:
+        latest = time.time() - t
+        print(latest)
+    except:
+        latest = 10
+        pass
     if latest < 1:
         print('flooding recognized!')
         return True
@@ -199,6 +231,10 @@ class login():
     web.form.Textbox('user', web.form.notnull, description="your registered mail account:"),
     web.form.Password('password', web.form.notnull, description="and your passcode please:"),
     web.form.Button('Login'))
+    users=os.listdir(basedir+'r/users/')
+    if len(users) == 0:
+        result = subprocess.run(['whoami'], capture_output=True, text=True)
+        adduser('op', 'blessyou', result.stdout+'@localhost')
     def GET(self):
         fejl = ''
         resetpasslink = False
@@ -224,7 +260,10 @@ class login():
         if i.user == '' or i.password == '':
             raise web.seeother('/login?error=tom')
         rymdadmins = []
-        rymdadmins = bildhistoriker()
+        users = os.listdir(basedir+'r/users/')
+        for r in users:
+            admin=loadjson('r/users/'+r)
+            rymdadmins.append(admin)
         #if not rymdadmins:
         #    raise web.seeother('/register')
         for p in rymdadmins:
@@ -640,31 +679,6 @@ def getdisplayname(user):
     except:
         displayname = user
     return displayname
-
-def safe_filename(name: str, max_length: int = 100, replacement: str = "-") -> str:
-    """
-    Convert a filename into a web-safe version.
-    """
-    if not name:
-        return "file"
-    #Normalize unicode (é → e, etc.)
-    name = unicodedata.normalize('NFKD', name)
-    name = name.encode('ascii', 'ignore').decode('ascii')
-    #Replace spaces and common separators with the replacement char
-    name = re.sub(r'[\s_]+', replacement, name)
-    #Remove any character that is not alphanumeric, hyphen, underscore, or dot
-    name = re.sub(r'[^a-zA-Z0-9.\-_]', '', name)
-    #Replace multiple replacement chars with single one
-    name = re.sub(re.escape(replacement) + r'+', replacement, name)
-    #Remove leading/trailing replacement chars and dots
-    name = name.strip(replacement + '.')
-    #Prevent empty or hidden files
-    if not name or name.startswith('.'):
-        name = "file" + name
-    #Enforce max length (leave room for extension)
-    if len(name) > max_length:
-        name = name[:max_length]
-    return name.lower()
 
 #-------------Get files and sort em by date modified---------------
 
@@ -1132,11 +1146,10 @@ class heartranked:
         session.search = ''
         session.bildsida = 0
         i = web.input(publised=None, public=None, show=None, remove=None, edit=None, feedbase=None, timebase=None)
-        print('FUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU')
         #search
         try:
             #bilder_totalt = db.query("SELECT COUNT(*) AS sound FROM published")[0]
-            bilder_totalt=os.listdir('p/posts/')
+            bilder_totalt=os.listdir(basedir+'p/posts/')
             tot = int(bilder_totalt)
             print('bilder alltsomallt: ' + str(tot))
         except:
@@ -1237,7 +1250,7 @@ class heartranked:
             rights = 'mod'
         else:
             rights = 'spacer'
-        return rendersplash.heartranked(markdown, visitors, total, unique, logged(), rights, session.user, getlikes, formattime, feedbase, tot, limit, offset, bildpersida, session.search, bilder, searchform, getcombines, timebase, getfeed, getcombofeed, userimage, postexist, i.show)
+        return rendersplash.heartranked(markdown, visitors, total, unique, logged(), rights, session.user, getlikes, formattime, feedbase, tot, limit, offset, bildpersida, session.search, bilder, searchform, getcombines, timebase, getfeed, getcombofeed, userimage, postexist, i.show, loadjson, loadtext)
     def POST(self):
         searchform = self.form()
         i = web.input()
