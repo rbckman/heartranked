@@ -96,9 +96,11 @@ def savetext(thename, description):
         f.write(description)
 
 def loadtext(thename):
-    with open(basedir+thename, 'r') as f:
-        description = f.read()
-    return description
+    if os.path.exists(basedir+thename):
+        with open(basedir+thename, 'r') as f:
+            description = f.read()
+        return description
+    return ''
 
 def savejson(thename, thedict):
     #full path to filename
@@ -181,7 +183,7 @@ def adminlevel(user):
     #2 rights to see pics and comment
     #3 rights to upoload
     #5 superadmin
-    session.login = int(level.adminlevel)
+    session.login = int(level['adminlevel'])
     return
 
 def stopresetpass(mail):
@@ -272,15 +274,15 @@ class login():
         #if not rymdadmins:
         #    raise web.seeother('/register')
         for p in rymdadmins:
-            if p.name.lower() == i.user.lower() or p.mail.lower() == i.user.lower():
+            if p['name'].lower() == i['user'].lower() or p['mail'].lower() == i['user'].lower():
                 try:
-                    encodepass = p.password.encode("utf-8")
+                    encodepass = p['password'].encode("utf-8")
                     print('noooo')
                 except:
-                    encodepass = p.password
-                if bcrypt.checkpw(i.password.encode('utf-8'), encodepass) == True:
-                    session.user = p.name
-                    adminlevel(p.name)
+                    encodepass = p['password']
+                if bcrypt.checkpw(i['password'].encode('utf-8'), encodepass) == True:
+                    session.user = p['name']
+                    adminlevel(p['name'])
                     print('BACKURL: '+session.backurl)
                     if session.login == 5:
                         raise web.seeother('/')
@@ -345,9 +347,9 @@ class register():
             #rymdadmins = db.select('rymdadmin', what='name, mail')
             rymdadmins = os.listdir(basedir+'r/users/')
             for p in rymdadmins:
-                if p.name.lower() == i.user.lower():
+                if p['name'].lower() == i.user.lower():
                     raise web.seeother('/register?invite='+i.invite+'&fail=nametaken' +r)
-                if p.mail.lower() == i.mail.lower():
+                if p['mail'].lower() == i.mail.lower():
                     raise web.seeother('/register?invite='+i.invite+'&fail=mailtaken' +r)
             adduser(i.user, i.password, i.mail.lower())
             #Send mail to Madbaker
@@ -360,7 +362,7 @@ class register():
             #session.user = safe_filename(i.user)
             #add user to matrix
             #os.system("register_new_matrix_user -u "+i.user+" -p "+i.password+" --no-admin -c /etc/matrix-synapse/homeserver.yaml") 
-            #db.update('invites', where='secretinvitation="'+i.invite+'"', accepted=datetime.datetime.now())
+            #db.update('invites', where='secretinvitation="'+i.invite+'"', accepted=formattime(datetime.datetime.now()))
             return web.seeother('/login')
         else:
             raise web.seeother('/oopsie')
@@ -388,8 +390,8 @@ class like:
             else:
                 user_likes = False
             if user_likes == False:
-                #db.insert('likes', user=session.user, bild=postid, datum=datetime.datetime.now())
-                savedict={'timeadded':datetime.datetime.now()}
+                #db.insert('likes', user=session.user, bild=postid, datum=formattime(datetime.datetime.now()))
+                savedict={'timeadded':formattime(datetime.datetime.now())}
                 savejson('p/posts/'+postid+'/hearts/'+session.user, savedict)
                 savejson('u/'+session.user+'/hearts/'+session.user, savedict)
                 user_likes = True
@@ -413,7 +415,7 @@ class user():
             if data.public and data.soundname:
                 #db.update('published', where="postid='" + data.soundname +"'", public=data.public)
                 public=data.public
-                savedict={'timeadded':datetime.datetime.now()}
+                savedict={'timeadded':formattime(datetime.datetime.now())}
                 savejson('p/posts/'+postid+'/meta')
             elif data.showuploads=='yes':
                 uploads = []
@@ -426,20 +428,22 @@ class user():
             #soundname='aurora_ruderalis-greatful_bread'
             #filetype='flac'
             #postid = hashlib.md5(str(random.getrandbits(256)).encode('utf-8')).hexdigest()
-            #db.insert('sound', postid=postid, filename=soundname, sort=filetype, title=soundname, uploaddate=datetime.datetime.now(), uppladdare=user, lastmod=datetime.datetime.now(), moddedby=user)
+            #db.insert('sound', postid=postid, filename=soundname, sort=filetype, title=soundname, uploaddate=formattime(datetime.datetime.now()), uppladdare=user, lastmod=formattime(datetime.datetime.now()), moddedby=user)
             #usersounds = db.query("SELECT * FROM published WHERE creator='"+user+"' ORDER BY timeadded DESC;")
-            usersound=loadjson('p/posts/')
+            usersounds=loadjson('p/posts/')
             #sounds = db.select('published')
-            sounds=os.listdir(basedir+'p/posts/')
+            #sounds=os.listdir(basedir+'p/posts/')
             creditsounds = []
-            for i in sounds:
-                try:
-                    credits=i.musicians.split(',')
-                except:
-                    credits=''
-                for u in credits:
-                    if u.strip().lower() == user.strip().lower():
-                        creditsounds.append(i.title)
+            #for i in sounds:
+            #    creditsounds.append(loadjson('p/posts/'+i))
+            #for i in creditsound:
+            #    try:
+            #        credits=i['musicians'].split(',')
+            #    except:
+            #        credits=''
+            #    for u in credits:
+            #        if u.strip().lower() == user.strip().lower():
+            #            creditsounds.append(i.title)
             return render.user(usersounds,creditsounds,user,datetime,str,int)
         return web.seeother('/login')
 
@@ -460,8 +464,8 @@ class invites():
                 formfail = formfail + 'you have to put your email in'
             if w.render == 'yes':
                 secretinvitekey = hashlib.md5(str(random.getrandbits(256)).encode('utf-8')).hexdigest()
-                #db.insert('invites', secretinvitation=secretinvitekey, created=datetime.datetime.now(), createdby=session.user)
-                thedict={"secretinvitekey":secretinvitekey,"timeadded":datetime.datetime.now(),"creator":session.user}
+                #db.insert('invites', secretinvitation=secretinvitekey, created=formattime(datetime.datetime.now()), createdby=session.user)
+                thedict={"secretinvitekey":secretinvitekey,"timeadded":formattime(datetime.datetime.now()),"creator":session.user}
                 savejson('r/invites/'+session.user, thedict)
             return render.invites(tuningform, formfail, user.name, invites)
     def POST(self):
@@ -475,8 +479,8 @@ class invites():
             if '@' not in i.mail:
                 raise web.seeother('/tuning?fail=notmail') 
             secretinvitekey = hashlib.md5(str(random.getrandbits(256)).encode('utf-8')).hexdigest()
-            #db.insert('invites', secretinvitation=secretinvitekey, created=datetime.datetime.now(), createdby=session.user)
-            thedict={"secretinvitekey":secretinvitekey,"timeadded":datetime.datetime.now(),"creator":session.user}
+            #db.insert('invites', secretinvitation=secretinvitekey, created=formattime(datetime.datetime.now()), createdby=session.user)
+            thedict={"secretinvitekey":secretinvitekey,"timeadded":formattime(datetime.datetime.now()),"creator":session.user}
             savejson('r/invites/'+session.user, thedict)
             msg = "YO! You are the One! " + user.name + " is your Morpheous. Follow this rabbit https://robinbackman.com/register?invite="+secretinvitekey 
             sendmail(i.mail, 'Invitation to HEART RANKED!', msg)
@@ -743,8 +747,8 @@ def visitorlog(ip, referer, environ):
             else:
                 country='none'
             #print('fuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu: '+ country)
-            #db.insert('visitors', ip=ip, referer=referer, environ=environ, country=country,  countrycode=countrycode, time=datetime.datetime.now())
-            thedict={'ip':ip,'referer':referer,'environ':environ,'country':country,'countrycode':countrycode,'time':datetime.datetime.now()}
+            #db.insert('visitors', ip=ip, referer=referer, environ=environ, country=country,  countrycode=countrycode, time=formattime(datetime.datetime.now()))
+            thedict={'ip':ip,'referer':referer,'environ':environ,'country':country,'countrycode':countrycode,'time':formattime(datetime.datetime.now())}
             savejson('r/visitors/'+ip,thedict)
         except:
             pass
@@ -757,8 +761,8 @@ def visitorlog(ip, referer, environ):
             countrycode = country.split(':')[1].split(',')[0].lower().strip()
             country = country.split(':')[1].split(',')[1].strip()
             #print('fuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu: '+ country)
-            #db.insert('visitors', ip=ip, referer=referer, environ=environ, country=country,  countrycode=countrycode, time=datetime.datetime.now())
-            thedict={'ip':ip,'referer':referer,'environ':environ,'country':country,'countrycode':countrycode,'time':datetime.datetime.now()}
+            #db.insert('visitors', ip=ip, referer=referer, environ=environ, country=country,  countrycode=countrycode, time=formattime(datetime.datetime.now()))
+            thedict={'ip':ip,'referer':referer,'environ':environ,'country':country,'countrycode':countrycode,'time':formattime(datetime.datetime.now())}
             savejson('r/visitors/'+ip,thedict)
         except:
             pass
@@ -890,12 +894,12 @@ def getfeed():
     feedbase=session.feedbase
     if feedbase == '':
         feedbase = 'time'
-    now = datetime.datetime.now()
+    now = formattime(datetime.datetime.now())
     #HEARTS
     #SAVE HEARTRANKING EVERY MINUTE CHECK BOTH USER LIKES AND POST LIKES IF IT CHECKS OUT GOOD IT NOT WRITE ERROR AT LEAST (A BACKEND PROGRAM, RUNS EVERY MINUTE AND COUNTS LIKES AND WRITES THE HEARTRANKING FOR TODAY. HEARTRANKING STAYES SAVED FOREVER IN FOLDERS BY DAYS. IT IS A FOLDER WITH NUMBERS. starting with 0000000000000001 pointing to postid. simple. effective.
     #backend program will also sync posts and likes to trustees
     if feedbase == "heart" and timebase == "today":
-        now = datetime.datetime.now()
+        now = formattime(datetime.datetime.now())
         one_day_before = now - datetime.timedelta(days=1)
         now = now.strftime('%Y-%m-%d %H:%M:%S')
         one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
@@ -912,7 +916,7 @@ def getfeed():
                 goodies.append(l)
         print(goodies)
     elif feedbase == "heart" and timebase == "week":
-        now = datetime.datetime.now()
+        now = formattime(datetime.datetime.now())
         one_day_before = now - datetime.timedelta(weeks=1)
         now = now.strftime('%Y-%m-%d %H:%M:%S')
         one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
@@ -927,7 +931,7 @@ def getfeed():
                 goodies.append(l)
         print(goodies)
     elif feedbase == "heart" and timebase == "month":
-        now = datetime.datetime.now()
+        now = formattime(datetime.datetime.now())
         one_day_before = now - datetime.timedelta(weeks=4)
         now = now.strftime('%Y-%m-%d %H:%M:%S')
         one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
@@ -942,7 +946,7 @@ def getfeed():
                 goodies.append(l)
         print(goodies)
     elif feedbase == "heart" and timebase == "year":
-        now = datetime.datetime.now()
+        now = formattime(datetime.datetime.now())
         one_day_before = now - datetime.timedelta(weeks=54)
         now = now.strftime('%Y-%m-%d %H:%M:%S')
         one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
@@ -979,7 +983,7 @@ def getfeed():
                 goodies.append(l)
         print(goodies)        
     elif feedbase == "time" and timebase == "week":
-        now = datetime.datetime.now()
+        now = formattime(datetime.datetime.now())
         one_day_before = now - datetime.timedelta(weeks=1)
         now = now.strftime('%Y-%m-%d %H:%M:%S')
         one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
@@ -992,7 +996,7 @@ def getfeed():
                 l=loadjson('p/posts/'+p)
                 goodies.append(l)
     elif feedbase == "time" and timebase == "month":
-        now = datetime.datetime.now()
+        now = formattime(datetime.datetime.now())
         one_day_before = now - datetime.timedelta(weeks=4)
         now = now.strftime('%Y-%m-%d %H:%M:%S')
         one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
@@ -1005,7 +1009,7 @@ def getfeed():
                 l=loadjson('p/posts/'+p)
                 goodies.append(l)
     elif feedbase == "time" and timebase == "year":
-        now = datetime.datetime.now()
+        now = formattime(datetime.datetime.now())
         one_day_before = now - datetime.timedelta(weeks=54)
         now = now.strftime('%Y-%m-%d %H:%M:%S')
         one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
@@ -1039,7 +1043,7 @@ def getfeed():
                 goodies.append(l)
         print(goodies)
     elif feedbase == "combo" and timebase == "week":
-        now = datetime.datetime.now()
+        now = formattime(datetime.datetime.now())
         one_day_before = now - datetime.timedelta(weeks=1)
         now = now.strftime('%Y-%m-%d %H:%M:%S')
         one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
@@ -1053,7 +1057,7 @@ def getfeed():
                 l=loadjson('p/posts/'+p)
                 goodies.append(l)
     elif feedbase == "combo" and timebase == "month":
-        now = datetime.datetime.now()
+        now = formattime(datetime.datetime.now())
         one_day_before = now - datetime.timedelta(weeks=4)
         now = now.strftime('%Y-%m-%d %H:%M:%S')
         one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
@@ -1067,7 +1071,7 @@ def getfeed():
                 l=loadjson('p/posts/'+p)
                 goodies.append(l)
     elif feedbase == "combo" and timebase == "year":
-        now = datetime.datetime.now()
+        now = formattime(datetime.datetime.now())
         one_day_before = now - datetime.timedelta(weeks=54)
         now = now.strftime('%Y-%m-%d %H:%M:%S')
         one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
@@ -1126,16 +1130,16 @@ def getcombofeed(show):
 
 def userimage(user):
     usrimg = ''
-    i = staticdir+'users/'+user+'/images/thumb/'+user
+    i = staticdir+'u/'+user+'/images/thumb/'+user
     print(i)
     if os.path.isfile(i+'.jpeg'):
-        usrimg='/static/users/'+user+'/images/thumb/'+user+'.jpeg'
+        usrimg='/u/users/'+user+'/images/thumb/'+user+'.jpeg'
     elif os.path.isfile(i+'.jpg'):
-        usrimg='/static/users/'+user+'/images/thumb/'+user+'.jpg'
+        usrimg='/u/users/'+user+'/images/thumb/'+user+'.jpg'
     elif os.path.isfile(i+'.png'):
-        usrimg='/static/users/'+user+'/images/thumb/'+user+'.png'
+        usrimg='/u/users/'+user+'/images/thumb/'+user+'.png'
     elif os.path.isfile(i+'.gif'):
-        usrimg='/static/users/'+user+'/images/thumb/'+user+'.gif'
+        usrimg='/u/users/'+user+'/images/thumb/'+user+'.gif'
     if usrimg != '':
         imghtml='<img class="usrimg" src="'+usrimg+'">'
         return imghtml
@@ -1239,7 +1243,7 @@ class heartranked:
             try:
                 #user = db.select('published', where="postid='"+i.remove+"'")[0]
                 post=loadjson('p/posts/'+i.remove+'/meta')
-                if post.creator == session.user:
+                if post['creator'] == session.user:
                     #os.system('mv -r '+basedir+'posts/'+i.remove+'/ deleted/'+i.remove)
                     print('move to a deleted folder, make backend clean things up for real')
             except:
@@ -1270,8 +1274,10 @@ class editor:
             if i.combine != None:
                 if session.user:
                     session.postid = hashlib.sha256(str(random.getrandbits(256)).encode('utf-8')).hexdigest()[9:36]
-                    #db.insert('unpublished', postid=session.postid, description='', description2='', timeadded=datetime.datetime.now(), creator=session.user, combine=i.combine)
-                    thedict={'postid':session.postid, 'timeadded':datetime.datetime.now(), 'creator':session.user, 'combine':i.combine}
+                    #db.insert('unpublished', postid=session.postid, description='', description2='', timeadded=formattime(datetime.datetime.now()), creator=session.user, combine=i.combine)
+                    print('FUUUUUUU')
+                    os.makedirs(basedir+'u/'+session.user+'/posts/'+session.postid,exist_ok=True)
+                    thedict={'postid':session.postid, 'timeadded':formattime(datetime.datetime.now()), 'creator':session.user, 'combine':i.combine}
                     savejson('u/'+session.user+'/posts/'+session.postid,thedict)
             if i.remix != None:
                 if session.user:
@@ -1287,7 +1293,7 @@ class editor:
                     except:
                         pass
                     try:
-                        olduser = olduser.creator
+                        olduser = olduser['creator']
                     except:
                         olduser = ''
                     if olduser != '':
@@ -1295,8 +1301,8 @@ class editor:
                     else:
                         allcreators = session.user
                     session.postid = hashlib.sha256(str(random.getrandbits(256)).encode('utf-8')).hexdigest()[9:36]
-                    #db.insert('unpublished', postid=session.postid, description=text, description2=text2, timeadded=datetime.datetime.now(), creator=allcreators, remix=i.remix)
-                    thedict={'postid':session.postid, 'soundname':soundname, 'timeadded':datetime.datetime.now(), 'creator':allcreators, 'remix':i.remix}
+                    #db.insert('unpublished', postid=session.postid, description=text, description2=text2, timeadded=formattime(datetime.datetime.now()), creator=allcreators, remix=i.remix)
+                    thedict={'postid':session.postid, 'timeadded':formattime(datetime.datetime.now()), 'creator':allcreators, 'remix':i.remix}
                     savejson('u/'+session.user+'/posts/'+session.postid+'/meta',thedict)
                     savetext('u/'+session.user+'/posts/'+session.postid+'/post', description)
                     savetext('u/'+session.user+'/posts/'+session.postid+'/intro', description2)
@@ -1344,8 +1350,9 @@ class editor:
                 except:
                     iftext = ''
                 if createpost == False:
-                    #db.update('published', where='postid="'+session.postid+'"', postid=session.postid, soundname=soundname, description=description1, description2=description2, timeadded=datetime.datetime.now(), creator=session.user)
-                    thedict={'postid':session.postid, 'soundname':soundname, 'timeadded':datetime.datetime.now(), 'creator':session.user, 'combine':i.combine, 'remix':i.remix}
+                    os.makedirs(basedir+'p/posts/'+session.postid,exist_ok=True)
+                    #db.update('published', where='postid="'+session.postid+'"', postid=session.postid, soundname=soundname, description=description1, description2=description2, timeadded=formattime(datetime.datetime.now()), creator=session.user)
+                    thedict={'postid':session.postid, 'soundname':soundname, 'timeadded':formattime(datetime.datetime.now()), 'creator':session.user, 'combine':i.combine, 'remix':i.remix}
                     savejson('p/posts/'+session.postid+'/meta',thedict)
                     savetext('p/posts/'+session.postid+'/post', description)
                     savetext('p/posts/'+session.postid+'/intro', description2)                    
@@ -1353,8 +1360,8 @@ class editor:
                 else:
                     print('make a new post')
                 try:
-                    #db.update('unpublished', where='postid="'+session.postid+'"', postid=session.postid, soundname=soundname, description=description1, description2=description2, timeadded=datetime.datetime.now(), creator=session.user)
-                    thedict={'postid':session.postid, 'soundname':soundname, 'timeadded':datetime.datetime.now(), 'creator':session.user, 'combine':i.combine, 'remix':i.remix}
+                    #db.update('unpublished', where='postid="'+session.postid+'"', postid=session.postid, soundname=soundname, description=description1, description2=description2, timeadded=formattime(datetime.datetime.now()), creator=session.user)
+                    thedict={'postid':session.postid, 'soundname':soundname, 'timeadded':formattime(datetime.datetime.now()), 'creator':session.user, 'combine':i.combine, 'remix':i.remix}
                     savejson('u/'+session.user+'/posts/'+session.postid+'/meta',thedict)
                     savetext('u/'+session.user+'/posts/'+session.postid+'/post', description)
                     savetext('u/'+session.user+'posts/'+session.postid+'/intro', description2)
@@ -1378,8 +1385,8 @@ class editor:
                         savetext('p/posts/'+combine+'/combos/'+session.postid,session.user)
                     if remix != '':
                         savetext('p/posts/'+remix+'/remixes/'+session.postid,session.user)
-                    #db.insert('published', postid=session.postid, soundname=soundname, description=description1, description2=description2, timeadded=datetime.datetime.now(), creator=session.user, combine=combine, remix=remix)
-                    thedict={'postid':session.postid,'soundname':soundname,'timeadded':datetime.datetime.now(),'creator':session.user,'combine':combine,'remix':remix}
+                    #db.insert('published', postid=session.postid, soundname=soundname, description=description1, description2=description2, timeadded=formattime(datetime.datetime.now()), creator=session.user, combine=combine, remix=remix)
+                    thedict={'postid':session.postid,'soundname':soundname,'timeadded':formattime(datetime.datetime.now()),'creator':session.user,'combine':combine,'remix':remix}
                     savejson('p/posts/'+session.postid+'/meta',thedict)
                     savetext('p/posts/'+session.postid+'/post', description)
                     savetext('p/posts/'+session.postid+'/intro', description2)                    
@@ -1406,7 +1413,7 @@ class editor:
 
                     raise web.seeother('/editor?public=yes')
                 raise web.seeother('/editor?public=yes')
-                #db.insert('pawning', pawning=i.remix, name=session.user, timeadded=datetime.datetime.now())
+                #db.insert('pawning', pawning=i.remix, name=session.user, timeadded=formattime(datetime.datetime.now()))
             return rendersplash.editor(storage, text, text2, markdown, safe_filename, session.postid, i.public, logged(), session.user, i.combine, i.remix)
 
 class savepost:
@@ -1418,8 +1425,8 @@ class savepost:
         print(text2 +'fuuuuuuuuuuuuu')
         if session.postid == '':
             session.postid = hashlib.sha256(str(random.getrandbits(256)).encode('utf-8')).hexdigest()[9:36]
-            #db.insert('unpublished', postid=session.postid, description=text, description2=text2, timeadded=datetime.datetime.now(), creator=session.user)
-            thedict={'postid':session.postid, 'soundname':soundname, 'timeadded':datetime.datetime.now(), 'creator':session.user}
+            #db.insert('unpublished', postid=session.postid, description=text, description2=text2, timeadded=formattime(datetime.datetime.now()), creator=session.user)
+            thedict={'postid':session.postid, 'timeadded':formattime(datetime.datetime.now()), 'creator':session.user}
             savejson('u/'+session.user+'/posts/'+session.postid+'/meta',thedict)
             savetext('u/'+session.user+'/posts/'+session.postid+'/post', text)
             savetext('u/'+session.user+'/posts/'+session.postid+'/intro', text2)
@@ -1432,14 +1439,15 @@ class savepost:
             except:
                 iftext = ''
             if iftext != '':
-                #db.update('unpublished', where='postid="'+session.postid+'"', description=text, description2=text2, timeadded=datetime.datetime.now(), creator=session.user)
-                thedict={'postid':session.postid, 'soundname':soundname, 'timeadded':datetime.datetime.now(), 'creator':session.user}
+                #db.update('unpublished', where='postid="'+session.postid+'"', description=text, description2=text2, timeadded=formattime(datetime.datetime.now()), creator=session.user)
+                thedict={'postid':session.postid, 'timeadded':formattime(datetime.datetime.now()), 'creator':session.user}
                 savejson('u/'+session.user+'/posts/'+session.postid+'/meta',thedict)
                 savetext('u/'+session.user+'/posts/'+session.postid+'/post', text)
                 savetext('u/'+session.user+'/posts/'+session.postid+'/intro', text2)
             else:
-                #db.insert('unpublished', postid=session.postid, description=text, description2=text2, timeadded=datetime.datetime.now(), creator=session.user)
-                thedict={'postid':session.postid, 'soundname':soundname, 'timeadded':datetime.datetime.now(), 'creator':session.user}
+                #db.insert('unpublished', postid=session.postid, description=text, description2=text2, timeadded=formattime(datetime.datetime.now()), creator=session.user)
+                os.makedirs(basedir+'u/'+session.user+'/posts/'+session.postid,exist_ok=True)
+                thedict={'postid':session.postid, 'timeadded':formattime(datetime.datetime.now()), 'creator':session.user}
                 savejson('u/'+session.user+'/posts/'+session.postid+'/meta',thedict)
                 savetext('u/'+session.user+'/posts/'+session.postid+'/post', text)
                 savetext('u/'+session.user+'/posts/'+session.postid+'/intro', text2)
@@ -1645,4 +1653,5 @@ class uploads:
             return render.uploads(uploaded)
 
 #application = app.wsgifunc()
+#application = app.run()
 app.run()
