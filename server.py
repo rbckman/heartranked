@@ -1423,20 +1423,21 @@ class rendered:
         i = web.input(public=None)
         if session.postid != '':
             if i.public == None:
-                try:
-                    unpublished = db.select('unpublished', where='postid="'+session.postid+'"')[0]
-                    if unpublished.description == None:
-                        return ''
-                except:
-                    print('can not find any post')
-                else:
-                    return markdown.markdown(unpublished.description+'\n\n---\n\n'+unpublished.description2)
-            elif i.public == 'yes':
-                published = db.select('published', where='postid="'+session.postid+'"')[0]
-                if published.description1 == None:
+                #unpublished = db.select('unpublished', where='postid="'+session.postid+'"')[0]
+                description='u/'+session.user+'/posts/'+session.postid+'/intro'
+                description2='u/'+session.user+'/posts/'+session.postid+'/post'
+                if description == None or description2 == None:
                     return ''
                 else:
-                    return markdown.markdown(published.description+'\n\n---\n\n'+published.description2)
+                    return markdown.markdown(description+'\n\n---\n\n'+description2)
+            elif i.public == 'yes':
+                #published = db.select('published', where='postid="'+session.postid+'"')[0]
+                description='posts/'+session.postid+'/intro'
+                description2='posts/'+session.postid+'/post'
+                if description == None or description2 == None:
+                    return ''
+                else:
+                    return markdown.markdown(description+'\n\n---\n\n'+description2)
             else:
                 return ''
 
