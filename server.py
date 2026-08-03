@@ -848,105 +848,226 @@ def getfeed():
         #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY hearts DESC LIMIT 1000;")
         #posts=os.listdir('posts/')
         #make function get_files_by_modtime newest_first and by today week month year
-        posts = get_files_by_modtime_today('posts/',newest_first=True)
-        #posts=os.listdir('heartranked/')
+        posts = os.listdir('hearts/')
         goodies=[]
-        goodies2=[]
         for p in posts:
-            l=load('posts/'+g)
-            goodies.append(l)
-        for g in goodies:
-            goodies2.append(g.postid)
-        print(goodies2)
+            #check modtime here day
+            lastupdate = os.path.getmtime('hearts/'+p)
+            if lastupdate > one_day_before:
+                l=load('posts/'+p)
+                goodies.append(l)
+        print(goodies)
     elif feedbase == "heart" and timebase == "week":
         now = datetime.datetime.now()
         one_day_before = now - datetime.timedelta(weeks=1)
         now = now.strftime('%Y-%m-%d %H:%M:%S')
         one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
-        goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY hearts DESC LIMIT 1000;")
+        #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY hearts DESC LIMIT 1000;")
+        posts = os.listdir('hearts/')
+        goodies=[]
+        for p in posts:
+            #check modtime here day
+            lastupdate = os.path.getmtime('hearts/'+p)
+            if lastupdate > one_day_before:
+                l=load('posts/'+p)
+                goodies.append(l)
+        print(goodies)
     elif feedbase == "heart" and timebase == "month":
         now = datetime.datetime.now()
         one_day_before = now - datetime.timedelta(weeks=4)
         now = now.strftime('%Y-%m-%d %H:%M:%S')
         one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
-        goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY hearts DESC LIMIT 1000;")
+        #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY hearts DESC LIMIT 1000;")
+        posts = os.listdir('hearts/')
+        goodies=[]
+        for p in posts:
+            #check modtime here day
+            lastupdate = os.path.getmtime('hearts/'+p)
+            if lastupdate > one_day_before:
+                l=load('posts/'+p)
+                goodies.append(l)
+        print(goodies)
     elif feedbase == "heart" and timebase == "year":
         now = datetime.datetime.now()
         one_day_before = now - datetime.timedelta(weeks=54)
         now = now.strftime('%Y-%m-%d %H:%M:%S')
         one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
-        goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY hearts DESC LIMIT 1000;")
+        #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY hearts DESC LIMIT 1000;")
+        posts = os.listdir('hearts/')
+        goodies=[]
+        for p in posts:
+            #check modtime here day
+            lastupdate = os.path.getmtime('hearts/'+p)
+            if lastupdate > one_day_before:
+                l=load('posts/'+p)
+                goodies.append(l)
+        print(goodies)
     elif feedbase == "heart" and timebase == "" or feedbase == "heart" and timebase == "all":
-        goodies = db.query("SELECT * FROM published ORDER BY hearts DESC LIMIT 1000;")
+        #goodies = db.query("SELECT * FROM published ORDER BY hearts DESC LIMIT 1000;")
+        posts = os.listdir('hearts/')
+        goodies=[]
+        for p in posts:
+            l=load('posts/'+p)
+            goodies.append(l)
+        print(goodies)
     #TIME
     elif feedbase == "time" and timebase == "today":
         one_day_before = now - datetime.timedelta(days=1)
         now = now.strftime('%Y-%m-%d %H:%M:%S')
         one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
-        goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY ID DESC LIMIT 1000;")
+        #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY ID DESC LIMIT 1000;")
+        posts = get_files_by_modtime('posts/',newest_first=True)
+        for p in posts:
+            #check modtime here day
+            lastupdate = os.path.getmtime('posts/'+p)
+            if lastupdate > one_day_before:
+                l=load('posts/'+p)
+                goodies.append(l)
+        print(goodies)        
     elif feedbase == "time" and timebase == "week":
         now = datetime.datetime.now()
         one_day_before = now - datetime.timedelta(weeks=1)
         now = now.strftime('%Y-%m-%d %H:%M:%S')
         one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
-        goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY ID DESC LIMIT 1000;")
+        #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY ID DESC LIMIT 1000;")
+        posts = get_files_by_modtime('posts/',newest_first=True)
+        for p in posts:
+            #check modtime here day
+            lastupdate = os.path.getmtime('posts/'+p)
+            if lastupdate > one_day_before:
+                l=load('posts/'+p)
+                goodies.append(l)
     elif feedbase == "time" and timebase == "month":
         now = datetime.datetime.now()
         one_day_before = now - datetime.timedelta(weeks=4)
         now = now.strftime('%Y-%m-%d %H:%M:%S')
         one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
-        goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY ID DESC LIMIT 1000;")
+        #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY ID DESC LIMIT 1000;")
+        posts = get_files_by_modtime('posts/',newest_first=True)
+        for p in posts:
+            #check modtime here day
+            lastupdate = os.path.getmtime('posts/'+p)
+            if lastupdate > one_day_before:
+                l=load('posts/'+p)
+                goodies.append(l)
     elif feedbase == "time" and timebase == "year":
         now = datetime.datetime.now()
         one_day_before = now - datetime.timedelta(weeks=54)
         now = now.strftime('%Y-%m-%d %H:%M:%S')
         one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
-        goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY ID DESC LIMIT 1000;")
+        #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY ID DESC LIMIT 1000;")
+        posts = get_files_by_modtime('posts/',newest_first=True)
+        for p in posts:
+            #check modtime here day
+            lastupdate = os.path.getmtime('posts/'+p)
+            if lastupdate > one_day_before:
+                l=load('posts/'+p)
+                goodies.append(l)
     elif feedbase == "time" and timebase == "" or  feedbase == "time" and timebase == "all":
-        goodies = db.query("SELECT * FROM published ORDER BY ID DESC LIMIT 1000;")
+        #goodies = db.query("SELECT * FROM published ORDER BY ID DESC LIMIT 1000;")
+        posts = get_files_by_modtime('posts/',newest_first=True)
+        for p in posts:
+            l=load('posts/'+p)
+            goodies.append(l)
     #COMBO
     elif feedbase == "combo" and timebase == "today":
         one_day_before = now - datetime.timedelta(days=1)
         now = now.strftime('%Y-%m-%d %H:%M:%S')
         one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
-        goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY combines DESC LIMIT 1000;")
+        #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY combines DESC LIMIT 1000;")
+        posts = os.listdir('combos/')
+        goodies=[]
+        for p in posts:
+            #check modtime here day
+            lastupdate = os.path.getmtime('combos/'+p)
+            if lastupdate > one_day_before:
+                l=load('posts/'+p)
+                goodies.append(l)
+        print(goodies)
     elif feedbase == "combo" and timebase == "week":
         now = datetime.datetime.now()
         one_day_before = now - datetime.timedelta(weeks=1)
         now = now.strftime('%Y-%m-%d %H:%M:%S')
         one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
-        goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY combines DESC LIMIT 1000;")
+        #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY combines DESC LIMIT 1000;")
+        posts = os.listdir('combos/')
+        goodies=[]
+        for p in posts:
+            #check modtime here day
+            lastupdate = os.path.getmtime('combos/'+p)
+            if lastupdate > one_day_before:
+                l=load('posts/'+p)
+                goodies.append(l)
     elif feedbase == "combo" and timebase == "month":
         now = datetime.datetime.now()
         one_day_before = now - datetime.timedelta(weeks=4)
         now = now.strftime('%Y-%m-%d %H:%M:%S')
         one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
-        goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY combines DESC LIMIT 1000;")
+        #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY combines DESC LIMIT 1000;")
+        posts = os.listdir('combos/')
+        goodies=[]
+        for p in posts:
+            #check modtime here day
+            lastupdate = os.path.getmtime('combos/'+p)
+            if lastupdate > one_day_before:
+                l=load('posts/'+p)
+                goodies.append(l)
     elif feedbase == "combo" and timebase == "year":
         now = datetime.datetime.now()
         one_day_before = now - datetime.timedelta(weeks=54)
         now = now.strftime('%Y-%m-%d %H:%M:%S')
         one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
-        goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY combines DESC LIMIT 1000;")
+        #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY combines DESC LIMIT 1000;")
+        posts = os.listdir('combos/')
+        goodies=[]
+        for p in posts:
+            #check modtime here day
+            lastupdate = os.path.getmtime('combos/'+p)
+            if lastupdate > one_day_before:
+                l=load('posts/'+p)
+                goodies.append(l)
     elif feedbase == "combo" and timebase == "" or  feedbase == "combo" and timebase == "all":
-        goodies = db.query("SELECT * FROM published ORDER BY combines DESC LIMIT 1000;")
+        #goodies = db.query("SELECT * FROM published ORDER BY combines DESC LIMIT 1000;")
+        posts = os.listdir('combos/')
+        goodies=[]
+        for p in posts:
+            l=load('posts/'+p)
+            goodies.append(l)
     elif feedbase == "Idontevenknow":
         goodies = db.query("SELECT * FROM published ORDER BY combines DESC LIMIT 1000;")
     else:
-        goodies = db.query("SELECT * FROM published ORDER BY ID DESC LIMIT 1000;")
+        #goodies = db.query("SELECT * FROM published ORDER BY ID DESC LIMIT 1000;")
+        posts = os.listdir('posts/')
+        goodies=[]
+        for p in posts:
+            l=load('posts/'+p)
+            goodies.append(l)
     return goodies
 
 def getcombofeed(show):
     timebase=session.timebase
     feedbase=session.feedbase
     if feedbase == "heart":
-        comboposts = db.query("SELECT * FROM published WHERE combine='"+show+"' ORDER BY hearts DESC LIMIT 1000;")
+        #comboposts = db.query("SELECT * FROM published WHERE combine='"+show+"' ORDER BY hearts DESC LIMIT 1000;")
+        posts = os.listdir('hearts/'+show)
+        comboposts=[]
+        for p in posts:
+            l=load('posts/'+p)
+            comboposts.append(l)
     elif feedbase == "combo":
-        comboposts = db.query("SELECT * FROM published WHERE combine='"+show+"' ORDER BY combines DESC LIMIT 1000;")
-    elif feedbase == "idontknow":
-        comboposts = db.query("SELECT * FROM published WHERE combine='"+show+"' ORDER BY hearts DESC LIMIT 1000;")
+        #comboposts = db.query("SELECT * FROM published WHERE combine='"+show+"' ORDER BY combines DESC LIMIT 1000;")
+        posts = os.listdir('combos/'+show)
+        comboposts=[]
+        for p in posts:
+            l=load('posts/'+p)
+            comboposts.append(l)
     else:
-        comboposts = db.query("SELECT * FROM published WHERE combine='"+show+"' ORDER BY ID DESC LIMIT 1000;")
+        #comboposts = db.query("SELECT * FROM published WHERE combine='"+show+"' ORDER BY ID DESC LIMIT 1000;")
+        posts = get_files_by_modtime('posts/',newest_first=True)
+        comboposts=[]
+        for p in posts:
+            l=load('posts/'+p)
+            comboposts.append(l)
     return comboposts
 
 def userimage(user):
