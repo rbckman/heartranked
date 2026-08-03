@@ -48,17 +48,14 @@ urls = (
     '/upload', 'upload',
     '/rendered', 'rendered',
     '/uploads?', 'uploads',
-    '/config', 'config',
+    '/config', 'config')
 
 #Load from settings
-
 webmaster = settings.webmaster
 baseurl = settings.baseurl
 siteurl = baseurl
-allowed = settings.allowed
 postadmin = settings.postadmin
 postadmin_signature = settings.postadmin_signature
-
 basedir = os.path.dirname(os.path.realpath(__file__))+'/'
 templatedir = basedir + 'html/'
 staticdir = basedir + 'public_html/'
@@ -71,6 +68,15 @@ rendersplash = web.template.render(templatedir, base="splash")
 session = web.session.Session(app,store,initializer={'login':0, 'privilege':0, 'bag':[], 'sessionkey':'empty','postid':'','backurl':'','user':'','search':'', 'bildsida':'', 'feedbase':'', 'timebase':''})
 
 allowedchar = '_','-','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','1','2','3','4','5','6','7','8','9','0'
+
+def runfirst():
+    os.makedirs(basedir+'p/posts',exist_ok=True)
+    os.makedirs(basedir+'p/deleted',exist_ok=True)
+    os.makedirs(basedir+'u/',exist_ok=True)
+    os.makedirs(basedir+'r/',exist_ok=True)
+    os.makedirs(basedir+'r/visitors',exist_ok=True)
+
+runfirst()
 
 def logged():
     if session.login > 0:
@@ -101,7 +107,7 @@ def savejson(thename, thedict):
     #hearts will be files as usernames with timestamp in a hearts folder in post folder. be stored and checked in u/hearts and post/hearts
     # be sure to add home domain setting to username
     #make save list a dict use same names
-    #postmeta=load(thename)
+    #postmeta=loadjson(thename)
     for key, i in thedict.items():
         postmeta=createpost(key,i)        
     with open(basedir+thename, "w") as f:
@@ -110,7 +116,7 @@ def savejson(thename, thedict):
 
 def loadjson(thename):
     with open(basedir+thename, 'r') as f:
-        settings = json.load(f)
+        settings = json.loadjson(f)
         for key, i in settings.items():
             postmeta=creatpost(key,i)
     return postmeta
@@ -124,20 +130,20 @@ def adduser(name, password, mail):
     password = password.encode("utf-8")
     salt = bcrypt.gensalt()
     password_hashed = bcrypt.hashpw(password, salt)
-    tot = len(os.listdir(basedir+'users/'))
+    tot = len(os.listdir(basedir+'/r/users/'))
     print('users alltsomallt: ' + str(tot))
     if tot > 1:
         adminlevel=3
     else:
         adminlevel=5
     savedict={'name':name, 'originalname':originalname, 'password':password, 'hashed':hashed,'mail':mail,'adminlevel':adminlevel}
-    savejson('users/'+name, savedict)
+    savejson('r/users/'+name, savedict)
     print("new user added")
     return
 
 def adminlevel(user):
     #level = db.query("SELECT adminlevel FROM rymdadmin WHERE name='"+user+"';")[0]
-    level=load('users', user)
+    level=loadjson('r/users/'+user)
     #1 session logout, web.py bug
     #2 rights to see pics and comment
     #3 rights to upoload
@@ -147,14 +153,14 @@ def adminlevel(user):
 
 def stopresetpass(mail):
     t = None
-    if os.path.exists(basedir+'stopresetpass/'+mail) == True:
-        t=load('stopresetpass/'+mail)
+    if os.path.exists(basedir+'r/stopresetpass/'+mail) == True:
+        t=loadjson('r/stopresetpass/'+mail)
     else:
         savedict={'timeadded':time.time()}
-        savejson('stopresetpass/'+mail, savedict)
+        savejson('r/stopresetpass/'+mail, savedict)
         return
     savedict={'timeadded':time.time()}
-    savejson('stopresetpass/'+mail, savedict)
+    savejson('r/stopresetpass/'+mail, savedict)
     latest = time.time() - t
     print(latest)
     if latest < 600:
@@ -165,14 +171,14 @@ def stopresetpass(mail):
 
 def stopflood(ip,referer):
     t = None
-    if os.path.exists(basedir+'stopflood/'+ip) == True:
-        t=load('stopflood/'+ip)
+    if os.path.exists(basedir+'r/stopflood/'+ip) == True:
+        t=loadjson('r/stopflood/'+ip)
     else:
         savedict={'timeadded':time.time()}
-        savejson('stopflood/'+ip, savedict)
+        savejson('r/stopflood/'+ip, savedict)
         return
     savedict={'timeadded':time.time()}
-    savejson('stopflood/'+ip, savedict)
+    savejson('r/stopflood/'+ip, savedict)
     latest = time.time() - t
     print(latest)
     if latest < 1:
@@ -182,7 +188,7 @@ def stopflood(ip,referer):
         return False
 
 def getinvitation(secretinvitation):
-    invite=load('invites/'+secretinvitation)
+    invite=loadjson('r/invites/'+secretinvitation)
     if invitation == secretinvitation:
         if invite == '':
             return True
@@ -206,9 +212,9 @@ class login():
             loginform = self.form()
             return render.login(loginform, fejl, resetpasslink)
         if session.login == 3:
-            return web.seeother('/heartranked')
+            return web.seeother('/')
         if session.login == 5:
-            raise web.seeother('/heartranked')
+            raise web.seeother('/')
     def POST(self):
         referer = web.ctx.env.get('HTTP_REFERER',baseurl)
         ip = web.ctx['ip']
@@ -233,13 +239,13 @@ class login():
                     adminlevel(p.name)
                     print('BACKURL: '+session.backurl)
                     if session.login == 5:
-                        raise web.seeother('/heartranked')
+                        raise web.seeother('/')
                     if session.backurl != '':
                         backurl = session.backurl
                         session.backurl = ''
                         raise web.seeother(backurl)
                     else:
-                        raise web.seeother('/heartranked')
+                        raise web.seeother('/')
         return web.seeother('/login?error=fejl')
 
 class register():
@@ -275,7 +281,7 @@ class register():
                     formfail = 'Too shoort passcode. Min 5 char.'
             except:
                 pass
-            totusers = len(os.listdir(basedir+'users/'))
+            totusers = len(os.listdir(basedir+'r/users/'))
             registerform.fill(user=urllib.parse.unquote_plus(n), mail=urllib.parse.unquote_plus(m), invite=w.invite)
             return render.register(registerform, formfail, totusers)
         else:
@@ -293,7 +299,7 @@ class register():
             if len(i.password) < 5:
                 raise web.seeother('/register?invite='+i.invite+'&fail=kortlosen'+r)
             #rymdadmins = db.select('rymdadmin', what='name, mail')
-            rymdadmins = os.listdir(basedir+'users/')
+            rymdadmins = os.listdir(basedir+'r/users/')
             for p in rymdadmins:
                 if p.name.lower() == i.user.lower():
                     raise web.seeother('/register?invite='+i.invite+'&fail=nametaken' +r)
@@ -331,7 +337,7 @@ class like:
             user = i.user
             postid = i.postid
             #l = db.query("SELECT * FROM likes WHERE bild='"+postid+"' AND user='"+session.user+"';")
-            l = loadjson('posts/'+postid+'/likes/'+session.user)
+            l = loadjson('p/posts/'+postid+'/hearts/'+session.user)
             print(session.user)
             if l:
                 user_likes = True
@@ -340,16 +346,16 @@ class like:
             if user_likes == False:
                 #db.insert('likes', user=session.user, bild=postid, datum=datetime.datetime.now())
                 savedict={'timeadded':datetime.datetime.now()}
-                savejson('posts/'+postid+'/hearts/'+session.user, savedict)
+                savejson('p/posts/'+postid+'/hearts/'+session.user, savedict)
                 savejson('u/'+session.user+'/hearts/'+session.user, savedict)
                 user_likes = True
             elif user_likes == True:
                 #db.query("DELETE FROM likes WHERE bild='"+postid+"' AND user='"+session.user+"';")
-                deletepost(basedir+'posts/'+postid+'/hearts/'+session.user)
+                deletepost(basedir+'p/posts/'+postid+'/hearts/'+session.user)
                 deletepost(basedir+'u/'+session.user+'/hearts/'+session.user)
                 user_likes = False
             #likes = db.query("SELECT Count(*) AS likes FROM likes WHERE bild='"+postid+"';")[0]
-            likes = len(os.listdir(basedir+'posts/'+postid+'/hearts/'))
+            likes = len(os.listdir(basedir+'/p/posts/'+postid+'/hearts/'))
             # Example: Update like count in your database
             # This is a placeholder; replace with your database logic
             # Return JSON response
@@ -364,7 +370,7 @@ class user():
                 #db.update('published', where="postid='" + data.soundname +"'", public=data.public)
                 public=data.public
                 savedict={'timeadded':datetime.datetime.now()}
-                savejson('posts/'+postid+'/meta')
+                savejson('p/posts/'+postid+'/meta')
             elif data.showuploads=='yes':
                 uploads = []
                 uploads = get_files_by_modtime('public_html/u/' + user + '/images/web/',newest_first=True)
@@ -372,15 +378,15 @@ class user():
             elif data.onair and data.soundname:
                 #db.update('published', where="postid='" + data.soundname +"'", playing=data.onair)
                 onair={"onair":data.onair}
-                savejson('posts/'+postid+'/meta')
+                savejson('p/posts/'+postid+'/meta')
             #soundname='aurora_ruderalis-greatful_bread'
             #filetype='flac'
             #postid = hashlib.md5(str(random.getrandbits(256)).encode('utf-8')).hexdigest()
             #db.insert('sound', postid=postid, filename=soundname, sort=filetype, title=soundname, uploaddate=datetime.datetime.now(), uppladdare=user, lastmod=datetime.datetime.now(), moddedby=user)
             #usersounds = db.query("SELECT * FROM published WHERE creator='"+user+"' ORDER BY timeadded DESC;")
-            usersound=load('posts/')
+            usersound=loadjson('p/posts/')
             #sounds = db.select('published')
-            sounds=os.listdir(basedir+'posts/')
+            sounds=os.listdir(basedir+'p/posts/')
             creditsounds = []
             for i in sounds:
                 try:
@@ -400,9 +406,9 @@ class invites():
     def GET(self):
         if session.login > 2:
             #user = db.select('rymdadmin', where='name="'+session.user+'"')[0]
-            user = loadjson('users/'+session.user)
+            user = loadjson('r/users/'+session.user)
             #invites = db.select('invites', where='createdby="'+session.user+'"')
-            invites = loadjson('invites/'+session.user)
+            invites = loadjson('r/invites/'+session.user)
             tuningform = self.form()
             w = web.input(epost=None, render=None)
             formfail = ''
@@ -411,13 +417,13 @@ class invites():
             if w.render == 'yes':
                 secretinvitekey = hashlib.md5(str(random.getrandbits(256)).encode('utf-8')).hexdigest()
                 #db.insert('invites', secretinvitation=secretinvitekey, created=datetime.datetime.now(), createdby=session.user)
-                thedict={"secretinvitekey":secretinvitekey,"timeadded":datetime.datetime.now(),"creator":session.user)
-                savejson('invites/'+session.user, thedict)
+                thedict={"secretinvitekey":secretinvitekey,"timeadded":datetime.datetime.now(),"creator":session.user}
+                savejson('r/invites/'+session.user, thedict)
             return render.invites(tuningform, formfail, user.name, invites)
     def POST(self):
         if session.login > 2:
             #user = db.select('rymdadmin', where='name="'+session.user+'"')[0]
-            user = loadjson('users/'+session.user)
+            user = loadjson('r/users/'+session.user)
             tuningform = self.form()
             i = web.input()
             if i.mail == '':
@@ -426,11 +432,11 @@ class invites():
                 raise web.seeother('/tuning?fail=notmail') 
             secretinvitekey = hashlib.md5(str(random.getrandbits(256)).encode('utf-8')).hexdigest()
             #db.insert('invites', secretinvitation=secretinvitekey, created=datetime.datetime.now(), createdby=session.user)
-            thedict={"secretinvitekey":secretinvitekey,"timeadded":datetime.datetime.now(),"creator":session.user)
-            savejson('invites/'+session.user, thedict)
+            thedict={"secretinvitekey":secretinvitekey,"timeadded":datetime.datetime.now(),"creator":session.user}
+            savejson('r/invites/'+session.user, thedict)
             msg = "YO! You are the One! " + user.name + " is your Morpheous. Follow this rabbit https://robinbackman.com/register?invite="+secretinvitekey 
             sendmail(i.mail, 'Invitation to HEART RANKED!', msg)
-        return web.seeother('/heartranked')
+        return web.seeother('/')
 
 class tuning():
     form = web.form.Form(
@@ -442,12 +448,10 @@ class tuning():
     web.form.Button('Spara'))
     def GET(self):
         if session.login > 2:
-            print('asdfasdfasdf')
             #user = db.select('rymdadmin', where='name="'+session.user+'"')[0]
-            user = loadjson('users/'+session.user)
+            user = loadjson('r/users/'+session.user)
             tuningform = self.form()
             w = web.input(namn=None,epost=None,fail=None,upd=None)
-            print('asdfasdfasdfkdakkakka')
             formfail = ''
             if w.fail == 'wrongpass':
                 formfail = formfail + 'wrong passcode'
@@ -503,14 +507,14 @@ class tuning():
                                 password_hashed = bcrypt.hashpw(password, salt)
                                 #db.update('rymdadmin', where='name="'+session.user+'"', displayname=i.user, password=password_hashed, mail=i.mail.lower())
                                 thedict={'displayname':i.user,'password':password_hashed,'mail':i.mail.lower()}
-                                savejson('users/'+session.user, thedict)
+                                savejson('r/users/'+session.user, thedict)
                                 return web.seeother('/tuning?upd=yes')
                         if '@' not in i.mail:
                             raise web.seeother('/tuning?fail=notmail')
                         #update without passwordchange
                         #db.update('rymdadmin', where='name="'+session.user+'"', displayname=i.user, mail=i.mail.lower())
                         thedict={'displayname':i.user,'mail':i.mail.lower()}
-                        savejson('users/'+session.user, thedict)
+                        savejson('r/users/'+session.user, thedict)
                         return web.seeother('/tuning?upd=yes')
                     else:
                         raise web.seeother('/tuning?fail=wrongpass')
@@ -561,7 +565,7 @@ class forgotpass():
                     password_hashed = bcrypt.hashpw(password, salt)
                     #db.update('rymdadmin', where='name="'+p.name+'"', password=password_hashed)
                     thedict={'password':password_hashed}
-                    savejson('users/'+p.name, thedict)
+                    savejson('r/users/'+p.name, thedict)
                     print("lösenordet uppdaterat!")
                     msg = "Your new passcode is: " + unencrypted_password + ' , once you logg in with this enter a new passcode by pressin your name, it a um link. Take care now bye bye then.'
                     sendmail(p.mail, 'Heart Ranked Passcode', msg)
@@ -631,7 +635,7 @@ def save_new_gif(new_frames, old_gif_information, new_path):
 def getdisplayname(user):
     try:
         #displayname = db.query("SELECT displayname FROM rymdadmin WHERE name='"+user+"';")[0]
-        displayname = loadjson('users/'+session.user)
+        displayname = loadjson('r/users/'+session.user)
         displayname = displayname.displayname
     except:
         displayname = user
@@ -705,19 +709,38 @@ def callsubprocess(cmd):
 
 def visitorlog(ip, referer, environ):
     #last = db.query('SELECT ip AS ip FROM visitors WHERE id=(SELECT MAX(id) FROM visitors)')
-    last = get_files_by_modtime('visitors/'+ip,newest_first=True)
-    lastip=load('visitors/'+last[0])
-    if lastip != ip:
-        country = ''
-        country = os.popen('geoiplookup '+ip).read()
-        #print(soundtype)
-        countrycode = country.split(':')[1].split(',')[0].lower().strip()
-        country = country.split(':')[1].split(',')[1].strip()
-        #print('fuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu: '+ country)
+    last = get_files_by_modtime('r/visitors/',newest_first=True)
+    if last:
+        lastip=loadjson('r/visitors/'+last[0])
+    else:
+        lastip=''
         try:
+            country = ''
+            country = os.popen('geoiplookup '+ip).read()
+            print(country)
+            if country != '':
+                countrycode = country.split(':')[1].split(',')[0].lower().strip()
+                country = country.split(':')[1].split(',')[1].strip()
+            else:
+                country='none'
+            #print('fuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu: '+ country)
             #db.insert('visitors', ip=ip, referer=referer, environ=environ, country=country,  countrycode=countrycode, time=datetime.datetime.now())
             thedict={'ip':ip,'referer':referer,'environ':environ,'country':country,'countrycode':countrycode,'time':datetime.datetime.now()}
-            savejson('visitors/'+ip,thedict)
+            savejson('r/visitors/'+ip,thedict)
+        except:
+            pass
+        print("added to visitor log")
+    if lastip != ip:
+        try:
+            country = ''
+            country = os.popen('geoiplookup '+ip).read()
+            #print(soundtype)
+            countrycode = country.split(':')[1].split(',')[0].lower().strip()
+            country = country.split(':')[1].split(',')[1].strip()
+            #print('fuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu: '+ country)
+            #db.insert('visitors', ip=ip, referer=referer, environ=environ, country=country,  countrycode=countrycode, time=datetime.datetime.now())
+            thedict={'ip':ip,'referer':referer,'environ':environ,'country':country,'countrycode':countrycode,'time':datetime.datetime.now()}
+            savejson('r/visitors/'+ip,thedict)
         except:
             pass
         print("added to visitor log")
@@ -726,9 +749,9 @@ def visitorlog(ip, referer, environ):
 def getvisitors():
     #visitors = db.select('visitors')
     #visitors = db.query('SELECT * FROM visitors ORDER BY time DESC LIMIT 10000')
-    visitors = get_files_by_modtime('visitors/'+ip,newest_first=True) 
+    visitors = get_files_by_modtime('r/visitors/'+ip,newest_first=True) 
     #total = db.query('SELECT COUNT(*) AS total_visits FROM visitors')
-    total=len(os.listdir('visitors/'))
+    total=len(os.listdir(basedir+'r/visitors/'))
     #unique = db.query('SELECT COUNT(DISTINCT ip) AS unique_visits FROM visitors')
     unique=[]
     for i in visitors:
@@ -741,20 +764,24 @@ def getvisitors():
 def getvisits():
     #limit=100
     #visits = db.query("SELECT * FROM visitors ORDER BY time DESC LIMIT " + str(limit))
-    visits=load('visitors/')
+    visitors=[]
+    v=os.listdir(basedir+'r/visitors/')
+    for i in v:
+        visit=loadjson('r/visitors/'+i)
+        visitors.append(visit)
     #visitors = db.select('visitors')
-    visitors=load('visitors/')
+    #visitors=loadjson('r/visitors/')
     #total = db.query('SELECT COUNT(*) AS total_visits FROM visitors')
-    total=len(os.listdir('visitors/'))
+    total=len(os.listdir(basedir+'r/visitors/'))
     #unique = db.query('SELECT COUNT(DISTINCT ip) AS unique_visits FROM visitors')
     unique=[]
     for i in visitors:
         for p in visitors:
-            if i == p:
+            if i.ip == p.ip:
                 unique.append(i)
     uniquevisits=len(unique)
     countrylist=[]
-    for i in visits:
+    for i in visitors:
         if i.countrycode not in countrylist:
             countrylist.append(i.countrycode)
             #print('fuuuuuuuuuuuuuuu: '+i.countrycode)
@@ -770,20 +797,20 @@ class logout:
     def GET(self):
         session.login = 0
         session.user = None
-        raise web.seeother('/heartranked')
+        raise web.seeother('/')
 
 def getlikes(postid, user):
     user_likes = False
     #l = db.query("SELECT Count(*) AS likes FROM likes WHERE bild='"+postid+"';")[0]
-    l=len(os.listdir('posts/'+postid+'/hearts/')
+    l=len(os.listdir(basedir+'p/posts/'+postid+'/hearts/'))
     #db.update('published', where='postid="'+postid+'"', hearts=l.likes)
-    thedict={'hearts:'l}
-    savejson('posts/'+postid+'/meta',thedict)
-    thedict={'postid:'postid}
-    savejson('heartranked/'+str(l),thedict)
+    thedict={'hearts':l}
+    savejson('p/posts/'+postid+'/meta',thedict)
+    thedict={'hearts':l}
+    savejson('/p/posts/'+postid+'/hearts/'+user,thedict)
     if user:
         #m = db.query("SELECT * FROM likes WHERE bild='"+postid+"' AND user='"+user+"';")
-        m=load('posts/'+postid+'/hearts/'+user)
+        m=loadjson('/p/posts/'+postid+'/hearts/'+user)
         if m:
             user_likes = True
         else:
@@ -802,7 +829,7 @@ def postexist(postid):
     return False
     try:
         #l = db.select('published', where="postid='"+postid+"'")[0]
-        l=load('posts/'+postid+'/meta')
+        l=loadjson('/p/posts/'+postid+'/meta')
     except:
         return False
     try:
@@ -816,7 +843,7 @@ def postexist(postid):
 
 def getcombines(postid):
     #l = db.query("SELECT Count(*) AS combines FROM published WHERE combine='"+postid+"';")[0]
-    l=len(os.listdir('posts/'+postid+'/combos/'))
+    l=len(os.listdir(basedir+'/p/posts/'+postid+'/combos/'))
     #m = db.query("SELECT * FROM likes WHERE bild='"+postid+"' AND user='"+user+"';")
     #db.update('published', where='postid="'+postid+'"', combines=0)
     if l.combines > 0:
@@ -826,11 +853,11 @@ def getcombines(postid):
 
 def pushcombines(postid):
     #l = db.query("SELECT Count(*) AS combines FROM published WHERE postid='"+postid+"';")[0]
-    l=len(os.listdir('posts/'+postid+'/combos/'))
+    l=len(os.listdir(basedir+'/p/posts/'+postid+'/combos/'))
     #m = db.query("SELECT * FROM likes WHERE bild='"+postid+"' AND user='"+user+"';")
     #db.update('published', where='postid="'+postid+'"', combines=l.combines)
     thedict={'combines':l}
-    savejson('posts/'+postid+'/meta',thedict)
+    savejson('/p/posts/'+postid+'/meta',thedict)
     if l.combines >= 0:
             return "⚭ " + str(l)
     else:
@@ -854,15 +881,15 @@ def getfeed():
         now = now.strftime('%Y-%m-%d %H:%M:%S')
         one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
         #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY hearts DESC LIMIT 1000;")
-        #posts=os.listdir('posts/')
+        #posts=os.listdir('/p/posts/')
         #make function get_files_by_modtime newest_first and by today week month year
         posts = os.listdir('heartrank/')
         goodies=[]
         for p in posts:
             #check modtime here day
-            lastupdate = os.path.getmtime('heartrank/'+p)
+            lastupdate = os.path.getmtime(basedir+'r/heartrank/'+p)
             if lastupdate > one_day_before:
-                l=load('posts/'+p)
+                l=loadjson('p/posts/'+p)
                 goodies.append(l)
         print(goodies)
     elif feedbase == "heart" and timebase == "week":
@@ -871,13 +898,13 @@ def getfeed():
         now = now.strftime('%Y-%m-%d %H:%M:%S')
         one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
         #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY hearts DESC LIMIT 1000;")
-        posts = os.listdir('heartrank/')
+        posts = os.listdir(basedir+'r/heartrank/')
         goodies=[]
         for p in posts:
             #check modtime here day
-            lastupdate = os.path.getmtime('heartrank/'+p)
+            lastupdate = os.path.getmtime(basedir+'r/heartrank/'+p)
             if lastupdate > one_day_before:
-                l=load('posts/'+p)
+                l=loadjson('p/posts/'+p)
                 goodies.append(l)
         print(goodies)
     elif feedbase == "heart" and timebase == "month":
@@ -886,13 +913,13 @@ def getfeed():
         now = now.strftime('%Y-%m-%d %H:%M:%S')
         one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
         #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY hearts DESC LIMIT 1000;")
-        posts = os.listdir('heartrank/')
+        posts = os.listdir(basedir+'r/heartrank/')
         goodies=[]
         for p in posts:
             #check modtime here day
-            lastupdate = os.path.getmtime('heartrank/'+p)
+            lastupdate = os.path.getmtime(basedir+'r/heartrank/'+p)
             if lastupdate > one_day_before:
-                l=load('posts/'+p)
+                l=loadjson('p/posts/'+p)
                 goodies.append(l)
         print(goodies)
     elif feedbase == "heart" and timebase == "year":
@@ -901,21 +928,21 @@ def getfeed():
         now = now.strftime('%Y-%m-%d %H:%M:%S')
         one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
         #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY hearts DESC LIMIT 1000;")
-        posts = os.listdir('heartrank/')
+        posts = os.listdir(basedir+'r/heartrank/')
         goodies=[]
         for p in posts:
             #check modtime here day
-            lastupdate = os.path.getmtime('heartrank/'+p)
+            lastupdate = os.path.getmtime(basedir+'r/heartrank/'+p)
             if lastupdate > one_day_before:
-                l=load('posts/'+p)
+                l=loadjson('p/posts/'+p)
                 goodies.append(l)
         print(goodies)
     elif feedbase == "heart" and timebase == "" or feedbase == "heart" and timebase == "all":
         #goodies = db.query("SELECT * FROM published ORDER BY hearts DESC LIMIT 1000;")
-        posts = os.listdir('heartrank/')
+        posts = os.listdir(basedir+'r/heartrank/')
         goodies=[]
         for p in posts:
-            l=load('posts/'+p)
+            l=loadjson('p/posts/'+p)
             goodies.append(l)
         print(goodies)
     #TIME
@@ -924,12 +951,12 @@ def getfeed():
         now = now.strftime('%Y-%m-%d %H:%M:%S')
         one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
         #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY ID DESC LIMIT 1000;")
-        posts = get_files_by_modtime('posts/',newest_first=True)
+        posts = get_files_by_modtime('p/posts/',newest_first=True)
         for p in posts:
             #check modtime here day
-            lastupdate = os.path.getmtime('posts/'+p)
+            lastupdate = os.path.getmtime('p/posts/'+p)
             if lastupdate > one_day_before:
-                l=load('posts/'+p)
+                l=loadjson('p/posts/'+p)
                 goodies.append(l)
         print(goodies)        
     elif feedbase == "time" and timebase == "week":
@@ -938,12 +965,12 @@ def getfeed():
         now = now.strftime('%Y-%m-%d %H:%M:%S')
         one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
         #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY ID DESC LIMIT 1000;")
-        posts = get_files_by_modtime('posts/',newest_first=True)
+        posts = get_files_by_modtime('p/posts/',newest_first=True)
         for p in posts:
             #check modtime here day
-            lastupdate = os.path.getmtime('posts/'+p)
+            lastupdate = os.path.getmtime('p/posts/'+p)
             if lastupdate > one_day_before:
-                l=load('posts/'+p)
+                l=loadjson('p/posts/'+p)
                 goodies.append(l)
     elif feedbase == "time" and timebase == "month":
         now = datetime.datetime.now()
@@ -951,12 +978,12 @@ def getfeed():
         now = now.strftime('%Y-%m-%d %H:%M:%S')
         one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
         #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY ID DESC LIMIT 1000;")
-        posts = get_files_by_modtime('posts/',newest_first=True)
+        posts = get_files_by_modtime('p/posts/',newest_first=True)
         for p in posts:
             #check modtime here day
-            lastupdate = os.path.getmtime('posts/'+p)
+            lastupdate = os.path.getmtime('p/posts/'+p)
             if lastupdate > one_day_before:
-                l=load('posts/'+p)
+                l=loadjson('p/posts/'+p)
                 goodies.append(l)
     elif feedbase == "time" and timebase == "year":
         now = datetime.datetime.now()
@@ -964,18 +991,18 @@ def getfeed():
         now = now.strftime('%Y-%m-%d %H:%M:%S')
         one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
         #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY ID DESC LIMIT 1000;")
-        posts = get_files_by_modtime('posts/',newest_first=True)
+        posts = get_files_by_modtime('p/posts/',newest_first=True)
         for p in posts:
             #check modtime here day
-            lastupdate = os.path.getmtime('posts/'+p)
+            lastupdate = os.path.getmtime('p/posts/'+p)
             if lastupdate > one_day_before:
-                l=load('posts/'+p)
+                l=loadjson('p/posts/'+p)
                 goodies.append(l)
     elif feedbase == "time" and timebase == "" or  feedbase == "time" and timebase == "all":
         #goodies = db.query("SELECT * FROM published ORDER BY ID DESC LIMIT 1000;")
-        posts = get_files_by_modtime('posts/',newest_first=True)
+        posts = get_files_by_modtime('/p/posts/',newest_first=True)
         for p in posts:
-            l=load('posts/'+p)
+            l=loadjson('p/posts/'+p)
             goodies.append(l)
     #COMBO
     elif feedbase == "combo" and timebase == "today":
@@ -983,13 +1010,13 @@ def getfeed():
         now = now.strftime('%Y-%m-%d %H:%M:%S')
         one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
         #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY combines DESC LIMIT 1000;")
-        posts = os.listdir('comborank/')
+        posts = os.listdir(basedir+'r/comborank/')
         goodies=[]
         for p in posts:
             #check modtime here day
-            lastupdate = os.path.getmtime('comborank/'+p)
+            lastupdate = os.path.getmtime(basedir+'r/comborank/'+p)
             if lastupdate > one_day_before:
-                l=load('posts/'+p)
+                l=loadjson('p/posts/'+p)
                 goodies.append(l)
         print(goodies)
     elif feedbase == "combo" and timebase == "week":
@@ -1002,9 +1029,9 @@ def getfeed():
         goodies=[]
         for p in posts:
             #check modtime here day
-            lastupdate = os.path.getmtime('comborank/'+p)
+            lastupdate = os.path.getmtime(basedir+'r/comborank/'+p)
             if lastupdate > one_day_before:
-                l=load('posts/'+p)
+                l=loadjson('p/posts/'+p)
                 goodies.append(l)
     elif feedbase == "combo" and timebase == "month":
         now = datetime.datetime.now()
@@ -1012,13 +1039,13 @@ def getfeed():
         now = now.strftime('%Y-%m-%d %H:%M:%S')
         one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
         #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY combines DESC LIMIT 1000;")
-        posts = os.listdir('comborank/')
+        posts = os.listdir(basedir+'r/comborank/')
         goodies=[]
         for p in posts:
             #check modtime here day
-            lastupdate = os.path.getmtime('comborank/'+p)
+            lastupdate = os.path.getmtime(basedir+'r/comborank/'+p)
             if lastupdate > one_day_before:
-                l=load('posts/'+p)
+                l=loadjson('p/posts/'+p)
                 goodies.append(l)
     elif feedbase == "combo" and timebase == "year":
         now = datetime.datetime.now()
@@ -1026,29 +1053,29 @@ def getfeed():
         now = now.strftime('%Y-%m-%d %H:%M:%S')
         one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
         #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY combines DESC LIMIT 1000;")
-        posts = os.listdir('comborank/')
+        posts = os.listdir(basedir+'r/comborank/')
         goodies=[]
         for p in posts:
             #check modtime here day
-            lastupdate = os.path.getmtime('comborank/'+p)
+            lastupdate = os.path.getmtime(basedir+'r/comborank/'+p)
             if lastupdate > one_day_before:
-                l=load('posts/'+p)
+                l=loadjson('p/posts/'+p)
                 goodies.append(l)
     elif feedbase == "combo" and timebase == "" or  feedbase == "combo" and timebase == "all":
         #goodies = db.query("SELECT * FROM published ORDER BY combines DESC LIMIT 1000;")
-        posts = os.listdir('comborank/')
+        posts = os.listdir('r/comborank/')
         goodies=[]
         for p in posts:
-            l=load('posts/'+p)
+            l=loadjson('p/posts/'+p)
             goodies.append(l)
     elif feedbase == "Idontevenknow":
         goodies = db.query("SELECT * FROM published ORDER BY combines DESC LIMIT 1000;")
     else:
         #goodies = db.query("SELECT * FROM published ORDER BY ID DESC LIMIT 1000;")
-        posts = os.listdir('posts/')
+        posts = os.listdir('p/posts/')
         goodies=[]
         for p in posts:
-            l=load('posts/'+p)
+            l=loadjson('p/posts/'+p)
             goodies.append(l)
     return goodies
 
@@ -1057,24 +1084,24 @@ def getcombofeed(show):
     feedbase=session.feedbase
     if feedbase == "heart":
         #comboposts = db.query("SELECT * FROM published WHERE combine='"+show+"' ORDER BY hearts DESC LIMIT 1000;")
-        posts = os.listdir('hearts/'+show)
+        posts = os.listdir(basedir+'r/heartrank/')
         comboposts=[]
         for p in posts:
-            l=load('posts/'+p)
+            l=loadjson('p/posts/'+p)
             comboposts.append(l)
     elif feedbase == "combo":
         #comboposts = db.query("SELECT * FROM published WHERE combine='"+show+"' ORDER BY combines DESC LIMIT 1000;")
-        posts = os.listdir('combos/'+show)
+        posts = os.listdir(basedir+'r/combos/')
         comboposts=[]
         for p in posts:
-            l=load('posts/'+p)
+            l=loadjson('p/posts/'+p)
             comboposts.append(l)
     else:
         #comboposts = db.query("SELECT * FROM published WHERE combine='"+show+"' ORDER BY ID DESC LIMIT 1000;")
-        posts = get_files_by_modtime('posts/',newest_first=True)
+        posts = get_files_by_modtime(basedir+'p/posts/',newest_first=True)
         comboposts=[]
         for p in posts:
-            l=load('posts/'+p)
+            l=loadjson('p/posts/'+p)
             comboposts.append(l)
     return comboposts
 
@@ -1108,7 +1135,7 @@ class heartranked:
         #search
         try:
             #bilder_totalt = db.query("SELECT COUNT(*) AS sound FROM published")[0]
-            bilder_totalt=os.listdir('posts/')
+            bilder_totalt=os.listdir('p/posts/')
             tot = int(bilder_totalt)
             print('bilder alltsomallt: ' + str(tot))
         except:
@@ -1132,7 +1159,7 @@ class heartranked:
                 #tot = db.query("SELECT Count(*) AS sound FROM published WHERE creator LIKE '%"+session.search+"%';")[0]
                 #b1 = tot.sound
                 for i in bilder_totalt:
-                    searchthis=load('posts/'+i)
+                    searchthis=loadjson('p/posts/'+i)
                     for p in dir(searchthis):
                         if session.search in p:
                             search_result.append(searchthis)
@@ -1161,9 +1188,9 @@ class heartranked:
         print(session.bildsida)
         if session.search == '':
             #bilder = db.query("SELECT * FROM published ORDER BY id DESC LIMIT " + str(limit) + " OFFSET " + str(offset))
-            posts=len(os.listdir('posts/')
+            posts=os.listdir(basedir+'p/posts/')
             for p in posts:
-                this=load('posts/'+p)
+                this=loadjson('p/posts/'+p)
                 bilder.append(this)
         else:
             bilder = search_result
@@ -1192,9 +1219,10 @@ class heartranked:
         if i.remove != None:
             try:
                 #user = db.select('published', where="postid='"+i.remove+"'")[0]
-                post=load('posts/'+i.remove+'/meta')
-                    if post.creator == session.user:
-                        os.system('mv -r posts/'+i.remove+'/ deleted/'+i.remove)
+                post=loadjson('p/posts/'+i.remove+'/meta')
+                if post.creator == session.user:
+                    #os.system('mv -r '+basedir+'posts/'+i.remove+'/ deleted/'+i.remove)
+                    print('move to a deleted folder, make backend clean things up for real')
             except:
                 pass
         if session.login > 3:
@@ -1213,7 +1241,7 @@ class heartranked:
         searchform = self.form()
         i = web.input()
         if i.search != '':
-            raise web.seeother('/heartranked?search='+i.search)
+            raise web.seeother('/?search='+i.search)
 
 storage = {"content": ""}
 class editor:
@@ -1232,11 +1260,11 @@ class editor:
                     text2=''
                     try:
                         #olduser = db.select('unpublished', where="postid='"+i.remix+"'")[0]
-                        olduser=loadjson('posts/'+i.remix+'/meta')
+                        olduser=loadjson('p/posts/'+i.remix+'/meta')
                         #text = db.select('unpublished', where="postid='"+i.remix+"'")[0]
-                        text=loadtext('posts/'+i.remix+'/intro')
+                        text=loadtext('p/posts/'+i.remix+'/intro')
                         #text2 = db.select('unpublished', where="postid='"+i.remix+"'")[0]
-                        text2=loadtext('posts/'+i.remix+'/post')
+                        text2=loadtext('p/posts/'+i.remix+'/post')
                     except:
                         pass
                     try:
@@ -1257,7 +1285,7 @@ class editor:
                 if i.public=='yes':
                     try:
                         #text = db.select('published', where="postid='"+session.postid+"'")[0]
-                        text=loadpost('posts/'+session.postid+'/post')
+                        text=loadpost('p/posts/'+session.postid+'/post')
                     except:
                         session.postid = ''
                 else:
@@ -1269,7 +1297,7 @@ class editor:
                 if i.public=='yes':
                     try:
                         #text2 = db.select('published', where="postid='"+session.postid+"'")[0]
-                        text2=loadpost('posts/'+session.postid+'/intro')
+                        text2=loadpost('p/posts/'+session.postid+'/intro')
                     except:
                         session.postid = ''
                 else:
@@ -1292,16 +1320,16 @@ class editor:
                 createpost=True
                 try:
                     #iftext = db.select('published', where="postid='"+session.postid+"'")[0]
-                    iftext = loadjson('posts/'+session.postid+'/post')
+                    iftext = loadjson('p/posts/'+session.postid+'/post')
                     createpost=False
                 except:
                     iftext = ''
                 if createpost == False:
                     #db.update('published', where='postid="'+session.postid+'"', postid=session.postid, soundname=soundname, description=description1, description2=description2, timeadded=datetime.datetime.now(), creator=session.user)
                     thedict={'postid':session.postid, 'soundname':soundname, 'timeadded':datetime.datetime.now(), 'creator':session.user, 'combine':i.combine, 'remix':i.remix}
-                    savejson('posts/'+session.postid+'/meta',thedict)
-                    savetext('posts/'+session.postid+'/post', description)
-                    savetext('posts/'+session.postid+'/intro', description2)                    
+                    savejson('p/posts/'+session.postid+'/meta',thedict)
+                    savetext('p/posts/'+session.postid+'/post', description)
+                    savetext('p/posts/'+session.postid+'/intro', description2)                    
                     raise web.seeother('/editor?public=yes')
                 else:
                     print('make a new post')
@@ -1316,31 +1344,31 @@ class editor:
                 if createpost == True:
                     try:
                         #combine = db.select('unpublished', where="postid='"+session.postid+"'")[0]
-                        combine=load('u/'+session.user+'/posts/'+session.postid+'/meta')
+                        combine=loadjson('u/'+session.user+'/posts/'+session.postid+'/meta')
                         combine=combine.combo
                     except:
                         combine = ''
                     try:
                         #remix = db.select('unpublished', where="postid='"+session.postid+"'")[0]
-                        remix=load('u/'+session.user+'/posts/'+session.postid+'/meta')
+                        remix=loadjson('u/'+session.user+'/posts/'+session.postid+'/meta')
                         remix=remix.remix
                     except:
                         remix = ''
                     if combine != '':
                         #get how many combos there was for this combined post befor and update count. this way we keep track of combo track. NO! make it creator. OBVIOUSLY.
-                        savetext('posts/'+combine+'/combos/'+session.postid,session.user)
-                    if remix != ''
-                        savetext('posts/'+remix+'/remixes/'+session.postid,session.user)
+                        savetext('p/posts/'+combine+'/combos/'+session.postid,session.user)
+                    if remix != '':
+                        savetext('p/posts/'+remix+'/remixes/'+session.postid,session.user)
                     #db.insert('published', postid=session.postid, soundname=soundname, description=description1, description2=description2, timeadded=datetime.datetime.now(), creator=session.user, combine=combine, remix=remix)
                     thedict={'postid':session.postid,'soundname':soundname,'timeadded':datetime.datetime.now(),'creator':session.user,'combine':combine,'remix':remix}
-                    savejson('posts/'+session.postid+'/meta',thedict)
-                    savetext('posts/'+session.postid+'/post', description)
-                    savetext('posts/'+session.postid+'/intro', description2)                    
+                    savejson('p/posts/'+session.postid+'/meta',thedict)
+                    savetext('p/posts/'+session.postid+'/post', description)
+                    savetext('p/posts/'+session.postid+'/intro', description2)                    
                     try:
                         #l = db.query("SELECT Count(*) AS combines FROM published WHERE combine='"+combine+"';")[0]
-                        l=len(os.listdir('posts/'+postid+'/combos/'))
+                        l=len(os.listdir(basedir+'p/posts/'+postid+'/combos/'))
                         thedict={'combines':l}
-                        savejson('posts/'+postid+'/meta',thedict)
+                        savejson('p/posts/'+postid+'/meta',thedict)
                         #m = db.query("SELECT * FROM likes WHERE bild='"+postid+"' AND user='"+user+"';")
                         #db.update('published', where='postid="'+combine+'"', combines=l.combines)
                     except:
@@ -1348,9 +1376,9 @@ class editor:
                         pass
                     try:
                         #l = db.query("SELECT Count(*) AS combines FROM published WHERE combine='"+combine+"';")[0]
-                        l=len(os.listdir('posts/'+postid+'/remixes/'))
+                        l=len(os.listdir(basedir+'p/posts/'+postid+'/remixes/'))
                         thedict={'remixes':l}
-                        savejson('posts/'+postid+'/meta',thedict)
+                        savejson('p/posts/'+postid+'/meta',thedict)
                         #m = db.query("SELECT * FROM likes WHERE bild='"+postid+"' AND user='"+user+"';")
                         #db.update('published', where='postid="'+combine+'"', combines=l.combines)
                     except:
@@ -1380,7 +1408,7 @@ class savepost:
             iftext = ''
             try:
                 #iftext = db.select('unpublished', where="postid='"+session.postid+"'")[0]
-                iftext=loadjson('/u/'+session.user+'/posts/'+session.postid+'/meta')
+                iftext=loadjson('u/'+session.user+'/posts/'+session.postid+'/meta')
                 iftext = iftext.postid
             except:
                 iftext = ''
@@ -1424,16 +1452,16 @@ class rendered:
         if session.postid != '':
             if i.public == None:
                 #unpublished = db.select('unpublished', where='postid="'+session.postid+'"')[0]
-                description='u/'+session.user+'/posts/'+session.postid+'/intro'
-                description2='u/'+session.user+'/posts/'+session.postid+'/post'
+                description=loadtext('u/'+session.user+'/posts/'+session.postid+'/intro')
+                description2=loadtext('u/'+session.user+'/posts/'+session.postid+'/post')
                 if description == None or description2 == None:
                     return ''
                 else:
                     return markdown.markdown(description+'\n\n---\n\n'+description2)
             elif i.public == 'yes':
                 #published = db.select('published', where='postid="'+session.postid+'"')[0]
-                description='posts/'+session.postid+'/intro'
-                description2='posts/'+session.postid+'/post'
+                description=loadtext('p/posts/'+session.postid+'/intro')
+                description2=loadtext('p/posts/'+session.postid+'/post')
                 if description == None or description2 == None:
                     return ''
                 else:
@@ -1597,4 +1625,5 @@ class uploads:
             uploaded = getfiles(staticdir+'upload/')
             return render.uploads(uploaded)
 
-application = app.wsgifunc()
+#application = app.wsgifunc()
+app.run()
