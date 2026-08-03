@@ -1,4 +1,4 @@
-$def with (db,markdown,visitors, total, unique, show, logged, rights, namn, getlikes, formattime, feedbase, totbilder, limit, offset, bildpersida, search, bilder, searchform, getcombines, timebase, getfeed, getcombofeed, userimage, postexist)
+$def with (markdown,visitors, total, unique, logged, rights, namn, getlikes, formattime, feedbase, totbilder, limit, offset, bildpersida, search, bilder, searchform, getcombines, timebase, getfeed, getcombofeed, userimage, postexist, show)
 
 <HEAD>
     <meta charset="utf-8">
@@ -22,7 +22,8 @@ $unique UNICORNS 🦄 PEACE! ☮️
 <br>
 <div id="mod">
 $if rights=='mod' or rights=='admin':
-    $ displayname = db.query("SELECT displayname FROM rymdadmin WHERE name='"+namn+"';")[0]
+    $ #displayname = db.query("SELECT displayname FROM rymdadmin WHERE name='"+namn+"';")[0]
+    $ displayname=loadjson('users/'+session.user)
     hey <b><a href="/tuning">$displayname.displayname</a></b>, <a href="/invites">invite</a> or <a href="/editor?new=yes">write</a>
     <br>
 $else:
@@ -33,53 +34,44 @@ $if rights=='mod' or rights=='admin':
     $:searchform.render()
     </form>
 </div>
-$if show == 'all':
-    $ goodies = db.query("SELECT * FROM published ORDER BY ID DESC LIMIT 1000;")
-    $#<a href="?show=">show less 📃</a> top 999!<br>
-$else:
-    $ goodies = db.query("SELECT * FROM published ORDER BY ID DESC LIMIT 1000;")
-    $#<a href="?show=all">show more 📃</a> here latest<br>
-    <br>
 $if search != '':
-    $#if offset > bildpersida:
-    $#    <a href="/s?page=back"><--- go back</a> 
-    $#if offset < totbilder:
-    $#    <a href="/s?page=next">next --></a>
     <p>posts with search word $search: $totbilder</p>
-    <p><a href="/heartranked?search=">remove search</a></p>
+    <p><a href="/?search=">remove search</a></p>
     $for b in bilder:
         $for g in b:
             <div class="post" id="$g.soundname">
             <br>
             <br>
             <div class="heartpost">
-            $:markdown.markdown(g.description)
+            $:markdown.markdown(loadtext('posts/'+g.postid+'/intro'))
             </div>
             <div class="postmenu">
             <small>by $g.creator $formattime(g.timeadded)</small><br>
-            $getcombines(g.soundlink)
+            $getcombines(g.postid)
             $if g.combine:
-                $ combined = db.select('published', where="soundlink='"+g.combine+"'")[0]
-                <small>combo with <a href="/heartranked?show=$combined.soundlink">$combined.soundname</a></small><br>
+                $ #combined = db.select('published', where="postid='"+g.combine+"'")[0]
+                $ combined=loadjson('posts/'+g.combine+/meta')
+                <small>combo with <a href="/?show=$combined.postid">$combined.soundname</a></small><br>
             $if g.remix:
-                $ remixed = db.select('published', where="soundlink='"+g.remix+"'")[0]
-                <small>remixed <a href="/heartranked?show=$remixed.soundlink">$remixed.soundname</a></small><br>
-            $if g.description2 != '':
-                $if len(g.description2) > 255:
-                    <a href="/heartranked?show=$g.soundlink">read plenty more</a>
+                $ #remixed = db.select('published', where="postid='"+g.remix+"'")[0]
+                $ combined=loadjson('posts/'+g.remix+/meta')
+                <small>remixed <a href="/?show=$remixed.postid">$remixed.soundname</a></small><br>
+            $if loadtext('posts/'+g.postid+'/post') != '':
+                $if len(loadtext('posts/'+g.postid+'/post')) > 255:
+                    <a href="/?show=$g.postid">read plenty more</a>
                 $else:
-                    <a href="/heartranked?show=$g.soundlink">read more</a>
+                    <a href="/?show=$g.postid">read more</a>
             $else:
-                <a href="/editor?combine=$g.soundlink">combo</a>
-                or <a href="/heartranked?show=$g.soundlink">more</a>
-            or <div class="megalike" id="megalike$g.soundlink" onclick="like('$g.soundlink')">$getlikes(g.soundlink,namn)</div>
+                <a href="/editor?combine=$g.postid">combo</a>
+                or <a href="/?show=$g.postid">more</a>
+            or <div class="megalike" id="megalike$g.postid" onclick="like('$g.postid')">$getlikes(g.postid,namn)</div>
             <br>
             </div>
             </div>
 $else:
     $if show == None:
-        $#<small><a href="/heartranked?feedbase=timebased">timebased🌍</a> <a href="/heartranked?feedbase=heart1day">heartbased❤️day</a> <a href="/heartranked?feedbase=heart1week">week</a> <a href="/heartranked?feedbase=heart1month">month</a> <a href="/heartranked?feedbase=heart1year">year</a> <a href="/heartranked?feedbase=alltime">alltime</a></small>
-        <small>🌍 <a href="/heartranked?feedbase=time">time</a> ❤️ <a href="/heartranked?feedbase=heart">heart</a> ⚭ <a href="/heartranked?feedbase=combo">combo</a> for <a href="/heartranked?timebase=today">day</a> <a href="/heartranked?timebase=week">week</a> <a href="/heartranked?timebase=month">month</a> <a href="/heartranked?timebase=year">year</a> <a href="/heartranked?timebase=all">all</a></small>
+        $#<small><a href="/?feedbase=timebased">timebased🌍</a> <a href="/?feedbase=heart1day">heartbased❤️day</a> <a href="/?feedbase=heart1week">week</a> <a href="/?feedbase=heart1month">month</a> <a href="/?feedbase=heart1year">year</a> <a href="/?feedbase=alltime">alltime</a></small>
+        <small>🌍 <a href="/?feedbase=time">time</a> ❤️ <a href="/?feedbase=heart">heart</a> ⚭ <a href="/?feedbase=combo">combo</a> for <a href="/?timebase=today">day</a> <a href="/?timebase=week">week</a> <a href="/?timebase=month">month</a> <a href="/?timebase=year">year</a> <a href="/?timebase=all">all</a></small>
         <br>
         $ goodies=getfeed()
         $for g in goodies:
@@ -87,70 +79,75 @@ $else:
             <br>
             <br>
             <div class="heartpost">
-            $:markdown.markdown(g.description)
+            $:markdown.markdown(loadtext('posts/'+g.postid+'/intro'))
             </div>
             <div class="postmenu">
             <small><small>$formattime(g.timeadded)</small></small>
             <small>by $g.creator</small>
             $:userimage(g.creator)
             <br>
-            $getcombines(g.soundlink)
+            $getcombines(g.postid)
             $if g.combine:
                 $if postexist(g.combine):
-                    $ combined = db.select('published', where="soundlink='"+g.combine+"'")[0]
-                    <small>combo with <a href="/heartranked?show=$combined.soundlink">$combined.soundname</a></small><br>
+                    $ combined = db.select('published', where="postid='"+g.combine+"'")[0]
+                    $ combined=loadjson('posts/'+g.combine+/meta')
+                    <small>combo with <a href="/?show=$combined.postid">$combined.soundname</a></small><br>
             $if g.remix:
                 $if postexist(g.remix):
-                    $ remixed = db.select('published', where="soundlink='"+g.remix+"'")
-                    <small>remixed <a href="/heartranked?show=$remixed.soundlink">$remixed[0].soundname</a></small><br>
-            $if g.description2 != '':
-                $if len(g.description2) > 255:
-                    <a href="/heartranked?show=$g.soundlink">read plenty more</a>
+                    $ #remixed = db.select('published', where="postid='"+g.remix+"'")
+                    $ remixed=loadjson('posts/'+g.remix+/meta')
+                    <small>remixed <a href="/?show=$remixed.postid">$remixed[0].soundname</a></small><br>
+            $if (loadtext('posts/'+g.postid+'/post') != '':
+                $if len(loadtext('posts/'+g.postid+'/post')) > 255:
+                    <a href="/?show=$g.postid">read plenty more</a>
                 $else:
-                    <a href="/heartranked?show=$g.soundlink">read more</a>
+                    <a href="/?show=$g.postid">read more</a>
             $else:
                 $if namn:
-                    <a href="/editor?combine=$g.soundlink">combo</a>
-                    or <a href="/heartranked?show=$g.soundlink">more</a>
+                    <a href="/editor?combine=$g.postid">combo</a>
+                    or <a href="/?show=$g.postid">more</a>
                 $else:
-                    <a href="/heartranked?show=$g.soundlink">combo</a>
-            or <div class="megalike" id="megalike$g.soundlink" onclick="like('$g.soundlink')">$getlikes(g.soundlink,namn)</div>
+                    <a href="/?show=$g.postid">combo</a>
+            or <div class="megalike" id="megalike$g.postid" onclick="like('$g.postid')">$getlikes(g.postid,namn)</div>
             <br>
             </div>
             </div>
     $else:
-        $ goodies = db.select('published', where="soundlink='"+show+"'")
+        $ #goodies = db.select('published', where="postid='"+show+"'")
+        $ goodies=loadjson('posts/'+show+'/meta')
         $for g in goodies:
-            <a href="/heartranked#$g.soundname">back</a> 
+            <a href="/#$g.soundname">back</a> 
             $if namn == g.creator:
-                or <a href="/heartranked?edit=$g.soundlink">edit</a> 
+                or <a href="/?edit=$g.postid">edit</a> 
             $if namn:
-                or <a href="/editor?remix=$g.soundlink">remix</a> 
-                or <a href="/editor?combine=$g.soundlink">combo</a> 
+                or <a href="/editor?remix=$g.postid">remix</a> 
+                or <a href="/editor?combine=$g.postid">combo</a> 
             $if namn == g.creator:
-                or <small><a href="/heartranked?remove=$g.soundlink">remove</a></small>
+                or <small><a href="/?remove=$g.postid">remove</a></small>
             <div class="post" id="$g.soundname">
             <br>
             <div class="heartpost">
-            $:markdown.markdown(g.description)
-            $:markdown.markdown(g.description2)
+            $:markdown.markdown(loadtext('posts/'+g.postid+'/intro'))
+            $:markdown.markdown(loadtext('posts/'+g.postid+'/post'))
             </div>
             <div class="postmenu">
             <small>by $g.creator $formattime(g.timeadded)</small><br>
-            $getcombines(g.soundlink)
+            $getcombines(g.postid)
             $if g.combine:
-                $ combined = db.select('published', where="soundlink='"+g.combine+"'")[0]
-                <small>combo with <a href="/heartranked?show=$combined.soundlink">$combined.soundname</a></small><br>
+                $ #combined = db.select('published', where="postid='"+g.combine+"'")[0]
+                $ combined=loadjson('posts/'+g.combine+/meta')
+                <small>combo with <a href="/?show=$combined.postid">$combined.soundname</a></small><br>
             $if g.remix:
-                $ remixed = db.select('published', where="soundlink='"+g.remix+"'")[0]
-                <small>remixed <a href="/heartranked?show=$remixed.soundlink">$remixed.soundname</a></small><br>
-            and <a href="/heartranked#$g.soundname">back</a> 
+                $ #remixed = db.select('published', where="postid='"+g.remix+"'")[0]
+                $ remixed=loadjson('posts/'+g.remix+/meta')
+                <small>remixed <a href="/?show=$remixed.postid">$remixed.soundname</a></small><br>
+            and <a href="/#$g.soundname">back</a> 
             $if namn == g.creator:
-                or <a href="/heartranked?edit=$g.soundlink">edit</a> 
+                or <a href="/?edit=$g.postid">edit</a> 
             $if namn:
-                or <a href="/editor?remix=$g.soundlink">remix</a> 
-                or <a href="/editor?combine=$g.soundlink">combo</a> 
-            <div class="megalike" id="megalike$g.soundlink" onclick="like('$g.soundlink')">$getlikes(g.soundlink,namn)</div>
+                or <a href="/editor?remix=$g.postid">remix</a> 
+                or <a href="/editor?combine=$g.postid">combo</a> 
+            <div class="megalike" id="megalike$g.postid" onclick="like('$g.postid')">$getlikes(g.postid,namn)</div>
             <br>
             </div>
             </div>
@@ -160,8 +157,8 @@ $else:
         $ choose_feed = False
         $for c in comboposts:
             $if c.soundname and choose_feed == False:
-                $#<small><a href="/heartranked?show=$g.soundlink&feedbase=timebased">timebased 🌍</a> <a href="/heartranked?show=$g.soundlink&feedbase=heart1day">heartbased ❤️ day</a> <a href="/heartranked?show=$g.soundlink&feedbase=heart1week">week</a> <a href="/heartranked?show=$g.soundlink&feedbase=heart1month">month</a> <a href="/heartranked?show=$g.soundlink&feedbase=heart1year">year</a> <a href="/heartranked?show=$g.soundlink&feedbase=alltime">alltime</a></small>
-                <small>🌍 <a href="/heartranked?show=$g.soundlink&feedbase=time">time</a> ❤️ <a href="/heartranked?show=$g.soundlink&feedbase=heart">heart</a> ⚭ <a href="/heartranked?show=$g.soundlink&feedbase=combo">combo</a> for <a href="/heartranked?show=$g.soundlink&feedbase=today">day</a> <a href="/heartranked?show=$g.soundlink&timebase=week">week</a> <a href="/heartranked?show=$g.soundlink&timebase=month">month</a> <a href="/heartranked?show=$g.soundlink&timebase=year">year</a> <a href="/heartranked?show=$g.soundlink&timebase=all">all</a></small>
+                $#<small><a href="/?show=$g.postid&feedbase=timebased">timebased 🌍</a> <a href="/?show=$g.postid&feedbase=heart1day">heartbased ❤️ day</a> <a href="/?show=$g.postid&feedbase=heart1week">week</a> <a href="/?show=$g.postid&feedbase=heart1month">month</a> <a href="/?show=$g.postid&feedbase=heart1year">year</a> <a href="/?show=$g.postid&feedbase=alltime">alltime</a></small>
+                <small>🌍 <a href="/?show=$g.postid&feedbase=time">time</a> ❤️ <a href="/?show=$g.postid&feedbase=heart">heart</a> ⚭ <a href="/?show=$g.postid&feedbase=combo">combo</a> for <a href="/?show=$g.postid&feedbase=today">day</a> <a href="/?show=$g.postid&timebase=week">week</a> <a href="/?show=$g.postid&timebase=month">month</a> <a href="/?show=$g.postid&timebase=year">year</a> <a href="/?show=$g.postid&timebase=all">all</a></small>
                 $ choose_feed = True
             <div class="post" id="$c.soundname">
             <br>
@@ -172,20 +169,20 @@ $else:
             </div>
             <div class="postmenu">
             <small>by $c.creator $formattime(c.timeadded)</small><br>
-            $getcombines(c.soundlink)
+            $getcombines(c.postid)
             $if c.combine:
-                $ combined = db.select('published', where="soundlink='"+c.combine+"'")[0]
-                <small>combo with <a href="/heartranked?show=$combined.soundlink">$combined.soundname</a></small><br>
+                $ combined = db.select('published', where="postid='"+c.combine+"'")[0]
+                <small>combo with <a href="/?show=$combined.postid">$combined.soundname</a></small><br>
             $if c.remix:
-                $ remixed = db.select('published', where="soundlink='"+c.remix+"'")[0]
-                <small>remixed <a href="/heartranked?show=$remixed.soundlink">$remixed.soundname</a></small><br>
-            <a href="/heartranked?show=$c.soundlink">more</a>
-            or <a href="/heartranked#$c.soundname">back</a>
+                $ remixed = db.select('published', where="postid='"+c.remix+"'")[0]
+                <small>remixed <a href="/?show=$remixed.postid">$remixed.soundname</a></small><br>
+            <a href="/?show=$c.postid">more</a>
+            or <a href="/#$c.soundname">back</a>
             $if namn == c.creator:
-                or <a href="/heartranked?edit=$c.soundlink">edit</a> 
+                or <a href="/?edit=$c.postid">edit</a> 
             $if namn:
-                or <a href="/editor?combine=$c.soundlink">combo</a> 
-            <div class="megalike" id="megalike$c.soundlink" onclick="like('$c.soundlink')">$getlikes(c.soundlink,namn)</div>
+                or <a href="/editor?combine=$c.postid">combo</a> 
+            <div class="megalike" id="megalike$c.postid" onclick="like('$c.postid')">$getlikes(c.postid,namn)</div>
             <br>
             </div>
             </div>
@@ -197,9 +194,9 @@ robinbackman.com
 Just Do Good
 <br>
 $if show:
-    <a href="/heartranked?show=$show#">back up?</a> or <a href="/heartranked#$show">go back</a>
+    <a href="/?show=$show#">back up?</a> or <a href="/#$show">go back</a>
 $else:
-    <a href="/heartranked#">back up?</a> or <br>
+    <a href="/#">back up?</a> or <br>
 </div>
 <br>
 <br>
