@@ -848,11 +848,11 @@ def getfeed():
         #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY hearts DESC LIMIT 1000;")
         #posts=os.listdir('posts/')
         #make function get_files_by_modtime newest_first and by today week month year
-        posts = os.listdir('hearts/')
+        posts = os.listdir('heartrank/')
         goodies=[]
         for p in posts:
             #check modtime here day
-            lastupdate = os.path.getmtime('hearts/'+p)
+            lastupdate = os.path.getmtime('heartrank/'+p)
             if lastupdate > one_day_before:
                 l=load('posts/'+p)
                 goodies.append(l)
@@ -863,11 +863,11 @@ def getfeed():
         now = now.strftime('%Y-%m-%d %H:%M:%S')
         one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
         #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY hearts DESC LIMIT 1000;")
-        posts = os.listdir('hearts/')
+        posts = os.listdir('heartrank/')
         goodies=[]
         for p in posts:
             #check modtime here day
-            lastupdate = os.path.getmtime('hearts/'+p)
+            lastupdate = os.path.getmtime('heartrank/'+p)
             if lastupdate > one_day_before:
                 l=load('posts/'+p)
                 goodies.append(l)
@@ -878,11 +878,11 @@ def getfeed():
         now = now.strftime('%Y-%m-%d %H:%M:%S')
         one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
         #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY hearts DESC LIMIT 1000;")
-        posts = os.listdir('hearts/')
+        posts = os.listdir('heartrank/')
         goodies=[]
         for p in posts:
             #check modtime here day
-            lastupdate = os.path.getmtime('hearts/'+p)
+            lastupdate = os.path.getmtime('heartrank/'+p)
             if lastupdate > one_day_before:
                 l=load('posts/'+p)
                 goodies.append(l)
@@ -893,18 +893,18 @@ def getfeed():
         now = now.strftime('%Y-%m-%d %H:%M:%S')
         one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
         #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY hearts DESC LIMIT 1000;")
-        posts = os.listdir('hearts/')
+        posts = os.listdir('heartrank/')
         goodies=[]
         for p in posts:
             #check modtime here day
-            lastupdate = os.path.getmtime('hearts/'+p)
+            lastupdate = os.path.getmtime('heartrank/'+p)
             if lastupdate > one_day_before:
                 l=load('posts/'+p)
                 goodies.append(l)
         print(goodies)
     elif feedbase == "heart" and timebase == "" or feedbase == "heart" and timebase == "all":
         #goodies = db.query("SELECT * FROM published ORDER BY hearts DESC LIMIT 1000;")
-        posts = os.listdir('hearts/')
+        posts = os.listdir('heartrank/')
         goodies=[]
         for p in posts:
             l=load('posts/'+p)
@@ -975,11 +975,11 @@ def getfeed():
         now = now.strftime('%Y-%m-%d %H:%M:%S')
         one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
         #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY combines DESC LIMIT 1000;")
-        posts = os.listdir('combos/')
+        posts = os.listdir('comborank/')
         goodies=[]
         for p in posts:
             #check modtime here day
-            lastupdate = os.path.getmtime('combos/'+p)
+            lastupdate = os.path.getmtime('comborank/'+p)
             if lastupdate > one_day_before:
                 l=load('posts/'+p)
                 goodies.append(l)
@@ -990,11 +990,11 @@ def getfeed():
         now = now.strftime('%Y-%m-%d %H:%M:%S')
         one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
         #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY combines DESC LIMIT 1000;")
-        posts = os.listdir('combos/')
+        posts = os.listdir('comborank/')
         goodies=[]
         for p in posts:
             #check modtime here day
-            lastupdate = os.path.getmtime('combos/'+p)
+            lastupdate = os.path.getmtime('comborank/'+p)
             if lastupdate > one_day_before:
                 l=load('posts/'+p)
                 goodies.append(l)
@@ -1004,11 +1004,11 @@ def getfeed():
         now = now.strftime('%Y-%m-%d %H:%M:%S')
         one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
         #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY combines DESC LIMIT 1000;")
-        posts = os.listdir('combos/')
+        posts = os.listdir('comborank/')
         goodies=[]
         for p in posts:
             #check modtime here day
-            lastupdate = os.path.getmtime('combos/'+p)
+            lastupdate = os.path.getmtime('comborank/'+p)
             if lastupdate > one_day_before:
                 l=load('posts/'+p)
                 goodies.append(l)
@@ -1018,17 +1018,17 @@ def getfeed():
         now = now.strftime('%Y-%m-%d %H:%M:%S')
         one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
         #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY combines DESC LIMIT 1000;")
-        posts = os.listdir('combos/')
+        posts = os.listdir('comborank/')
         goodies=[]
         for p in posts:
             #check modtime here day
-            lastupdate = os.path.getmtime('combos/'+p)
+            lastupdate = os.path.getmtime('comborank/'+p)
             if lastupdate > one_day_before:
                 l=load('posts/'+p)
                 goodies.append(l)
     elif feedbase == "combo" and timebase == "" or  feedbase == "combo" and timebase == "all":
         #goodies = db.query("SELECT * FROM published ORDER BY combines DESC LIMIT 1000;")
-        posts = os.listdir('combos/')
+        posts = os.listdir('comborank/')
         goodies=[]
         for p in posts:
             l=load('posts/'+p)
