@@ -1132,6 +1132,7 @@ class heartranked:
         session.search = ''
         session.bildsida = 0
         i = web.input(publised=None, public=None, show=None, remove=None, edit=None, feedbase=None, timebase=None)
+        print('FUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU')
         #search
         try:
             #bilder_totalt = db.query("SELECT COUNT(*) AS sound FROM published")[0]
@@ -1211,8 +1212,8 @@ class heartranked:
         ip = web.ctx['ip']
         referer = web.ctx.env.get('HTTP_REFERER', 'none')
         environ = web.ctx.env.get('HTTP_USER_AGENT', 'dunno')
-        visitorlog(ip,referer,environ)
-        visitors, total, unique = getvisits()
+        #visitorlog(ip,referer,environ)
+        #visitors, total, unique = getvisits()
         if i.edit != None:
             session.postid=i.edit
             raise web.seeother('/editor?public=yes') 

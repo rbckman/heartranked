@@ -25,7 +25,7 @@ EOF
 
 echo "Installing all dependencies..."
 apt-get update
-sudo apt install apache2 libapache2-mod-wsgi-py3 python3-pip python3-pil python3-bcrypt python3-webpy
+sudo apt install apache2 libapache2-mod-wsgi-py3 python3-pip python3-pil python3-bcrypt python3-webpy python3-markdown
 #python3 -m pip install web.py==0.61
 
 echo "skapa www-data åtkomst"
