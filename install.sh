@@ -28,11 +28,7 @@ apt-get update
 sudo apt install apache2 libapache2-mod-wsgi-py3 python3-pip python3-pil python3-bcrypt python3-webpy python3-markdown
 #python3 -m pip install web.py==0.61
 
-echo "skapa www-data åtkomst"
 mkdir u r p
-sudo chown -R www-data u
-sudo chown -R www-data r
-sudo chown -R www-data p
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 ACONF="/etc/apache2/sites-available/heartranked.conf"
