@@ -1208,7 +1208,7 @@ class heartranked:
             rights = 'mod'
         else:
             rights = 'spacer'
-        return rendersplash.heartranked(db,markdown, visitors, total, unique, i.show, logged(), rights, session.user, getlikes, formattime, feedbase, tot, limit, offset, bildpersida, session.search, bilder, searchform, getcombines, timebase, getfeed, getcombofeed, userimage, postexist)
+        return rendersplash.heartranked(markdown, visitors, total, unique, logged(), rights, session.user, getlikes, formattime, feedbase, tot, limit, offset, bildpersida, session.search, bilder, searchform, getcombines, timebase, getfeed, getcombofeed, userimage, postexist, i.show)
     def POST(self):
         searchform = self.form()
         i = web.input()
