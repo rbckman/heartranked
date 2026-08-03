@@ -23,7 +23,7 @@ $unique UNICORNS 🦄 PEACE! ☮️
 <div id="mod">
 $if rights=='mod' or rights=='admin':
     $ #displayname = db.query("SELECT displayname FROM rymdadmin WHERE name='"+namn+"';")[0]
-    $ displayname=loadjson('users/'+session.user)
+    $ displayname=loadjson('r/users/'+session.user)
     hey <b><a href="/tuning">$displayname.displayname</a></b>, <a href="/invites">invite</a> or <a href="/editor?new=yes">write</a>
     <br>
 $else:
@@ -43,21 +43,21 @@ $if search != '':
             <br>
             <br>
             <div class="heartpost">
-            $:markdown.markdown(loadtext('posts/'+g.postid+'/intro'))
+            $:markdown.markdown(loadtext('p/posts/'+g.postid+'/intro'))
             </div>
             <div class="postmenu">
             <small>by $g.creator $formattime(g.timeadded)</small><br>
             $getcombines(g.postid)
             $if g.combine:
                 $ #combined = db.select('published', where="postid='"+g.combine+"'")[0]
-                $ combined=loadjson('posts/'+g.combine+/meta')
+                $ combined=loadjson('p/posts/'+g.combine+/meta')
                 <small>combo with <a href="/?show=$combined.postid">$combined.soundname</a></small><br>
             $if g.remix:
                 $ #remixed = db.select('published', where="postid='"+g.remix+"'")[0]
-                $ combined=loadjson('posts/'+g.remix+/meta')
+                $ combined=loadjson('p/posts/'+g.remix+/meta')
                 <small>remixed <a href="/?show=$remixed.postid">$remixed.soundname</a></small><br>
-            $if loadtext('posts/'+g.postid+'/post') != '':
-                $if len(loadtext('posts/'+g.postid+'/post')) > 255:
+            $if loadtext('p/posts/'+g.postid+'/post') != '':
+                $if len(loadtext('p/posts/'+g.postid+'/post')) > 255:
                     <a href="/?show=$g.postid">read plenty more</a>
                 $else:
                     <a href="/?show=$g.postid">read more</a>
@@ -79,7 +79,7 @@ $else:
             <br>
             <br>
             <div class="heartpost">
-            $:markdown.markdown(loadtext('posts/'+g.postid+'/intro'))
+            $:markdown.markdown(loadtext('p/posts/'+g.postid+'/intro'))
             </div>
             <div class="postmenu">
             <small><small>$formattime(g.timeadded)</small></small>
@@ -90,15 +90,15 @@ $else:
             $if g.combine:
                 $if postexist(g.combine):
                     $ combined = db.select('published', where="postid='"+g.combine+"'")[0]
-                    $ combined=loadjson('posts/'+g.combine+/meta')
+                    $ combined=loadjson('p/posts/'+g.combine+/meta')
                     <small>combo with <a href="/?show=$combined.postid">$combined.soundname</a></small><br>
             $if g.remix:
                 $if postexist(g.remix):
                     $ #remixed = db.select('published', where="postid='"+g.remix+"'")
-                    $ remixed=loadjson('posts/'+g.remix+/meta')
+                    $ remixed=loadjson('p/posts/'+g.remix+/meta')
                     <small>remixed <a href="/?show=$remixed.postid">$remixed[0].soundname</a></small><br>
-            $if (loadtext('posts/'+g.postid+'/post') != '':
-                $if len(loadtext('posts/'+g.postid+'/post')) > 255:
+            $if (loadtext('p/posts/'+g.postid+'/post') != '':
+                $if len(loadtext('p/posts/'+g.postid+'/post')) > 255:
                     <a href="/?show=$g.postid">read plenty more</a>
                 $else:
                     <a href="/?show=$g.postid">read more</a>
@@ -114,7 +114,7 @@ $else:
             </div>
     $else:
         $ #goodies = db.select('published', where="postid='"+show+"'")
-        $ goodies=loadjson('posts/'+show+'/meta')
+        $ goodies=loadjson('p/posts/'+show+'/meta')
         $for g in goodies:
             <a href="/#$g.soundname">back</a> 
             $if namn == g.creator:
@@ -127,19 +127,19 @@ $else:
             <div class="post" id="$g.soundname">
             <br>
             <div class="heartpost">
-            $:markdown.markdown(loadtext('posts/'+g.postid+'/intro'))
-            $:markdown.markdown(loadtext('posts/'+g.postid+'/post'))
+            $:markdown.markdown(loadtext('p/posts/'+g.postid+'/intro'))
+            $:markdown.markdown(loadtext('p/posts/'+g.postid+'/post'))
             </div>
             <div class="postmenu">
             <small>by $g.creator $formattime(g.timeadded)</small><br>
             $getcombines(g.postid)
             $if g.combine:
                 $ #combined = db.select('published', where="postid='"+g.combine+"'")[0]
-                $ combined=loadjson('posts/'+g.combine+/meta')
+                $ combined=loadjson('p/posts/'+g.combine+/meta')
                 <small>combo with <a href="/?show=$combined.postid">$combined.soundname</a></small><br>
             $if g.remix:
                 $ #remixed = db.select('published', where="postid='"+g.remix+"'")[0]
-                $ remixed=loadjson('posts/'+g.remix+/meta')
+                $ remixed=loadjson('p/posts/'+g.remix+/meta')
                 <small>remixed <a href="/?show=$remixed.postid">$remixed.soundname</a></small><br>
             and <a href="/#$g.soundname">back</a> 
             $if namn == g.creator:
