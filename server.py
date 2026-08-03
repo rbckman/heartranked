@@ -108,12 +108,15 @@ def savejson(thename, thedict):
     #hearts will be files as usernames with timestamp in a hearts folder in post folder. be stored and checked in u/hearts and post/hearts
     # be sure to add home domain setting to username
     #make save list a dict use same names
+    name=thename
+    thename=basedir+thename
     if os.path.exists(thename):
-        p=loadjson(thename)
-        thedict.update(p)
+        p=loadjson(name)
+        if isinstance(p, dict):
+            thedict.update(p)
     #for key, i in thedict.items():
     #    createpost(key,i)        
-    with open(basedir+thename, "w") as f:
+    with open(thename, "w") as f:
         #f.write(str(i) + ',')
         json.dump(thedict,f)
 
@@ -132,8 +135,9 @@ def adduser(name, password, mail):
     name=safe_filename(name[:12])
     password = password.encode("utf-8")
     salt = bcrypt.gensalt()
-    password_hashed = bcrypt.hashpw(password, salt)
-    tot = len(os.listdir(basedir+'/r/users/'))
+    password_hashed = bcrypt.hashpw(password, salt).decode('utf-8')
+    tot = len(os.listdir(basedir+'r/users/'))
+    print(password_hashed)
     print('users alltsomallt: ' + str(tot))
     if tot > 1:
         adminlevel=3
@@ -141,6 +145,7 @@ def adduser(name, password, mail):
         adminlevel=5
     savedict={'name':name, 'originalname':originalname, 'password':password_hashed,'mail':mail,'adminlevel':adminlevel}
     savejson('r/users/'+name, savedict)
+    #savetext('r/user/'+name,password_hashed)
     print("new user added")
     return
 
@@ -234,7 +239,7 @@ class login():
     users=os.listdir(basedir+'r/users/')
     if len(users) == 0:
         result = subprocess.run(['whoami'], capture_output=True, text=True)
-        adduser('op', 'blessyou', result.stdout+'@localhost')
+        adduser('op', 'blessyou', result.stdout.rstrip()+'@localhost')
     def GET(self):
         fejl = ''
         resetpasslink = False
@@ -394,7 +399,7 @@ class like:
                 deletepost(basedir+'u/'+session.user+'/hearts/'+session.user)
                 user_likes = False
             #likes = db.query("SELECT Count(*) AS likes FROM likes WHERE bild='"+postid+"';")[0]
-            likes = len(os.listdir(basedir+'/p/posts/'+postid+'/hearts/'))
+            likes = len(os.listdir(basedir+'p/posts/'+postid+'/hearts/'))
             # Example: Update like count in your database
             # This is a placeholder; replace with your database logic
             # Return JSON response
@@ -857,7 +862,7 @@ def postexist(postid):
 
 def getcombines(postid):
     #l = db.query("SELECT Count(*) AS combines FROM published WHERE combine='"+postid+"';")[0]
-    l=len(os.listdir(basedir+'/p/posts/'+postid+'/combos/'))
+    l=len(os.listdir(basedir+'p/posts/'+postid+'/combos/'))
     #m = db.query("SELECT * FROM likes WHERE bild='"+postid+"' AND user='"+user+"';")
     #db.update('published', where='postid="'+postid+'"', combines=0)
     if l.combines > 0:
@@ -867,7 +872,7 @@ def getcombines(postid):
 
 def pushcombines(postid):
     #l = db.query("SELECT Count(*) AS combines FROM published WHERE postid='"+postid+"';")[0]
-    l=len(os.listdir(basedir+'/p/posts/'+postid+'/combos/'))
+    l=len(os.listdir(basedir+'p/posts/'+postid+'/combos/'))
     #m = db.query("SELECT * FROM likes WHERE bild='"+postid+"' AND user='"+user+"';")
     #db.update('published', where='postid="'+postid+'"', combines=l.combines)
     thedict={'combines':l}
