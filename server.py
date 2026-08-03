@@ -68,7 +68,7 @@ store = web.session.DiskStore(basedir + 'sessions')
 render = web.template.render(templatedir, base="base")
 renderop = web.template.render(templatedir, base="op")
 rendersplash = web.template.render(templatedir, base="splash")
-session = web.session.Session(app,store,initializer={'login':0, 'privilege':0, 'bag':[], 'sessionkey':'empty','soundlink':'','backurl':'','user':'','search':'', 'bildsida':'', 'feedbase':'', 'timebase':''})
+session = web.session.Session(app,store,initializer={'login':0, 'privilege':0, 'bag':[], 'sessionkey':'empty','postid':'','backurl':'','user':'','search':'', 'bildsida':'', 'feedbase':'', 'timebase':''})
 
 allowedchar = '_','-','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','1','2','3','4','5','6','7','8','9','0'
 
@@ -84,14 +84,16 @@ class creatpost:
         self.value = value
         return self
 
-def load(thename):
-    with open(basedir+thename, 'r') as f:
-        settings = json.load(f)
-        for key, i in settings.items():
-            postmeta=creatpost(key,i)
-    return postmeta
+def savetext(thename, description):
+    with open(basedir+thename, "w") as f:
+        f.write(description)
 
-def save(thename, thedict):
+def loadtext(thename):
+    with open(basedir+thename, 'r') as f:
+        description = f.read()
+    return description
+
+def savejson(thename, thedict):
     #full path to filename
     #save to next line make an ID automatically, you have to check the save to know how to load it.
     #loadfile check if record exist, first in line is the record hash and update if it exists
@@ -101,11 +103,17 @@ def save(thename, thedict):
     #make save list a dict use same names
     #postmeta=load(thename)
     for key, i in thedict.items():
-        postmeta=createpost(key,i)
-        
+        postmeta=createpost(key,i)        
     with open(basedir+thename, "w") as f:
         #f.write(str(i) + ',')
         json.dumps(thedict,f)
+
+def loadjson(thename):
+    with open(basedir+thename, 'r') as f:
+        settings = json.load(f)
+        for key, i in settings.items():
+            postmeta=creatpost(key,i)
+    return postmeta
 
 def deletepost(thefile):
     os.system('rm '+thefile)
@@ -123,7 +131,7 @@ def adduser(name, password, mail):
     else:
         adminlevel=5
     savedict={'name':name, 'originalname':originalname, 'password':password, 'hashed':hashed,'mail':mail,'adminlevel':adminlevel}
-    save('users/'+name, savedict)
+    savejson('users/'+name, savedict)
     print("new user added")
     return
 
@@ -143,10 +151,10 @@ def stopresetpass(mail):
         t=load('stopresetpass/'+mail)
     else:
         savedict={'timeadded':time.time()}
-        save('stopresetpass/'+mail, savedict)
+        savejson('stopresetpass/'+mail, savedict)
         return
     savedict={'timeadded':time.time()}
-    save('stopresetpass/'+mail, savedict)
+    savejson('stopresetpass/'+mail, savedict)
     latest = time.time() - t
     print(latest)
     if latest < 600:
@@ -161,10 +169,10 @@ def stopflood(ip,referer):
         t=load('stopflood/'+ip)
     else:
         savedict={'timeadded':time.time()}
-        save('stopflood/'+ip, savedict)
+        savejson('stopflood/'+ip, savedict)
         return
     savedict={'timeadded':time.time()}
-    save('stopflood/'+ip, savedict)
+    savejson('stopflood/'+ip, savedict)
     latest = time.time() - t
     print(latest)
     if latest < 1:
@@ -323,7 +331,7 @@ class like:
             user = i.user
             postid = i.postid
             #l = db.query("SELECT * FROM likes WHERE bild='"+postid+"' AND user='"+session.user+"';")
-            l = load('posts/'+postid+'/likes/'+session.user)
+            l = loadjson('posts/'+postid+'/likes/'+session.user)
             print(session.user)
             if l:
                 user_likes = True
@@ -332,8 +340,8 @@ class like:
             if user_likes == False:
                 #db.insert('likes', user=session.user, bild=postid, datum=datetime.datetime.now())
                 savedict={'timeadded':datetime.datetime.now()}
-                save('posts/'+postid+'/hearts/'+session.user, savedict)
-                save('u/'+session.user+'/hearts/'+session.user, savedict)
+                savejson('posts/'+postid+'/hearts/'+session.user, savedict)
+                savejson('u/'+session.user+'/hearts/'+session.user, savedict)
                 user_likes = True
             elif user_likes == True:
                 #db.query("DELETE FROM likes WHERE bild='"+postid+"' AND user='"+session.user+"';")
@@ -353,22 +361,22 @@ class user():
         data = web.input(soundname=None, onair=None, public=None, showuploads=None)
         if user == session.user:
             if data.public and data.soundname:
-                #db.update('published', where="soundlink='" + data.soundname +"'", public=data.public)
+                #db.update('published', where="postid='" + data.soundname +"'", public=data.public)
                 public=data.public
                 savedict={'timeadded':datetime.datetime.now()}
-                save('posts/'+postid+'/meta')
+                savejson('posts/'+postid+'/meta')
             elif data.showuploads=='yes':
                 uploads = []
                 uploads = get_files_by_modtime('public_html/u/' + user + '/images/web/',newest_first=True)
                 return render.showuploads(uploads,user,allowedchar, random)
             elif data.onair and data.soundname:
-                #db.update('published', where="soundlink='" + data.soundname +"'", playing=data.onair)
+                #db.update('published', where="postid='" + data.soundname +"'", playing=data.onair)
                 onair={"onair":data.onair}
-                save('posts/'+postid+'/meta')
+                savejson('posts/'+postid+'/meta')
             #soundname='aurora_ruderalis-greatful_bread'
             #filetype='flac'
-            #soundlink = hashlib.md5(str(random.getrandbits(256)).encode('utf-8')).hexdigest()
-            #db.insert('sound', soundlink=soundlink, filename=soundname, sort=filetype, title=soundname, uploaddate=datetime.datetime.now(), uppladdare=user, lastmod=datetime.datetime.now(), moddedby=user)
+            #postid = hashlib.md5(str(random.getrandbits(256)).encode('utf-8')).hexdigest()
+            #db.insert('sound', postid=postid, filename=soundname, sort=filetype, title=soundname, uploaddate=datetime.datetime.now(), uppladdare=user, lastmod=datetime.datetime.now(), moddedby=user)
             #usersounds = db.query("SELECT * FROM published WHERE creator='"+user+"' ORDER BY timeadded DESC;")
             usersound=load('posts/')
             #sounds = db.select('published')
@@ -392,9 +400,9 @@ class invites():
     def GET(self):
         if session.login > 2:
             #user = db.select('rymdadmin', where='name="'+session.user+'"')[0]
-            user = load('users/'+session.user)
+            user = loadjson('users/'+session.user)
             #invites = db.select('invites', where='createdby="'+session.user+'"')
-            invites = load('invites/'+session.user)
+            invites = loadjson('invites/'+session.user)
             tuningform = self.form()
             w = web.input(epost=None, render=None)
             formfail = ''
@@ -404,12 +412,12 @@ class invites():
                 secretinvitekey = hashlib.md5(str(random.getrandbits(256)).encode('utf-8')).hexdigest()
                 #db.insert('invites', secretinvitation=secretinvitekey, created=datetime.datetime.now(), createdby=session.user)
                 thedict={"secretinvitekey":secretinvitekey,"timeadded":datetime.datetime.now(),"creator":session.user)
-                save('invites/'+session.user, thedict)
+                savejson('invites/'+session.user, thedict)
             return render.invites(tuningform, formfail, user.name, invites)
     def POST(self):
         if session.login > 2:
             #user = db.select('rymdadmin', where='name="'+session.user+'"')[0]
-            user = load('users/'+session.user)
+            user = loadjson('users/'+session.user)
             tuningform = self.form()
             i = web.input()
             if i.mail == '':
@@ -419,7 +427,7 @@ class invites():
             secretinvitekey = hashlib.md5(str(random.getrandbits(256)).encode('utf-8')).hexdigest()
             #db.insert('invites', secretinvitation=secretinvitekey, created=datetime.datetime.now(), createdby=session.user)
             thedict={"secretinvitekey":secretinvitekey,"timeadded":datetime.datetime.now(),"creator":session.user)
-            save('invites/'+session.user, thedict)
+            savejson('invites/'+session.user, thedict)
             msg = "YO! You are the One! " + user.name + " is your Morpheous. Follow this rabbit https://robinbackman.com/register?invite="+secretinvitekey 
             sendmail(i.mail, 'Invitation to HEART RANKED!', msg)
         return web.seeother('/heartranked')
@@ -436,7 +444,7 @@ class tuning():
         if session.login > 2:
             print('asdfasdfasdf')
             #user = db.select('rymdadmin', where='name="'+session.user+'"')[0]
-            user = load('users/'+session.user)
+            user = loadjson('users/'+session.user)
             tuningform = self.form()
             w = web.input(namn=None,epost=None,fail=None,upd=None)
             print('asdfasdfasdfkdakkakka')
@@ -495,14 +503,14 @@ class tuning():
                                 password_hashed = bcrypt.hashpw(password, salt)
                                 #db.update('rymdadmin', where='name="'+session.user+'"', displayname=i.user, password=password_hashed, mail=i.mail.lower())
                                 thedict={'displayname':i.user,'password':password_hashed,'mail':i.mail.lower()}
-                                save('users/'+session.user, thedict)
+                                savejson('users/'+session.user, thedict)
                                 return web.seeother('/tuning?upd=yes')
                         if '@' not in i.mail:
                             raise web.seeother('/tuning?fail=notmail')
                         #update without passwordchange
                         #db.update('rymdadmin', where='name="'+session.user+'"', displayname=i.user, mail=i.mail.lower())
                         thedict={'displayname':i.user,'mail':i.mail.lower()}
-                        save('users/'+session.user, thedict)
+                        savejson('users/'+session.user, thedict)
                         return web.seeother('/tuning?upd=yes')
                     else:
                         raise web.seeother('/tuning?fail=wrongpass')
@@ -553,7 +561,7 @@ class forgotpass():
                     password_hashed = bcrypt.hashpw(password, salt)
                     #db.update('rymdadmin', where='name="'+p.name+'"', password=password_hashed)
                     thedict={'password':password_hashed}
-                    save('users/'+p.name, thedict)
+                    savejson('users/'+p.name, thedict)
                     print("lösenordet uppdaterat!")
                     msg = "Your new passcode is: " + unencrypted_password + ' , once you logg in with this enter a new passcode by pressin your name, it a um link. Take care now bye bye then.'
                     sendmail(p.mail, 'Heart Ranked Passcode', msg)
@@ -623,7 +631,7 @@ def save_new_gif(new_frames, old_gif_information, new_path):
 def getdisplayname(user):
     try:
         #displayname = db.query("SELECT displayname FROM rymdadmin WHERE name='"+user+"';")[0]
-        displayname = load('users/'+session.user)
+        displayname = loadjson('users/'+session.user)
         displayname = displayname.displayname
     except:
         displayname = user
@@ -709,7 +717,7 @@ def visitorlog(ip, referer, environ):
         try:
             #db.insert('visitors', ip=ip, referer=referer, environ=environ, country=country,  countrycode=countrycode, time=datetime.datetime.now())
             thedict={'ip':ip,'referer':referer,'environ':environ,'country':country,'countrycode':countrycode,'time':datetime.datetime.now()}
-            save('visitors/'+ip,thedict)
+            savejson('visitors/'+ip,thedict)
         except:
             pass
         print("added to visitor log")
@@ -768,11 +776,11 @@ def getlikes(postid, user):
     user_likes = False
     #l = db.query("SELECT Count(*) AS likes FROM likes WHERE bild='"+postid+"';")[0]
     l=len(os.listdir('posts/'+postid+'/hearts/')
-    #db.update('published', where='soundlink="'+postid+'"', hearts=l.likes)
+    #db.update('published', where='postid="'+postid+'"', hearts=l.likes)
     thedict={'hearts:'l}
-    save('posts/'+postid+'/meta',thedict)
+    savejson('posts/'+postid+'/meta',thedict)
     thedict={'postid:'postid}
-    save('heartranked/'+str(l),thedict)
+    savejson('heartranked/'+str(l),thedict)
     if user:
         #m = db.query("SELECT * FROM likes WHERE bild='"+postid+"' AND user='"+user+"';")
         m=load('posts/'+postid+'/hearts/'+user)
@@ -793,7 +801,7 @@ def getlikes(postid, user):
 def postexist(postid):
     return False
     try:
-        #l = db.select('published', where="soundlink='"+postid+"'")[0]
+        #l = db.select('published', where="postid='"+postid+"'")[0]
         l=load('posts/'+postid+'/meta')
     except:
         return False
@@ -808,21 +816,21 @@ def postexist(postid):
 
 def getcombines(postid):
     #l = db.query("SELECT Count(*) AS combines FROM published WHERE combine='"+postid+"';")[0]
-    l=len(os.listdir('post/'+postid+'/combines/'))
+    l=len(os.listdir('posts/'+postid+'/combos/'))
     #m = db.query("SELECT * FROM likes WHERE bild='"+postid+"' AND user='"+user+"';")
-    #db.update('published', where='soundlink="'+postid+'"', combines=0)
+    #db.update('published', where='postid="'+postid+'"', combines=0)
     if l.combines > 0:
             return "⚭ " + str(l)
     else:
         return ''
 
 def pushcombines(postid):
-    #l = db.query("SELECT Count(*) AS combines FROM published WHERE soundlink='"+postid+"';")[0]
-    l=len(os.listdir('post/'+postid+'/combines/'))
+    #l = db.query("SELECT Count(*) AS combines FROM published WHERE postid='"+postid+"';")[0]
+    l=len(os.listdir('posts/'+postid+'/combos/'))
     #m = db.query("SELECT * FROM likes WHERE bild='"+postid+"' AND user='"+user+"';")
-    #db.update('published', where='soundlink="'+postid+'"', combines=l.combines)
+    #db.update('published', where='postid="'+postid+'"', combines=l.combines)
     thedict={'combines':l}
-    save('posts/'+postid+'/meta',thedict)
+    savejson('posts/'+postid+'/meta',thedict)
     if l.combines >= 0:
             return "⚭ " + str(l)
     else:
@@ -1099,8 +1107,9 @@ class heartranked:
         i = web.input(publised=None, public=None, show=None, remove=None, edit=None, feedbase=None, timebase=None)
         #search
         try:
-            bilder_totalt = db.query("SELECT COUNT(*) AS sound FROM published")[0]
-            tot = int(bilder_totalt.sound)
+            #bilder_totalt = db.query("SELECT COUNT(*) AS sound FROM published")[0]
+            bilder_totalt=os.listdir('posts/')
+            tot = int(bilder_totalt)
             print('bilder alltsomallt: ' + str(tot))
         except:
             print("inga bilder")
@@ -1118,26 +1127,18 @@ class heartranked:
         if session.search != '':
             search_result = []
             tot = 0
-            b1, b2, b3 = 0,0,0
             try:
-                search_result.append(db.query("SELECT * FROM published WHERE creator LIKE '%"+session.search+"%' ORDER BY ID DESC LIMIT 1000;"))
-                tot = db.query("SELECT Count(*) AS sound FROM published WHERE creator LIKE '%"+session.search+"%';")[0]
-                b1 = tot.sound
+                #search_result.append(db.query("SELECT * FROM published WHERE creator LIKE '%"+session.search+"%' ORDER BY ID DESC LIMIT 1000;"))
+                #tot = db.query("SELECT Count(*) AS sound FROM published WHERE creator LIKE '%"+session.search+"%';")[0]
+                #b1 = tot.sound
+                for i in bilder_totalt:
+                    searchthis=load('posts/'+i)
+                    for p in dir(searchthis):
+                        if session.search in p:
+                            search_result.append(searchthis)
+                            tot=tot+1
             except:
                 pass
-            try:
-                search_result.append(db.query("SELECT * FROM published WHERE description LIKE '%"+session.search+"%' ORDER BY ID DESC LIMIT 1000;"))
-                tot = db.query("SELECT Count(*) AS sound FROM published WHERE description LIKE '%"+session.search+"%';")[0]
-                b2 = tot.sound
-            except:
-                pass
-            try:
-                search_result.append(db.query("SELECT * FROM published WHERE description2 LIKE '%"+session.search+"%' ORDER BY ID DESC LIMIT 1000;"))
-                tot = db.query("SELECT Count(*) AS sound FROM published WHERE description2 LIKE '%"+session.search+"%';")[0]
-                b3 = tot.sound
-            except:
-                pass
-            tot = b1 + b2 + b3
             try:
                 print(search_result)
                 print('sökta bilder: ' + str(tot))
@@ -1159,7 +1160,11 @@ class heartranked:
         #EOF search
         print(session.bildsida)
         if session.search == '':
-            bilder = db.query("SELECT * FROM published ORDER BY id DESC LIMIT " + str(limit) + " OFFSET " + str(offset))
+            #bilder = db.query("SELECT * FROM published ORDER BY id DESC LIMIT " + str(limit) + " OFFSET " + str(offset))
+            posts=len(os.listdir('posts/')
+            for p in posts:
+                this=load('posts/'+p)
+                bilder.append(this)
         else:
             bilder = search_result
         if i.feedbase == None:
@@ -1182,21 +1187,16 @@ class heartranked:
         visitorlog(ip,referer,environ)
         visitors, total, unique = getvisits()
         if i.edit != None:
-            session.soundlink=i.edit
+            session.postid=i.edit
             raise web.seeother('/editor?public=yes') 
         if i.remove != None:
             try:
-                user = db.select('published', where="soundlink='"+i.remove+"'")[0]
+                #user = db.select('published', where="postid='"+i.remove+"'")[0]
+                post=load('posts/'+i.remove+'/meta')
+                    if post.creator == session.user:
+                        os.system('mv -r posts/'+i.remove+'/ deleted/'+i.remove)
             except:
                 pass
-            try:
-                user = user.creator
-            except:
-                user = ''
-            if user == session.user:
-                db.query("INSERT INTO deleted SELECT * FROM published WHERE soundlink = '"+i.remove+"'")
-                db.delete('published', where='soundlink="' + i.remove + '"')
-                #db.query("DELETE * FROM published WHERE soundlink ="+i.remove)
         if session.login > 3:
             try:
                 if i.delete != '':
@@ -1222,115 +1222,145 @@ class editor:
             i = web.input(publish=None, public=None, new=None, combine=None, remix=None)
             if i.combine != None:
                 if session.user:
-                    session.soundlink = hashlib.sha256(str(random.getrandbits(256)).encode('utf-8')).hexdigest()[9:36]
-                    db.insert('unpublished', soundlink=session.soundlink, description='', description2='', timeadded=datetime.datetime.now(), creator=session.user, combine=i.combine)
+                    session.postid = hashlib.sha256(str(random.getrandbits(256)).encode('utf-8')).hexdigest()[9:36]
+                    #db.insert('unpublished', postid=session.postid, description='', description2='', timeadded=datetime.datetime.now(), creator=session.user, combine=i.combine)
+                    thedict={'postid':session.postid, 'timeadded':datetime.datetime.now(), 'creator':session.user, 'combine':i.combine}
+                    savejson('u/'+session.user+'/posts/'+session.postid,thedict)
             if i.remix != None:
                 if session.user:
                     text=''
                     text2=''
                     try:
-                        olduser = db.select('unpublished', where="soundlink='"+i.remix+"'")[0]
-                        text = db.select('unpublished', where="soundlink='"+i.remix+"'")[0]
-                        text2 = db.select('unpublished', where="soundlink='"+i.remix+"'")[0]
+                        #olduser = db.select('unpublished', where="postid='"+i.remix+"'")[0]
+                        olduser=loadjson('posts/'+i.remix+'/meta')
+                        #text = db.select('unpublished', where="postid='"+i.remix+"'")[0]
+                        text=loadtext('posts/'+i.remix+'/intro')
+                        #text2 = db.select('unpublished', where="postid='"+i.remix+"'")[0]
+                        text2=loadtext('posts/'+i.remix+'/post')
                     except:
                         pass
                     try:
                         olduser = olduser.creator
-                        text = text.description
-                        text2 = text2.description2
                     except:
                         olduser = ''
                     if olduser != '':
                         allcreators = olduser+','+session.user
                     else:
                         allcreators = session.user
-                    session.soundlink = hashlib.sha256(str(random.getrandbits(256)).encode('utf-8')).hexdigest()[9:36]
-                    db.insert('unpublished', soundlink=session.soundlink, description=text, description2=text2, timeadded=datetime.datetime.now(), creator=allcreators, remix=i.remix)
-            if session.soundlink != '':
+                    session.postid = hashlib.sha256(str(random.getrandbits(256)).encode('utf-8')).hexdigest()[9:36]
+                    #db.insert('unpublished', postid=session.postid, description=text, description2=text2, timeadded=datetime.datetime.now(), creator=allcreators, remix=i.remix)
+                    thedict={'postid':session.postid, 'soundname':soundname, 'timeadded':datetime.datetime.now(), 'creator':allcreators, 'remix':i.remix}
+                    savejson('u/'+session.user+'/posts/'+session.postid+'/meta',thedict)
+                    savetext('u/'+session.user+'/posts/'+session.postid+'/post', description)
+                    savetext('u/'+session.user+'/posts/'+session.postid+'/intro', description2)
+            if session.postid != '':
                 if i.public=='yes':
                     try:
-                        text = db.select('published', where="soundlink='"+session.soundlink+"'")[0]
+                        #text = db.select('published', where="postid='"+session.postid+"'")[0]
+                        text=loadpost('posts/'+session.postid+'/post')
                     except:
-                        session.soundlink = ''
+                        session.postid = ''
                 else:
                     try:
-                        text = db.select('unpublished', where="soundlink='"+session.soundlink+"'")[0]
+                        #text = db.select('unpublished', where="postid='"+session.postid+"'")[0]
+                        text=loadpost('u/'+session.user+'/posts/'+session.postid+'/post')
                     except:
-                        pass
-                try:
-                    text = text.description
-                except:
-                    text = ''
+                        text = ''
                 if i.public=='yes':
                     try:
-                        text2 = db.select('published', where="soundlink='"+session.soundlink+"'")[0]
+                        #text2 = db.select('published', where="postid='"+session.postid+"'")[0]
+                        text2=loadpost('posts/'+session.postid+'/intro')
                     except:
-                        session.soundlink = ''
+                        session.postid = ''
                 else:
                     try:
-                        text2 = db.select('unpublished', where="soundlink='"+session.soundlink+"'")[0]
+                        #text2 = db.select('unpublished', where="postid='"+session.postid+"'")[0]
+                        text2=loadpost('u/'+session.user+'/posts/'+session.postid+'/intro')
                     except:
-                        pass
-                try:
-                    text2 = text2.description2
-                except:
-                    text2 = ''
+                        text2=''
             else:
                 text = ''
                 text2 = ''
             if i.new == 'yes':
-                session.soundlink = ''
+                session.postid = ''
                 raise web.seeother('/editor')
             if i.publish == 'yes' and text != '' and i.public == None and logged() and len(text) < 256:
                 description1 = text
                 description2 = text2
                 soundname = safe_filename(description1[0:27])
-                #session.soundlink = hashlib.sha256(str(random.getrandbits(256)).encode('utf-8')).hexdigest()[9:36]
+                #session.postid = hashlib.sha256(str(random.getrandbits(256)).encode('utf-8')).hexdigest()[9:36]
                 createpost=True
                 try:
-                    iftext = db.select('published', where="soundlink='"+session.soundlink+"'")[0]
-                    iftext = iftext.description
+                    #iftext = db.select('published', where="postid='"+session.postid+"'")[0]
+                    iftext = loadjson('posts/'+session.postid+'/post')
                     createpost=False
                 except:
                     iftext = ''
                 if createpost == False:
-                    db.update('published', where='soundlink="'+session.soundlink+'"', soundlink=session.soundlink, soundname=soundname, description=description1, description2=description2, timeadded=datetime.datetime.now(), creator=session.user)
+                    #db.update('published', where='postid="'+session.postid+'"', postid=session.postid, soundname=soundname, description=description1, description2=description2, timeadded=datetime.datetime.now(), creator=session.user)
+                    thedict={'postid':session.postid, 'soundname':soundname, 'timeadded':datetime.datetime.now(), 'creator':session.user, 'combine':i.combine, 'remix':i.remix}
+                    savejson('posts/'+session.postid+'/meta',thedict)
+                    savetext('posts/'+session.postid+'/post', description)
+                    savetext('posts/'+session.postid+'/intro', description2)                    
                     raise web.seeother('/editor?public=yes')
                 else:
                     print('make a new post')
                 try:
-                    db.update('unpublished', where='soundlink="'+session.soundlink+'"', soundlink=session.soundlink, soundname=soundname, description=description1, description2=description2, timeadded=datetime.datetime.now(), creator=session.user)
+                    #db.update('unpublished', where='postid="'+session.postid+'"', postid=session.postid, soundname=soundname, description=description1, description2=description2, timeadded=datetime.datetime.now(), creator=session.user)
+                    thedict={'postid':session.postid, 'soundname':soundname, 'timeadded':datetime.datetime.now(), 'creator':session.user, 'combine':i.combine, 'remix':i.remix}
+                    savejson('u/'+session.user+'/posts/'+session.postid+'/meta',thedict)
+                    savetext('u/'+session.user+'/posts/'+session.postid+'/post', description)
+                    savetext('u/'+session.user+'posts/'+session.postid+'/intro', description2)
                 except:
                     print('update unpublished')
                 if createpost == True:
                     try:
-                        combine = db.select('unpublished', where="soundlink='"+session.soundlink+"'")[0]
-                    except:
-                        pass
-                    try:
-                        combine = combine.combine
+                        #combine = db.select('unpublished', where="postid='"+session.postid+"'")[0]
+                        combine=load('u/'+session.user+'/posts/'+session.postid+'/meta')
+                        combine=combine.combo
                     except:
                         combine = ''
                     try:
-                        remix = db.select('unpublished', where="soundlink='"+session.soundlink+"'")[0]
-                    except:
-                        pass
-                    try:
-                        remix = remix.remix
+                        #remix = db.select('unpublished', where="postid='"+session.postid+"'")[0]
+                        remix=load('u/'+session.user+'/posts/'+session.postid+'/meta')
+                        remix=remix.remix
                     except:
                         remix = ''
-                    db.insert('published', soundlink=session.soundlink, soundname=soundname, description=description1, description2=description2, timeadded=datetime.datetime.now(), creator=session.user, combine=combine, remix=remix)
+                    if combine != '':
+                        #get how many combos there was for this combined post befor and update count. this way we keep track of combo track. NO! make it creator. OBVIOUSLY.
+                        savetext('posts/'+combine+'/combos/'+session.postid,session.user)
+                    if remix != ''
+                        savetext('posts/'+remix+'/remixes/'+session.postid,session.user)
+                    #db.insert('published', postid=session.postid, soundname=soundname, description=description1, description2=description2, timeadded=datetime.datetime.now(), creator=session.user, combine=combine, remix=remix)
+                    thedict={'postid':session.postid,'soundname':soundname,'timeadded':datetime.datetime.now(),'creator':session.user,'combine':combine,'remix':remix}
+                    savejson('posts/'+session.postid+'/meta',thedict)
+                    savetext('posts/'+session.postid+'/post', description)
+                    savetext('posts/'+session.postid+'/intro', description2)                    
                     try:
-                        l = db.query("SELECT Count(*) AS combines FROM published WHERE combine='"+combine+"';")[0]
+                        #l = db.query("SELECT Count(*) AS combines FROM published WHERE combine='"+combine+"';")[0]
+                        l=len(os.listdir('posts/'+postid+'/combos/'))
+                        thedict={'combines':l}
+                        savejson('posts/'+postid+'/meta',thedict)
                         #m = db.query("SELECT * FROM likes WHERE bild='"+postid+"' AND user='"+user+"';")
-                        db.update('published', where='soundlink="'+combine+'"', combines=l.combines)
+                        #db.update('published', where='postid="'+combine+'"', combines=l.combines)
                     except:
                         print('fuuuuuuuuuuuuuuuuuuuuuuu COMBINES NOT UPDATING! WARNING WARNING!')
                         pass
+                    try:
+                        #l = db.query("SELECT Count(*) AS combines FROM published WHERE combine='"+combine+"';")[0]
+                        l=len(os.listdir('posts/'+postid+'/remixes/'))
+                        thedict={'remixes':l}
+                        savejson('posts/'+postid+'/meta',thedict)
+                        #m = db.query("SELECT * FROM likes WHERE bild='"+postid+"' AND user='"+user+"';")
+                        #db.update('published', where='postid="'+combine+'"', combines=l.combines)
+                    except:
+                        print('fuuuuuuuuuuuuuuuuuuuuuuu COMBINES NOT UPDATING! WARNING WARNING!')
+                        pass
+
                     raise web.seeother('/editor?public=yes')
                 raise web.seeother('/editor?public=yes')
                 #db.insert('pawning', pawning=i.remix, name=session.user, timeadded=datetime.datetime.now())
-            return rendersplash.editor(storage, text, text2, markdown, safe_filename, session.soundlink, i.public, logged(), session.user, i.combine, i.remix)
+            return rendersplash.editor(storage, text, text2, markdown, safe_filename, session.postid, i.public, logged(), session.user, i.combine, i.remix)
 
 class savepost:
     def POST(self):
@@ -1339,20 +1369,34 @@ class savepost:
         text2 = data.get("text2", "")
         print(text)
         print(text2 +'fuuuuuuuuuuuuu')
-        if session.soundlink == '':
-            session.soundlink = hashlib.sha256(str(random.getrandbits(256)).encode('utf-8')).hexdigest()[9:36]
-            db.insert('unpublished', soundlink=session.soundlink, description=text, description2=text2, timeadded=datetime.datetime.now(), creator=session.user)
+        if session.postid == '':
+            session.postid = hashlib.sha256(str(random.getrandbits(256)).encode('utf-8')).hexdigest()[9:36]
+            #db.insert('unpublished', postid=session.postid, description=text, description2=text2, timeadded=datetime.datetime.now(), creator=session.user)
+            thedict={'postid':session.postid, 'soundname':soundname, 'timeadded':datetime.datetime.now(), 'creator':session.user}
+            savejson('u/'+session.user+'/posts/'+session.postid+'/meta',thedict)
+            savetext('u/'+session.user+'/posts/'+session.postid+'/post', text)
+            savetext('u/'+session.user+'/posts/'+session.postid+'/intro', text2)
         else:
             iftext = ''
             try:
-                iftext = db.select('unpublished', where="soundlink='"+session.soundlink+"'")[0]
-                iftext = iftext.soundlink
+                #iftext = db.select('unpublished', where="postid='"+session.postid+"'")[0]
+                iftext=loadjson('/u/'+session.user+'/posts/'+session.postid+'/meta')
+                iftext = iftext.postid
             except:
                 iftext = ''
             if iftext != '':
-                db.update('unpublished', where='soundlink="'+session.soundlink+'"', description=text, description2=text2, timeadded=datetime.datetime.now(), creator=session.user)
+                #db.update('unpublished', where='postid="'+session.postid+'"', description=text, description2=text2, timeadded=datetime.datetime.now(), creator=session.user)
+                thedict={'postid':session.postid, 'soundname':soundname, 'timeadded':datetime.datetime.now(), 'creator':session.user}
+                savejson('u/'+session.user+'/posts/'+session.postid+'/meta',thedict)
+                savetext('u/'+session.user+'/posts/'+session.postid+'/post', text)
+                savetext('u/'+session.user+'/posts/'+session.postid+'/intro', text2)
             else:
-                db.insert('unpublished', soundlink=session.soundlink, description=text, description2=text2, timeadded=datetime.datetime.now(), creator=session.user)
+                #db.insert('unpublished', postid=session.postid, description=text, description2=text2, timeadded=datetime.datetime.now(), creator=session.user)
+                thedict={'postid':session.postid, 'soundname':soundname, 'timeadded':datetime.datetime.now(), 'creator':session.user}
+                savejson('u/'+session.user+'/posts/'+session.postid+'/meta',thedict)
+                savetext('u/'+session.user+'/posts/'+session.postid+'/post', text)
+                savetext('u/'+session.user+'/posts/'+session.postid+'/intro', text2)
+                print('hmmm db seeems useless now')
         return "ok"  # simple response
 
 class imageapi:
@@ -1377,10 +1421,10 @@ class imageapi:
 class rendered:
     def GET(self):
         i = web.input(public=None)
-        if session.soundlink != '':
+        if session.postid != '':
             if i.public == None:
                 try:
-                    unpublished = db.select('unpublished', where='soundlink="'+session.soundlink+'"')[0]
+                    unpublished = db.select('unpublished', where='postid="'+session.postid+'"')[0]
                     if unpublished.description == None:
                         return ''
                 except:
@@ -1388,11 +1432,11 @@ class rendered:
                 else:
                     return markdown.markdown(unpublished.description+'\n\n---\n\n'+unpublished.description2)
             elif i.public == 'yes':
-                published = db.select('published', where='soundlink="'+session.soundlink+'"')[0]
+                published = db.select('published', where='postid="'+session.postid+'"')[0]
                 if published.description1 == None:
                     return ''
                 else:
-                    return markdown.markdown(published.description1+'\n\n---\n\n'+published.description2)
+                    return markdown.markdown(published.description+'\n\n---\n\n'+published.description2)
             else:
                 return ''
 
