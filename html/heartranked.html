@@ -46,13 +46,13 @@ $if search != '':
             $:markdown.markdown(loadtext('p/posts/'+g['postid']+'/intro'))
             </div>
             <div class="postmenu">
-            <small>by $g['creator'] $formattime(g['timeadded'])</small><br>
+            <small>by $g['creator'] g['timeadded']</small><br>
             $getcombines(g['postid'])
-            $if g['combine']:
+            $if 'combine' in g:
                 $#combined = db.select('published', where="postid='"+g['combine']+"'")[0]
                 $ combined=loadjson('p/posts/'+g['combine']+'/meta')
                 <small>combo with <a href="/?show=$combined.postid">$combined['soundname']</a></small><br>
-            $if g.remix:
+            $if 'remix' in g:
                 $#remixed = db.select('published', where="postid='"+g['remix']+"'")[0]
                 $ combined=loadjson('p/posts/'+g['remix']+'/meta')
                 <small>remixed <a href="/?show=$remixed['postid']">$remixed['soundname']</a></small><br>
@@ -83,17 +83,17 @@ $else:
                 $:markdown.markdown(loadtext('p/posts/'+g['postid']+'/intro'))
                 </div>
                 <div class="postmenu">
-                <small><small>$formattime(g['timeadded'])</small></small>
+                <small><small>$g['timeadded']</small></small>
                 <small>by $g['creator']</small>
                 $:userimage(g['creator'])
                 <br>
-                $getcombines(g['postid'])
-                $if g['combine']:
+                $ getcombines(g['postid'])
+                $if 'combine' in g:
                     $if postexist(g['combine']):
                         $#combined = db.select('published', where="postid='"+g['combine']+"'")[0]
                         $ combined=loadjson('p/posts/'+g['combine']+'/meta')
                         <small>combo with <a href="/?show=$combined['postid']">$combined['soundname']</a></small><br>
-                $if g['remix']:
+                $if 'remix' in g:
                     $if postexist(g['remix']):
                         $#remixed = db.select('published', where="postid='"+g['remix']+"'")
                         $ remixed=loadjson('p/posts/'+g['remix']+'/meta')
@@ -136,13 +136,13 @@ $else:
                 $:markdown.markdown(loadtext('p/posts/'+g['postid']+'/post'))
                 </div>
                 <div class="postmenu">
-                <small>by $g['creator'] $formattime(g['timeadded'])</small><br>
+                <small>by $g['creator'] $g['timeadded']</small><br>
                 $getcombines(g['postid'])
-                $if g['combine']:
+                $if 'combine' in g:
                     $#combined = db.select('published', where="postid='"+g['combine']+"'")[0]
                     $ combined=loadjson('p/posts/'+g['combine']+'/meta')
                     <small>combo with <a href="/?show=$combined['postid']">$combined['soundname']</a></small><br>
-                $if g['remix']:
+                $if 'remix' in g:
                     $#remixed = db.select('published', where="postid='"+g['remix']+"'")[0]
                     $ remixed=loadjson('p/posts/'+g['remix']+'/meta')
                     <small>remixed <a href="/?show=$remixed['postid']">$remixed['soundname']</a></small><br>
@@ -173,7 +173,7 @@ $else:
                 $:markdown.markdown(loadtext('p/posts/'+c['postid']+'/post'))
                 </div>
                 <div class="postmenu">
-                <small>by $c['creator'] $formattime(c['timeadded'])</small><br>
+                <small>by $c['creator'] $c['timeadded']</small><br>
                 $getcombines(c['postid'])
                 $if c['combine']:
                     $#combined = db.select('published', where="postid='"+c['combine']+"'")[0]
