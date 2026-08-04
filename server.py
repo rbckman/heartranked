@@ -1209,12 +1209,14 @@ class heartranked:
         offset = session.bildsida
         #EOF search
         print(session.bildsida)
+        bilder=[]
         if session.search == '':
             #bilder = db.query("SELECT * FROM published ORDER BY id DESC LIMIT " + str(limit) + " OFFSET " + str(offset))
             posts=os.listdir(basedir+'p/posts/')
             for p in posts:
-                this=loadjson('p/posts/'+p)
+                this=loadjson('p/posts/'+p+'/meta')
                 bilder.append(this)
+            print(bilder)
         else:
             bilder = search_result
         if i.feedbase == None:
@@ -1234,8 +1236,11 @@ class heartranked:
         ip = web.ctx['ip']
         referer = web.ctx.env.get('HTTP_REFERER', 'none')
         environ = web.ctx.env.get('HTTP_USER_AGENT', 'dunno')
-        #visitorlog(ip,referer,environ)
-        #visitors, total, unique = getvisits()
+        visitorlog(ip,referer,environ)
+        visitors, total, unique = getvisits()
+        print(visitors)
+        print(str(total))
+        print(str(unique))
         if i.edit != None:
             session.postid=i.edit
             raise web.seeother('/editor?public=yes') 
@@ -1259,7 +1264,7 @@ class heartranked:
             rights = 'mod'
         else:
             rights = 'spacer'
-        return rendersplash.heartranked(markdown, visitors, total, unique, logged(), rights, session.user, getlikes, formattime, feedbase, tot, limit, offset, bildpersida, session.search, bilder, searchform, getcombines, timebase, getfeed, getcombofeed, userimage, postexist, i.show, loadjson, loadtext)
+        return rendersplash.heartranked(markdown, visitors, total, unique, logged, rights, session.user, getlikes, formattime, feedbase, tot, limit, offset, bildpersida, session.search, bilder, searchform, getcombines, timebase, getfeed, getcombofeed, userimage, postexist, i.show, loadjson, loadtext, len)
     def POST(self):
         searchform = self.form()
         i = web.input()
@@ -1276,9 +1281,11 @@ class editor:
                     session.postid = hashlib.sha256(str(random.getrandbits(256)).encode('utf-8')).hexdigest()[9:36]
                     #db.insert('unpublished', postid=session.postid, description='', description2='', timeadded=formattime(datetime.datetime.now()), creator=session.user, combine=i.combine)
                     print('FUUUUUUU')
-                    os.makedirs(basedir+'u/'+session.user+'/posts/'+session.postid,exist_ok=True)
+                    os.makedirs(basedir+'u/'+session.user+'/posts/'+session.postid, exist_ok=True)
                     thedict={'postid':session.postid, 'timeadded':formattime(datetime.datetime.now()), 'creator':session.user, 'combine':i.combine}
                     savejson('u/'+session.user+'/posts/'+session.postid,thedict)
+                    os.makedirs(basedir+'p/posts/'+i.combine+'/combos', exist_ok=True)
+                    savetext('p/posts/'+i.combine+'/combos/'+session.postid,session.user)
             if i.remix != None:
                 if session.user:
                     text=''
@@ -1302,33 +1309,37 @@ class editor:
                         allcreators = session.user
                     session.postid = hashlib.sha256(str(random.getrandbits(256)).encode('utf-8')).hexdigest()[9:36]
                     #db.insert('unpublished', postid=session.postid, description=text, description2=text2, timeadded=formattime(datetime.datetime.now()), creator=allcreators, remix=i.remix)
+                    os.makedirs(basedir+'u/'+session.user+'/posts/'+session.postid, exist_ok=True)
                     thedict={'postid':session.postid, 'timeadded':formattime(datetime.datetime.now()), 'creator':allcreators, 'remix':i.remix}
+                    os.makedirs(basedir+'p/posts/'+i.remix+'/remix', exist_ok=True)
+                    savetext('p/posts/'+i.remix+'/remix/'+session.postid,session.user)
+
                     savejson('u/'+session.user+'/posts/'+session.postid+'/meta',thedict)
-                    savetext('u/'+session.user+'/posts/'+session.postid+'/post', description)
-                    savetext('u/'+session.user+'/posts/'+session.postid+'/intro', description2)
+                    savetext('u/'+session.user+'/posts/'+session.postid+'/post', text)
+                    savetext('u/'+session.user+'/posts/'+session.postid+'/intro', text2)
             if session.postid != '':
                 if i.public=='yes':
                     try:
                         #text = db.select('published', where="postid='"+session.postid+"'")[0]
-                        text=loadpost('p/posts/'+session.postid+'/post')
+                        text=loadtext('p/posts/'+session.postid+'/post')
                     except:
                         session.postid = ''
                 else:
                     try:
                         #text = db.select('unpublished', where="postid='"+session.postid+"'")[0]
-                        text=loadpost('u/'+session.user+'/posts/'+session.postid+'/post')
+                        text=loadtext('u/'+session.user+'/posts/'+session.postid+'/post')
                     except:
                         text = ''
                 if i.public=='yes':
                     try:
                         #text2 = db.select('published', where="postid='"+session.postid+"'")[0]
-                        text2=loadpost('p/posts/'+session.postid+'/intro')
+                        text2=loadtext('p/posts/'+session.postid+'/intro')
                     except:
                         session.postid = ''
                 else:
                     try:
                         #text2 = db.select('unpublished', where="postid='"+session.postid+"'")[0]
-                        text2=loadpost('u/'+session.user+'/posts/'+session.postid+'/intro')
+                        text2=loadtext('u/'+session.user+'/posts/'+session.postid+'/intro')
                     except:
                         text2=''
             else:
@@ -1336,48 +1347,42 @@ class editor:
                 text2 = ''
             if i.new == 'yes':
                 session.postid = ''
+                print('WTFWTFWTF')
                 raise web.seeother('/editor')
             if i.publish == 'yes' and text != '' and i.public == None and logged() and len(text) < 256:
                 description1 = text
                 description2 = text2
                 soundname = safe_filename(description1[0:27])
                 #session.postid = hashlib.sha256(str(random.getrandbits(256)).encode('utf-8')).hexdigest()[9:36]
-                createpost=True
-                try:
-                    #iftext = db.select('published', where="postid='"+session.postid+"'")[0]
-                    iftext = loadjson('p/posts/'+session.postid+'/post')
-                    createpost=False
-                except:
-                    iftext = ''
-                if createpost == False:
+                if os.path.exists(basedir+'p/posts/'+session.postid+'/meta') == False:
                     os.makedirs(basedir+'p/posts/'+session.postid,exist_ok=True)
                     #db.update('published', where='postid="'+session.postid+'"', postid=session.postid, soundname=soundname, description=description1, description2=description2, timeadded=formattime(datetime.datetime.now()), creator=session.user)
-                    thedict={'postid':session.postid, 'soundname':soundname, 'timeadded':formattime(datetime.datetime.now()), 'creator':session.user, 'combine':i.combine, 'remix':i.remix}
+                    thedict={'postid':session.postid, 'soundname':soundname, 'timeadded':formattime(datetime.datetime.now()), 'creator':session.user}
                     savejson('p/posts/'+session.postid+'/meta',thedict)
-                    savetext('p/posts/'+session.postid+'/post', description)
-                    savetext('p/posts/'+session.postid+'/intro', description2)                    
+                    savetext('p/posts/'+session.postid+'/intro', description1)
+                    savetext('p/posts/'+session.postid+'/post', description2)              
                     raise web.seeother('/editor?public=yes')
                 else:
                     print('make a new post')
                 try:
                     #db.update('unpublished', where='postid="'+session.postid+'"', postid=session.postid, soundname=soundname, description=description1, description2=description2, timeadded=formattime(datetime.datetime.now()), creator=session.user)
-                    thedict={'postid':session.postid, 'soundname':soundname, 'timeadded':formattime(datetime.datetime.now()), 'creator':session.user, 'combine':i.combine, 'remix':i.remix}
+                    thedict={'postid':session.postid, 'soundname':soundname, 'timeadded':formattime(datetime.datetime.now()), 'creator':session.user}
                     savejson('u/'+session.user+'/posts/'+session.postid+'/meta',thedict)
-                    savetext('u/'+session.user+'/posts/'+session.postid+'/post', description)
-                    savetext('u/'+session.user+'posts/'+session.postid+'/intro', description2)
+                    savetext('u/'+session.user+'/posts/'+session.postid+'/post', description1)
+                    savetext('u/'+session.user+'/posts/'+session.postid+'/intro', description2)
                 except:
                     print('update unpublished')
                 if createpost == True:
                     try:
                         #combine = db.select('unpublished', where="postid='"+session.postid+"'")[0]
                         combine=loadjson('u/'+session.user+'/posts/'+session.postid+'/meta')
-                        combine=combine.combo
+                        combine=combine['combo']
                     except:
                         combine = ''
                     try:
                         #remix = db.select('unpublished', where="postid='"+session.postid+"'")[0]
                         remix=loadjson('u/'+session.user+'/posts/'+session.postid+'/meta')
-                        remix=remix.remix
+                        remix=remix['remix']
                     except:
                         remix = ''
                     if combine != '':
@@ -1388,8 +1393,8 @@ class editor:
                     #db.insert('published', postid=session.postid, soundname=soundname, description=description1, description2=description2, timeadded=formattime(datetime.datetime.now()), creator=session.user, combine=combine, remix=remix)
                     thedict={'postid':session.postid,'soundname':soundname,'timeadded':formattime(datetime.datetime.now()),'creator':session.user,'combine':combine,'remix':remix}
                     savejson('p/posts/'+session.postid+'/meta',thedict)
-                    savetext('p/posts/'+session.postid+'/post', description)
-                    savetext('p/posts/'+session.postid+'/intro', description2)                    
+                    savetext('p/posts/'+session.postid+'/intro', description1)
+                    savetext('p/posts/'+session.postid+'/post', description2)                    
                     try:
                         #l = db.query("SELECT Count(*) AS combines FROM published WHERE combine='"+combine+"';")[0]
                         l=len(os.listdir(basedir+'p/posts/'+postid+'/combos/'))
@@ -1410,7 +1415,6 @@ class editor:
                     except:
                         print('fuuuuuuuuuuuuuuuuuuuuuuu COMBINES NOT UPDATING! WARNING WARNING!')
                         pass
-
                     raise web.seeother('/editor?public=yes')
                 raise web.seeother('/editor?public=yes')
                 #db.insert('pawning', pawning=i.remix, name=session.user, timeadded=formattime(datetime.datetime.now()))
@@ -1426,31 +1430,32 @@ class savepost:
         if session.postid == '':
             session.postid = hashlib.sha256(str(random.getrandbits(256)).encode('utf-8')).hexdigest()[9:36]
             #db.insert('unpublished', postid=session.postid, description=text, description2=text2, timeadded=formattime(datetime.datetime.now()), creator=session.user)
+            os.makedirs(basedir+'u/'+session.user+'/posts/'+session.postid,exist_ok=True)
             thedict={'postid':session.postid, 'timeadded':formattime(datetime.datetime.now()), 'creator':session.user}
             savejson('u/'+session.user+'/posts/'+session.postid+'/meta',thedict)
-            savetext('u/'+session.user+'/posts/'+session.postid+'/post', text)
-            savetext('u/'+session.user+'/posts/'+session.postid+'/intro', text2)
+            savetext('u/'+session.user+'/posts/'+session.postid+'/intro', text)
+            savetext('u/'+session.user+'/posts/'+session.postid+'/post', text2)
         else:
             iftext = ''
             try:
                 #iftext = db.select('unpublished', where="postid='"+session.postid+"'")[0]
-                iftext=loadjson('u/'+session.user+'/posts/'+session.postid+'/meta')
-                iftext = iftext.postid
+                iftext=loadtext('u/'+session.user+'/posts/'+session.postid+'/meta')
+                iftext = iftext['postid']
             except:
                 iftext = ''
             if iftext != '':
                 #db.update('unpublished', where='postid="'+session.postid+'"', description=text, description2=text2, timeadded=formattime(datetime.datetime.now()), creator=session.user)
                 thedict={'postid':session.postid, 'timeadded':formattime(datetime.datetime.now()), 'creator':session.user}
                 savejson('u/'+session.user+'/posts/'+session.postid+'/meta',thedict)
-                savetext('u/'+session.user+'/posts/'+session.postid+'/post', text)
-                savetext('u/'+session.user+'/posts/'+session.postid+'/intro', text2)
+                savetext('u/'+session.user+'/posts/'+session.postid+'/intro', text)
+                savetext('u/'+session.user+'/posts/'+session.postid+'/post', text2)
             else:
                 #db.insert('unpublished', postid=session.postid, description=text, description2=text2, timeadded=formattime(datetime.datetime.now()), creator=session.user)
                 os.makedirs(basedir+'u/'+session.user+'/posts/'+session.postid,exist_ok=True)
                 thedict={'postid':session.postid, 'timeadded':formattime(datetime.datetime.now()), 'creator':session.user}
                 savejson('u/'+session.user+'/posts/'+session.postid+'/meta',thedict)
-                savetext('u/'+session.user+'/posts/'+session.postid+'/post', text)
-                savetext('u/'+session.user+'/posts/'+session.postid+'/intro', text2)
+                savetext('u/'+session.user+'/posts/'+session.postid+'/intro', text)
+                savetext('u/'+session.user+'/posts/'+session.postid+'/post', text2)
                 print('hmmm db seeems useless now')
         return "ok"  # simple response
 

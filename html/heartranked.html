@@ -1,4 +1,4 @@
-$def with (markdown,visitors, total, unique, logged, rights, namn, getlikes, formattime, feedbase, totbilder, limit, offset, bildpersida, search, bilder, searchform, getcombines, timebase, getfeed, getcombofeed, userimage, postexist, show, loadjson, loadtext)
+$def with (markdown, visitors, total, unique, logged, rights, namn, getlikes, formattime, feedbase, totbilder, limit, offset, bildpersida, search, bilder, searchform, getcombines, timebase, getfeed, getcombofeed, userimage, postexist, show, loadjson, loadtext, len)
 
 <HEAD>
     <meta charset="utf-8">
@@ -16,7 +16,7 @@ $if rights=='mod' or rights=='admin':
 <div id="visitors">
 last VISITS by COUNTRIES<br>
 $for i in visitors:
-    <img src="/flags/${i}.png"> 
+    <img src="static/flags/${i}.png"> 
 <br>
 $unique UNICORNS 🦄 PEACE! ☮️
 <br>
@@ -89,12 +89,12 @@ $else:
             $getcombines(g['postid'])
             $if g['combine']:
                 $if postexist(g['combine']):
-                    $ combined = db.select('published', where="postid='"+g['combine']+"'")[0]
+                    $#combined = db.select('published', where="postid='"+g['combine']+"'")[0]
                     $ combined=loadjson('p/posts/'+g['combine']+'/meta')
                     <small>combo with <a href="/?show=$combined['postid']">$combined['soundname']</a></small><br>
-            $if g.remix:
-                $if postexist(g.remix):
-                    $#remixed = db.select('published', where="postid='"+g.remix+"'")
+            $if g['remix']:
+                $if postexist(g['remix']):
+                    $#remixed = db.select('published', where="postid='"+g['remix']+"'")
                     $ remixed=loadjson('p/posts/'+g['remix']+'/meta')
                     <small>remixed <a href="/?show=$remixed['postid']">$remixed['soundname']</a></small><br>
             $if (loadtext('p/posts/'+g['postid']+'/post') != '':
@@ -137,7 +137,7 @@ $else:
                 $#combined = db.select('published', where="postid='"+g['combine']+"'")[0]
                 $ combined=loadjson('p/posts/'+g['combine']+'/meta')
                 <small>combo with <a href="/?show=$combined['postid']">$combined['soundname']</a></small><br>
-            $if g.remix:
+                $if g['remix']:
                 $#remixed = db.select('published', where="postid='"+g['remix']+"'")[0]
                 $ remixed=loadjson('p/posts/'+g['remix']+'/meta')
                 <small>remixed <a href="/?show=$remixed['postid']">$remixed['soundname']</a></small><br>
