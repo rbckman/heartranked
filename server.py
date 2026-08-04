@@ -1313,31 +1313,31 @@ class editor:
                     savetext('p/posts/'+i.remix+'/remix/'+session.postid,session.user)
 
                     savejson('u/'+session.user+'/posts/'+session.postid+'/meta',thedict)
-                    savetext('u/'+session.user+'/posts/'+session.postid+'/post', text)
-                    savetext('u/'+session.user+'/posts/'+session.postid+'/intro', text2)
+                    savetext('u/'+session.user+'/posts/'+session.postid+'/post', text2)
+                    savetext('u/'+session.user+'/posts/'+session.postid+'/intro', text)
             if session.postid != '':
                 if i.public=='yes':
                     try:
                         #text = db.select('published', where="postid='"+session.postid+"'")[0]
-                        text=loadtext('p/posts/'+session.postid+'/post')
+                        text=loadtext('p/posts/'+session.postid+'/intro')
                     except:
                         session.postid = ''
                 else:
                     try:
                         #text = db.select('unpublished', where="postid='"+session.postid+"'")[0]
-                        text=loadtext('u/'+session.user+'/posts/'+session.postid+'/post')
+                        text=loadtext('u/'+session.user+'/posts/'+session.postid+'/intro')
                     except:
                         text = ''
                 if i.public=='yes':
                     try:
                         #text2 = db.select('published', where="postid='"+session.postid+"'")[0]
-                        text2=loadtext('p/posts/'+session.postid+'/intro')
+                        text2=loadtext('p/posts/'+session.postid+'/post')
                     except:
                         session.postid = ''
                 else:
                     try:
                         #text2 = db.select('unpublished', where="postid='"+session.postid+"'")[0]
-                        text2=loadtext('u/'+session.user+'/posts/'+session.postid+'/intro')
+                        text2=loadtext('u/'+session.user+'/posts/'+session.postid+'/post')
                     except:
                         text2=''
             else:
@@ -1366,8 +1366,8 @@ class editor:
                     #db.update('unpublished', where='postid="'+session.postid+'"', postid=session.postid, soundname=soundname, description=description1, description2=description2, timeadded=formattime(datetime.datetime.now()), creator=session.user)
                     thedict={'postid':session.postid, 'soundname':soundname, 'timeadded':formattime(datetime.datetime.now()), 'creator':session.user}
                     savejson('u/'+session.user+'/posts/'+session.postid+'/meta',thedict)
-                    savetext('u/'+session.user+'/posts/'+session.postid+'/post', description1)
-                    savetext('u/'+session.user+'/posts/'+session.postid+'/intro', description2)
+                    savetext('u/'+session.user+'/posts/'+session.postid+'/intro', description1)
+                    savetext('u/'+session.user+'/posts/'+session.postid+'/post', description2)
                 except:
                     print('update unpublished')
                 if createpost == True:
