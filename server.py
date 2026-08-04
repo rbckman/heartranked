@@ -145,7 +145,7 @@ def adduser(name, password, mail):
         adminlevel=3
     else:
         adminlevel=5
-    savedict={'name':name, 'originalname':originalname, 'password':password_hashed,'mail':mail,'adminlevel':adminlevel}
+    savedict={'name':name, 'displayname':originalname, 'password':password_hashed,'mail':mail,'adminlevel':adminlevel}
     savejson('r/users/'+name, savedict)
     #savetext('r/user/'+name,password_hashed)
     print("new user added")
@@ -894,12 +894,14 @@ def getfeed():
     feedbase=session.feedbase
     if feedbase == '':
         feedbase = 'time'
-    now = formattime(datetime.datetime.now())
+    if timebase == '':
+        timebase = 'week'
+    now = datetime.datetime.now()
+    goodies=[]
     #HEARTS
     #SAVE HEARTRANKING EVERY MINUTE CHECK BOTH USER LIKES AND POST LIKES IF IT CHECKS OUT GOOD IT NOT WRITE ERROR AT LEAST (A BACKEND PROGRAM, RUNS EVERY MINUTE AND COUNTS LIKES AND WRITES THE HEARTRANKING FOR TODAY. HEARTRANKING STAYES SAVED FOREVER IN FOLDERS BY DAYS. IT IS A FOLDER WITH NUMBERS. starting with 0000000000000001 pointing to postid. simple. effective.
     #backend program will also sync posts and likes to trustees
     if feedbase == "heart" and timebase == "today":
-        now = formattime(datetime.datetime.now())
         one_day_before = now - datetime.timedelta(days=1)
         now = now.strftime('%Y-%m-%d %H:%M:%S')
         one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
@@ -910,13 +912,12 @@ def getfeed():
         goodies=[]
         for p in posts:
             #check modtime here day
-            lastupdate = os.path.getmtime(basedir+'r/heartrank/'+p)
+            lastupdate = os.path.getmtime(basedir+'p/posts/'+p+'/meta')
             if lastupdate > one_day_before:
                 l=loadjson('p/posts/'+p)
                 goodies.append(l)
         print(goodies)
     elif feedbase == "heart" and timebase == "week":
-        now = formattime(datetime.datetime.now())
         one_day_before = now - datetime.timedelta(weeks=1)
         now = now.strftime('%Y-%m-%d %H:%M:%S')
         one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
@@ -925,13 +926,12 @@ def getfeed():
         goodies=[]
         for p in posts:
             #check modtime here day
-            lastupdate = os.path.getmtime(basedir+'r/heartrank/'+p)
+            lastupdate = os.path.getmtime(basedir+'p/posts/'+p+'/meta')
             if lastupdate > one_day_before:
                 l=loadjson('p/posts/'+p)
                 goodies.append(l)
         print(goodies)
     elif feedbase == "heart" and timebase == "month":
-        now = formattime(datetime.datetime.now())
         one_day_before = now - datetime.timedelta(weeks=4)
         now = now.strftime('%Y-%m-%d %H:%M:%S')
         one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
@@ -940,13 +940,12 @@ def getfeed():
         goodies=[]
         for p in posts:
             #check modtime here day
-            lastupdate = os.path.getmtime(basedir+'r/heartrank/'+p)
+            lastupdate = os.path.getmtime(basedir+'p/posts/'+p+'/meta')
             if lastupdate > one_day_before:
                 l=loadjson('p/posts/'+p)
                 goodies.append(l)
         print(goodies)
     elif feedbase == "heart" and timebase == "year":
-        now = formattime(datetime.datetime.now())
         one_day_before = now - datetime.timedelta(weeks=54)
         now = now.strftime('%Y-%m-%d %H:%M:%S')
         one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
@@ -955,7 +954,7 @@ def getfeed():
         goodies=[]
         for p in posts:
             #check modtime here day
-            lastupdate = os.path.getmtime(basedir+'r/heartrank/'+p)
+            lastupdate = os.path.getmtime(basedir+'p/posts/'+p+'/meta')
             if lastupdate > one_day_before:
                 l=loadjson('p/posts/'+p)
                 goodies.append(l)
@@ -977,13 +976,12 @@ def getfeed():
         posts = get_files_by_modtime('p/posts/',newest_first=True)
         for p in posts:
             #check modtime here day
-            lastupdate = os.path.getmtime('p/posts/'+p)
+            lastupdate = os.path.getmtime(basedir+'p/posts/'+p+'/meta')
             if lastupdate > one_day_before:
                 l=loadjson('p/posts/'+p)
                 goodies.append(l)
         print(goodies)        
     elif feedbase == "time" and timebase == "week":
-        now = formattime(datetime.datetime.now())
         one_day_before = now - datetime.timedelta(weeks=1)
         now = now.strftime('%Y-%m-%d %H:%M:%S')
         one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
@@ -991,12 +989,12 @@ def getfeed():
         posts = get_files_by_modtime('p/posts/',newest_first=True)
         for p in posts:
             #check modtime here day
-            lastupdate = os.path.getmtime('p/posts/'+p)
+            lastupdate = os.path.getmtime(basedir+'p/posts/'+p+'/meta')
             if lastupdate > one_day_before:
                 l=loadjson('p/posts/'+p)
                 goodies.append(l)
+        print(goodies)        
     elif feedbase == "time" and timebase == "month":
-        now = formattime(datetime.datetime.now())
         one_day_before = now - datetime.timedelta(weeks=4)
         now = now.strftime('%Y-%m-%d %H:%M:%S')
         one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
@@ -1004,12 +1002,11 @@ def getfeed():
         posts = get_files_by_modtime('p/posts/',newest_first=True)
         for p in posts:
             #check modtime here day
-            lastupdate = os.path.getmtime('p/posts/'+p)
+            lastupdate = os.path.getmtime(basedir+'p/posts/'+p+'/meta')
             if lastupdate > one_day_before:
                 l=loadjson('p/posts/'+p)
                 goodies.append(l)
     elif feedbase == "time" and timebase == "year":
-        now = formattime(datetime.datetime.now())
         one_day_before = now - datetime.timedelta(weeks=54)
         now = now.strftime('%Y-%m-%d %H:%M:%S')
         one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
@@ -1017,13 +1014,13 @@ def getfeed():
         posts = get_files_by_modtime('p/posts/',newest_first=True)
         for p in posts:
             #check modtime here day
-            lastupdate = os.path.getmtime('p/posts/'+p)
+            lastupdate = os.path.getmtime(basedir+'p/posts/'+p+'/meta')
             if lastupdate > one_day_before:
                 l=loadjson('p/posts/'+p)
                 goodies.append(l)
     elif feedbase == "time" and timebase == "" or  feedbase == "time" and timebase == "all":
         #goodies = db.query("SELECT * FROM published ORDER BY ID DESC LIMIT 1000;")
-        posts = get_files_by_modtime('/p/posts/',newest_first=True)
+        posts = get_files_by_modtime('p/posts/',newest_first=True)
         for p in posts:
             l=loadjson('p/posts/'+p)
             goodies.append(l)
@@ -1037,13 +1034,12 @@ def getfeed():
         goodies=[]
         for p in posts:
             #check modtime here day
-            lastupdate = os.path.getmtime(basedir+'r/comborank/'+p)
+            lastupdate = os.path.getmtime(basedir+'p/posts/'+p+'/meta')
             if lastupdate > one_day_before:
                 l=loadjson('p/posts/'+p)
                 goodies.append(l)
         print(goodies)
     elif feedbase == "combo" and timebase == "week":
-        now = formattime(datetime.datetime.now())
         one_day_before = now - datetime.timedelta(weeks=1)
         now = now.strftime('%Y-%m-%d %H:%M:%S')
         one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
@@ -1052,12 +1048,11 @@ def getfeed():
         goodies=[]
         for p in posts:
             #check modtime here day
-            lastupdate = os.path.getmtime(basedir+'r/comborank/'+p)
+            lastupdate = os.path.getmtime(basedir+'p/posts/'+p+'/meta')
             if lastupdate > one_day_before:
                 l=loadjson('p/posts/'+p)
                 goodies.append(l)
     elif feedbase == "combo" and timebase == "month":
-        now = formattime(datetime.datetime.now())
         one_day_before = now - datetime.timedelta(weeks=4)
         now = now.strftime('%Y-%m-%d %H:%M:%S')
         one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
@@ -1066,12 +1061,11 @@ def getfeed():
         goodies=[]
         for p in posts:
             #check modtime here day
-            lastupdate = os.path.getmtime(basedir+'r/comborank/'+p)
+            lastupdate = os.path.getmtime(basedir+'p/posts/'+p+'/meta')
             if lastupdate > one_day_before:
                 l=loadjson('p/posts/'+p)
                 goodies.append(l)
     elif feedbase == "combo" and timebase == "year":
-        now = formattime(datetime.datetime.now())
         one_day_before = now - datetime.timedelta(weeks=54)
         now = now.strftime('%Y-%m-%d %H:%M:%S')
         one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
@@ -1080,7 +1074,7 @@ def getfeed():
         goodies=[]
         for p in posts:
             #check modtime here day
-            lastupdate = os.path.getmtime(basedir+'r/comborank/'+p)
+            lastupdate = os.path.getmtime(basedir+'p/posts/'+p+'/meta')
             if lastupdate > one_day_before:
                 l=loadjson('p/posts/'+p)
                 goodies.append(l)
@@ -1092,7 +1086,8 @@ def getfeed():
             l=loadjson('p/posts/'+p)
             goodies.append(l)
     elif feedbase == "Idontevenknow":
-        goodies = db.query("SELECT * FROM published ORDER BY combines DESC LIMIT 1000;")
+        #goodies = db.query("SELECT * FROM published ORDER BY combines DESC LIMIT 1000;")
+        print('write your own custom feed here')
     else:
         #goodies = db.query("SELECT * FROM published ORDER BY ID DESC LIMIT 1000;")
         posts = os.listdir('p/posts/')
@@ -1121,7 +1116,7 @@ def getcombofeed(show):
             comboposts.append(l)
     else:
         #comboposts = db.query("SELECT * FROM published WHERE combine='"+show+"' ORDER BY ID DESC LIMIT 1000;")
-        posts = get_files_by_modtime(basedir+'p/posts/',newest_first=True)
+        posts = get_files_by_modtime('p/posts/',newest_first=True)
         comboposts=[]
         for p in posts:
             l=loadjson('p/posts/'+p)

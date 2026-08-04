@@ -269,15 +269,15 @@ function uploadSingleFile(file, progressBar, statusEl) {
 $if soundlink:
     <a href="https://robinbackman.com/editor?edit=$soundlink"><code>https://robinbackman.com/editor?edit=$soundlink</code></a></br>
 <div id="status"></div>
-<a id='back' href='/heartranked'>go back</a> 
+<a id='back' href='/'>go back</a> 
 $if logged:
     or <a id='publish' href='/editor?publish=yes'>publish</a>
     or <a id='new' href='/editor?new=yes'>new</a>
     <small>logged in as $user
     $if combine:
-        this is a <a href="/heartranked?show=$combine">combined post</a>
+        this is a <a href="/?show=$combine">combined post</a>
     $if remix:
-        this is a <a href="/heartranked?show=$remix">remix post</a></small>
+        this is a <a href="/?show=$remix">remix post</a></small>
 </div>
 <div style="text-align: left; width: 455px;" id="rendered">
 </div>
