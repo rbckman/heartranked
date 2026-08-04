@@ -121,14 +121,16 @@ def savejson(thename, thedict):
 def loadjson(thename):
     if os.path.exists(basedir+thename):
         with open(basedir+thename, 'r') as f:
-            settings = json.load(f)
+            s = json.load(f)
             #for key, i in settings.items():
             #    createpost(key,i)
-    print(settings)
-    if settings != None:
-        return settings
+    try:
+        if s != None:
+            return s
+    except:
+        return {} 
     else:
-        return ''
+        return {}
 
 def deletepost(thefile):
     os.system('rm '+thefile)
@@ -1360,7 +1362,6 @@ class editor:
                 text2 = ''
             if i.new == 'yes':
                 session.postid = ''
-                print('WTFWTFWTF')
                 raise web.seeother('/editor')
             if i.publish == 'yes' and text != '' and i.public == None and logged() and len(text) < 256:
                 description1 = text
@@ -1373,10 +1374,11 @@ class editor:
                     thedict={'postid':session.postid, 'soundname':soundname, 'timeadded':formattime(datetime.datetime.now()), 'creator':session.user}
                     savejson('p/posts/'+session.postid+'/meta',thedict)
                     savetext('p/posts/'+session.postid+'/intro', description1)
-                    savetext('p/posts/'+session.postid+'/post', description2)              
+                    savetext('p/posts/'+session.postid+'/post', description2) 
                     raise web.seeother('/editor?public=yes')
                 else:
                     print('make a new post')
+                    createpost=True
                 try:
                     #db.update('unpublished', where='postid="'+session.postid+'"', postid=session.postid, soundname=soundname, description=description1, description2=description2, timeadded=formattime(datetime.datetime.now()), creator=session.user)
                     thedict={'postid':session.postid, 'soundname':soundname, 'timeadded':formattime(datetime.datetime.now()), 'creator':session.user}
@@ -1404,6 +1406,7 @@ class editor:
                     if remix != '':
                         savetext('p/posts/'+remix+'/remixes/'+session.postid,session.user)
                     #db.insert('published', postid=session.postid, soundname=soundname, description=description1, description2=description2, timeadded=formattime(datetime.datetime.now()), creator=session.user, combine=combine, remix=remix)
+                    print('update sahfajfhajfhahfHFLDHFODHFOHFDDOJFODUF')
                     thedict={'postid':session.postid,'soundname':soundname,'timeadded':formattime(datetime.datetime.now()),'creator':session.user,'combine':combine,'remix':remix}
                     savejson('p/posts/'+session.postid+'/meta',thedict)
                     savetext('p/posts/'+session.postid+'/intro', description1)
