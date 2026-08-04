@@ -117,84 +117,80 @@ $else:
             $:markdown.markdown('#welcome to HEART RANKED!')
     $else:
         $#goodies = db.select('published', where="postid='"+show+"'")
-        $#goodies=loadjson('p/posts/'+show+'/meta')
-        $ goodies=getfeed()
-        if goodies != []:
-            $for g in goodies:
-                <a href="/#$g['soundname']">back</a> 
-                $if namn == g['creator']:
-                    or <a href="/?edit=$g['postid']">edit</a> 
-                $if namn:
-                    or <a href="/editor?remix=$g['postid']">remix</a> 
-                    or <a href="/editor?combine=$g['postid']">combo</a> 
-                $if namn == g['creator']:
-                    or <small><a href="/?remove=$g['postid']">remove</a></small>
-                <div class="post" id="$g['soundname']">
-                <br>
-                <div class="heartpost">
-                $:markdown.markdown(loadtext('p/posts/'+g['postid']+'/intro'))
-                $:markdown.markdown(loadtext('p/posts/'+g['postid']+'/post'))
-                </div>
-                <div class="postmenu">
-                <small>by $g['creator'] $g['timeadded']</small><br>
-                $getcombines(g['postid'])
-                $if 'combine' in g:
-                    $#combined = db.select('published', where="postid='"+g['combine']+"'")[0]
-                    $ combined=loadjson('p/posts/'+g['combine']+'/meta')
-                    <small>combo with <a href="/?show=$combined['postid']">$combined['soundname']</a></small><br>
-                $if 'remix' in g:
-                    $#remixed = db.select('published', where="postid='"+g['remix']+"'")[0]
-                    $ remixed=loadjson('p/posts/'+g['remix']+'/meta')
-                    <small>remixed <a href="/?show=$remixed['postid']">$remixed['soundname']</a></small><br>
-                or <a href="/#$g['soundname']">back</a> 
-                $if namn == g['creator']:
-                    or <a href="/?edit=$g['postid']">edit</a> 
-                $if namn:
-                    or <a href="/editor?remix=$g['postid']">remix</a> 
-                    or <a href="/editor?combine=$g['postid']">combo</a> 
-                <div class="megalike" id="megalike$g['postid']" onclick="like('$g['postid']')">$getlikes(g['postid'],namn)</div>
-                <br>
-                </div>
-                </div>
+        $ g=loadjson('p/posts/'+show+'/meta')
+        $if g != {}:
+            <a href="/#$g['soundname']">back</a> 
+            $if namn == g['creator']:
+                or <a href="/?edit=$g['postid']">edit</a> 
+            $if namn:
+                or <a href="/editor?remix=$g['postid']">remix</a> 
+                or <a href="/editor?combine=$g['postid']">combo</a> 
+            $if namn == g['creator']:
+                or <small><a href="/?remove=$g['postid']">remove</a></small>
+            <div class="post" id="$g['soundname']">
+            <br>
+            <div class="heartpost">
+            $:markdown.markdown(loadtext('p/posts/'+g['postid']+'/intro'))
+            $:markdown.markdown(loadtext('p/posts/'+g['postid']+'/post'))
+            </div>
+            <div class="postmenu">
+            <small>by $g['creator'] $g['timeadded']</small><br>
+            $getcombines(g['postid'])
+            $if 'combine' in g and g['combine'] != None:
+                $#combined = db.select('published', where="postid='"+g['combine']+"'")[0]
+                $ combined=loadjson('p/posts/'+g['combine']+'/meta')
+                <small>combo with <a href="/?show=$combined['postid']">$combined['soundname']</a></small><br>
+            $if 'remix' in g and g['remix'] != None:
+                $#remixed = db.select('published', where="postid='"+g['remix']+"'")[0]
+                $ remixed=loadjson('p/posts/'+g['remix']+'/meta')
+                <small>remixed <a href="/?show=$remixed['postid']">$remixed['soundname']</a></small><br>
+            or <a href="/#$g['soundname']">back</a> 
+            $if namn == g['creator']:
+                or <a href="/?edit=$g['postid']">edit</a> 
+            $if namn:
+                or <a href="/editor?remix=$g['postid']">remix</a> 
+                or <a href="/editor?combine=$g['postid']">combo</a> 
+            <div class="megalike" id="megalike$g['postid']" onclick="like('$g['postid']')">$getlikes(g['postid'],namn)</div>
+            <br>
+            </div>
+            </div>
+        <br>
+        <br>
+        $ comboposts=getcombofeed(show)
+        $ choose_feed = False
+        $for c in comboposts:
+            $if c['soundname'] and choose_feed == False:
+                $#<small><a href="/?show=$g['postid']&feedbase=timebased">timebased 🌍</a> <a href="/?show=$g['postid']&feedbase=heart1day">heartbased ❤️ day</a> <a href="/?show=$g['postid']&feedbase=heart1week">week</a> <a href="/?show=$g['postid']&feedbase=heart1month">month</a> <a href="/?show=$g['postid']&feedbase=heart1year">year</a> <a href="/?show=$g['postid']&feedbase=alltime">alltime</a></small>
+                <small>🌍 <a href="/?show=$g['postid']&feedbase=time">time</a> ❤️ <a href="/?show=$g['postid']&feedbase=heart">heart</a> ⚭ <a href="/?show=$g['postid']&feedbase=combo">combo</a> for <a href="/?show=$g['postid']&feedbase=today">day</a> <a href="/?show=$g['postid']&timebase=week">week</a> <a href="/?show=$g['postid']&timebase=month">month</a> <a href="/?show=$g['postid']&timebase=year">year</a> <a href="/?show=$g['postid']&timebase=all">all</a></small>
+                $ choose_feed = True
+            <div class="post" id="$c['soundname']">
             <br>
             <br>
-            $ comboposts=getcombofeed(show)
-            $ choose_feed = False
-            $for c in comboposts:
-                $if c['soundname'] and choose_feed == False:
-                    $#<small><a href="/?show=$g['postid']&feedbase=timebased">timebased 🌍</a> <a href="/?show=$g['postid']&feedbase=heart1day">heartbased ❤️ day</a> <a href="/?show=$g['postid']&feedbase=heart1week">week</a> <a href="/?show=$g['postid']&feedbase=heart1month">month</a> <a href="/?show=$g['postid']&feedbase=heart1year">year</a> <a href="/?show=$g['postid']&feedbase=alltime">alltime</a></small>
-                    <small>🌍 <a href="/?show=$g['postid']&feedbase=time">time</a> ❤️ <a href="/?show=$g['postid']&feedbase=heart">heart</a> ⚭ <a href="/?show=$g['postid']&feedbase=combo">combo</a> for <a href="/?show=$g['postid']&feedbase=today">day</a> <a href="/?show=$g['postid']&timebase=week">week</a> <a href="/?show=$g['postid']&timebase=month">month</a> <a href="/?show=$g['postid']&timebase=year">year</a> <a href="/?show=$g['postid']&timebase=all">all</a></small>
-                    $ choose_feed = True
-                <div class="post" id="$c['soundname']">
-                <br>
-                <br>
-                <div class="heartpost">
-                $:markdown.markdown(loadtext('p/posts/'+c['postid']+'/intro'))
-                $:markdown.markdown(loadtext('p/posts/'+c['postid']+'/post'))
-                </div>
-                <div class="postmenu">
-                <small>by $c['creator'] $c['timeadded']</small><br>
-                $getcombines(c['postid'])
-                $if c['combine']:
-                    $#combined = db.select('published', where="postid='"+c['combine']+"'")[0]
-                    $ combined=loadjson('p/posts/'+c['combine']+'/meta')
-                    <small>combo with <a href="/?show=$combined['postid']">$combined['soundname']</a></small><br>
-                $if c['remix']:
-                    $#remixed = db.select('published', where="postid='"+c['remix']+"'")[0]
-                    $ remixed=loadjson('p/posts/'+c['remix']+'/meta')
-                    <small>remixed <a href="/?show=$remixed['postid']">$remixed['soundname']</a></small><br>
-                <a href="/?show=$c['postid']">more</a>
-                or <a href="/#$c['soundname']">back</a>
-                $if namn == c['creator']:
-                    or <a href="/?edit=$c['postid']">edit</a> 
-                $if namn:
-                    or <a href="/editor?combine=$c['postid']">combo</a> 
-                <div class="megalike" id="megalike$c['postid']" onclick="like('$c['postid']')">$getlikes(c['postid'],namn)</div>
-                <br>
-                </div>
-                </div>
-        else:
-            print('de nada')
+            <div class="heartpost">
+            $:markdown.markdown(loadtext('p/posts/'+c['postid']+'/intro'))
+            $:markdown.markdown(loadtext('p/posts/'+c['postid']+'/post'))
+            </div>
+            <div class="postmenu">
+            <small>by $c['creator'] $c['timeadded']</small><br>
+            $getcombines(c['postid'])
+            $if c['combine']:
+                $#combined = db.select('published', where="postid='"+c['combine']+"'")[0]
+                $ combined=loadjson('p/posts/'+c['combine']+'/meta')
+                <small>combo with <a href="/?show=$combined['postid']">$combined['soundname']</a></small><br>
+            $if c['remix']:
+                $#remixed = db.select('published', where="postid='"+c['remix']+"'")[0]
+                $ remixed=loadjson('p/posts/'+c['remix']+'/meta')
+                <small>remixed <a href="/?show=$remixed['postid']">$remixed['soundname']</a></small><br>
+            <a href="/?show=$c['postid']">more</a>
+            or <a href="/#$c['soundname']">back</a>
+            $if namn == c['creator']:
+                or <a href="/?edit=$c['postid']">edit</a> 
+            $if namn:
+                or <a href="/editor?combine=$c['postid']">combo</a> 
+            <div class="megalike" id="megalike$c['postid']" onclick="like('$c['postid']')">$getlikes(c['postid'],namn)</div>
+            <br>
+            </div>
+            </div>
 
 <br>
 <br>

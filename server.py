@@ -12,11 +12,7 @@ import subprocess
 import web
 import hashlib
 import random
-import time
-import shutil
 import settings
-import binascii
-import base64
 import markdown
 import re
 import bcrypt
@@ -123,11 +119,16 @@ def savejson(thename, thedict):
         json.dump(thedict,f)
 
 def loadjson(thename):
-    with open(basedir+thename, 'r') as f:
-        settings = json.load(f)
-        #for key, i in settings.items():
-        #    createpost(key,i)
-    return settings
+    if os.path.exists(basedir+thename):
+        with open(basedir+thename, 'r') as f:
+            settings = json.load(f)
+            #for key, i in settings.items():
+            #    createpost(key,i)
+    print(settings)
+    if settings != None:
+        return settings
+    else:
+        return ''
 
 def deletepost(thefile):
     os.system('rm '+thefile)
@@ -379,11 +380,16 @@ class welcome():
 class like:
     def POST(self):
         if session.user != '':
-            i = web.input(unlike=None, like=None, hate=None, unhate=None, user=None, postid=None)
+            i = web.input(unlike=None, like=None, hate=None, unhate=None, user=None, imghash=None)
             user = i.user
-            postid = i.postid
+            postid = i.imghash
             #l = db.query("SELECT * FROM likes WHERE bild='"+postid+"' AND user='"+session.user+"';")
-            l = loadjson('p/posts/'+postid+'/hearts/'+session.user)
+            os.makedirs(basedir+'p/posts/'+postid+'/hearts/',exist_ok=True)
+            os.makedirs(basedir+'u/'+session.user+'/posts/'+postid+'/hearts/',exist_ok=True)
+            try:
+                l = loadjson('p/posts/'+postid+'/hearts/'+session.user)
+            except:
+                l={}
             print(session.user)
             if l:
                 user_likes = True
@@ -391,14 +397,21 @@ class like:
                 user_likes = False
             if user_likes == False:
                 #db.insert('likes', user=session.user, bild=postid, datum=formattime(datetime.datetime.now()))
-                savedict={'timeadded':formattime(datetime.datetime.now())}
+                try:
+                    l=len(os.listdir(basedir+'p/posts/'+postid+'/hearts/'))
+                except:
+                    l=0
+                #db.update('published', where='postid="'+postid+'"', hearts=l.likes)
+                thedict={'hearts':l}
+                savejson('p/posts/'+postid+'/meta',thedict)
+                savedict={'timeadded':formattime(datetime.datetime.now()),'siteurl':siteurl, 'hearts':l}
                 savejson('p/posts/'+postid+'/hearts/'+session.user, savedict)
-                savejson('u/'+session.user+'/hearts/'+session.user, savedict)
+                savejson('u/'+session.user+'/posts/'+postid+'/hearts/'+session.user, savedict)
                 user_likes = True
             elif user_likes == True:
                 #db.query("DELETE FROM likes WHERE bild='"+postid+"' AND user='"+session.user+"';")
                 deletepost(basedir+'p/posts/'+postid+'/hearts/'+session.user)
-                deletepost(basedir+'u/'+session.user+'/hearts/'+session.user)
+                deletepost(basedir+'u/'+session.user+'/posts/'+postid+'/hearts/'+session.user)
                 user_likes = False
             #likes = db.query("SELECT Count(*) AS likes FROM likes WHERE bild='"+postid+"';")[0]
             likes = len(os.listdir(basedir+'p/posts/'+postid+'/hearts/'))
@@ -838,6 +851,8 @@ def getlikes(postid, user):
     os.makedirs(basedir+'p/posts/'+postid+'/hearts/',exist_ok=True)
     try:
         l=len(os.listdir(basedir+'p/posts/'+postid+'/hearts/'))
+        print(os.listdir(basedir+'p/posts/'+postid+'/hearts/'))
+        print('fuuuuuukkk'+str(l))
     except:
         l=0
     #db.update('published', where='postid="'+postid+'"', hearts=l.likes)
