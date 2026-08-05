@@ -1375,9 +1375,8 @@ class editor:
                 thedict={'soundname':soundname}
                 savejson('u/'+session.user+'/posts/'+session.postid+'/meta',thedict)
                 #session.postid = hashlib.sha256(str(random.getrandbits(256)).encode('utf-8')).hexdigest()[9:36]
-                if os.path.exists(basedir+'p/posts/'+session.postid+'/meta') == False:
-                    os.system('cp -r '+basedir+'u/'+session.user+'/posts/'+session.postid+' '+basedir+'p/posts/')
-                    #also zippit here!
+                os.system('cp -r '+basedir+'u/'+session.user+'/posts/'+session.postid+' '+basedir+'p/posts/')
+                #also zippit here!
                 raise web.seeother('/editor?public=yes')
                 #db.insert('pawning', pawning=i.remix, name=session.user, timeadded=formattime(datetime.datetime.now()))
             return rendersplash.editor(storage, text, text2, markdown, safe_filename, session.postid, i.public, logged(), session.user, i.combine, i.remix)

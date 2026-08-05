@@ -87,7 +87,7 @@ $else:
                 <small>by $g['creator']</small>
                 $:userimage(g['creator'])
                 <br>
-                $ getcombines(g['postid'])
+                $getcombines(g['postid'])
                 $if 'combine' in g:
                     $if g['combine'] != '':
                         $if postexist(g['combine']):
@@ -137,7 +137,7 @@ $else:
             </div>
             <div class="postmenu">
             <small>by $g['creator'] $g['timeadded']</small><br>
-            $ getcombines(g['postid'])
+            $getcombines(g['postid'])
             $if 'combine' in g:
                 $if g['combine'] != '':
                     $#combined = db.select('published', where="postid='"+g['combine']+"'")[0]
