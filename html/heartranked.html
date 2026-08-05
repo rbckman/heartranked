@@ -47,7 +47,7 @@ $if search != '':
             </div>
             <div class="postmenu">
             <small>by $g['creator'] g['timeadded']</small><br>
-            $getcombines(g['postid'])
+            $ getcombines(g['postid'])
             $if 'combine' in g:
                 $#combined = db.select('published', where="postid='"+g['combine']+"'")[0]
                 $ combined=loadjson('p/posts/'+g['combine']+'/meta')
@@ -89,15 +89,17 @@ $else:
                 <br>
                 $ getcombines(g['postid'])
                 $if 'combine' in g:
-                    $if postexist(g['combine']):
-                        $#combined = db.select('published', where="postid='"+g['combine']+"'")[0]
-                        $ combined=loadjson('p/posts/'+g['combine']+'/meta')
-                        <small>combo with <a href="/?show=$combined['postid']">$combined['soundname']</a></small><br>
+                    $if g['combine'] != '':
+                        $if postexist(g['combine']):
+                            $#combined = db.select('published', where="postid='"+g['combine']+"'")[0]
+                            $ combined=loadjson('p/posts/'+g['combine']+'/meta')
+                            <small>combo with <a href="/?show=$combined['postid']">$combined['soundname']</a></small><br>
                 $if 'remix' in g:
-                    $if postexist(g['remix']):
-                        $#remixed = db.select('published', where="postid='"+g['remix']+"'")
-                        $ remixed=loadjson('p/posts/'+g['remix']+'/meta')
-                        <small>remixed <a href="/?show=$remixed['postid']">$remixed['soundname']</a></small><br>
+                    $if g['remix'] != '':
+                        $if postexist(g['remix']):
+                            $#remixed = db.select('published', where="postid='"+g['remix']+"'")
+                            $ remixed=loadjson('p/posts/'+g['remix']+'/meta')
+                            <small>remixed <a href="/?show=$remixed['postid']">$remixed['soundname']</a></small><br>
                 $if loadtext('p/posts/'+g['postid']+'/post') != '':
                     $if len(loadtext('p/posts/'+g['postid']+'/post')) > 255:
                         <a href="/?show=$g['postid']">read plenty more</a>
@@ -135,15 +137,17 @@ $else:
             </div>
             <div class="postmenu">
             <small>by $g['creator'] $g['timeadded']</small><br>
-            $getcombines(g['postid'])
-            $if 'combine' in g and g['combine'] != '':
-                $#combined = db.select('published', where="postid='"+g['combine']+"'")[0]
-                $ combined=loadjson('p/posts/'+g['combine']+'/meta')
-                <small>combo with <a href="/?show=$combined['postid']">$combined['soundname']</a></small><br>
-            $if 'remix' in g and g['remix'] != '':
-                $#remixed = db.select('published', where="postid='"+g['remix']+"'")[0]
-                $ remixed=loadjson('p/posts/'+g['remix']+'/meta')
-                <small>remixed <a href="/?show=$remixed['postid']">$remixed['soundname']</a></small><br>
+            $ getcombines(g['postid'])
+            $if 'combine' in g:
+                $if g['combine'] != '':
+                    $#combined = db.select('published', where="postid='"+g['combine']+"'")[0]
+                    $ combined=loadjson('p/posts/'+g['combine']+'/meta')
+                    <small>combo with <a href="/?show=$combined['postid']">$combined['soundname']</a></small><br>
+            $if 'remix' in g:
+                $if g['remix'] != '':
+                    $#remixed = db.select('published', where="postid='"+g['remix']+"'")[0]
+                    $ remixed=loadjson('p/posts/'+g['remix']+'/meta')
+                    <small>remixed <a href="/?show=$remixed['postid']">$remixed['soundname']</a></small><br>
             or <a href="/#$g['soundname']">back</a> 
             $if namn == g['creator']:
                 or <a href="/?edit=$g['postid']">edit</a> 
@@ -159,7 +163,7 @@ $else:
         $ comboposts=getcombofeed(show)
         $ choose_feed = False
         $for c in comboposts:
-            $if c['soundname'] and choose_feed == False:
+            $if c['postid'] and choose_feed == False:
                 $#<small><a href="/?show=$g['postid']&feedbase=timebased">timebased 🌍</a> <a href="/?show=$g['postid']&feedbase=heart1day">heartbased ❤️ day</a> <a href="/?show=$g['postid']&feedbase=heart1week">week</a> <a href="/?show=$g['postid']&feedbase=heart1month">month</a> <a href="/?show=$g['postid']&feedbase=heart1year">year</a> <a href="/?show=$g['postid']&feedbase=alltime">alltime</a></small>
                 <small>🌍 <a href="/?show=$g['postid']&feedbase=time">time</a> ❤️ <a href="/?show=$g['postid']&feedbase=heart">heart</a> ⚭ <a href="/?show=$g['postid']&feedbase=combo">combo</a> for <a href="/?show=$g['postid']&feedbase=today">day</a> <a href="/?show=$g['postid']&timebase=week">week</a> <a href="/?show=$g['postid']&timebase=month">month</a> <a href="/?show=$g['postid']&timebase=year">year</a> <a href="/?show=$g['postid']&timebase=all">all</a></small>
                 $ choose_feed = True
@@ -173,14 +177,16 @@ $else:
             <div class="postmenu">
             <small>by $c['creator'] $c['timeadded']</small><br>
             $getcombines(c['postid'])
-            $if 'combine' in c and c['combine'] != '':
-                $#combined = db.select('published', where="postid='"+c['combine']+"'")[0]
-                $ combined=loadjson('p/posts/'+c['combine']+'/meta')
-                <small>combo with <a href="/?show=$combined['postid']">$combined['soundname']</a></small><br>
-            $if 'remix' in c and c['remix'] != '':
-                $#remixed = db.select('published', where="postid='"+c['remix']+"'")[0]
-                $ remixed=loadjson('p/posts/'+c['remix']+'/meta')
-                <small>remixed <a href="/?show=$remixed['postid']">$remixed['soundname']</a></small><br>
+            $if 'combine' in c:
+                $if c['combine'] != '':
+                    $#combined = db.select('published', where="postid='"+c['combine']+"'")[0]
+                    $ combined=loadjson('p/posts/'+c['combine']+'/meta')
+                    <small>combo with <a href="/?show=$combined['postid']">$combined['soundname']</a></small><br>
+            $if 'remix' in c:
+                $if c['remix'] != '':
+                    $#remixed = db.select('published', where="postid='"+c['remix']+"'")[0]
+                    $ remixed=loadjson('p/posts/'+c['remix']+'/meta')
+                    <small>remixed <a href="/?show=$remixed['postid']">$remixed['soundname']</a></small><br>
             <a href="/?show=$c['postid']">more</a>
             or <a href="/#$c['soundname']">back</a>
             $if namn == c['creator']:

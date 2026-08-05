@@ -121,16 +121,14 @@ def savejson(thename, thedict):
 def loadjson(thename):
     if os.path.exists(basedir+thename):
         with open(basedir+thename, 'r') as f:
-            s = json.load(f)
+            settings = json.load(f)
             #for key, i in settings.items():
             #    createpost(key,i)
-    try:
-        if s != None:
-            return s
-    except:
-        return {} 
+    print(settings)
+    if settings != None:
+        return settings
     else:
-        return {}
+        return ''
 
 def deletepost(thefile):
     os.system('rm '+thefile)
@@ -445,7 +443,7 @@ class user():
             #postid = hashlib.md5(str(random.getrandbits(256)).encode('utf-8')).hexdigest()
             #db.insert('sound', postid=postid, filename=soundname, sort=filetype, title=soundname, uploaddate=formattime(datetime.datetime.now()), uppladdare=user, lastmod=formattime(datetime.datetime.now()), moddedby=user)
             #usersounds = db.query("SELECT * FROM published WHERE creator='"+user+"' ORDER BY timeadded DESC;")
-            usersounds=loadjson('p/posts/')
+            usersounds=loadjson('r/users/'+user)
             #sounds = db.select('published')
             #sounds=os.listdir(basedir+'p/posts/')
             creditsounds = []
@@ -880,14 +878,14 @@ def getlikes(postid, user):
         return likes
 
 def postexist(postid):
-    return False
+    print('fucxkä')
     try:
         #l = db.select('published', where="postid='"+postid+"'")[0]
         l=loadjson('/p/posts/'+postid+'/meta')
     except:
         return False
     try:
-        if l.soundname != None:
+        if l['postid'] != None:
             return True
         else:
             return False
@@ -1048,7 +1046,7 @@ def getfeed():
         #goodies = db.query("SELECT * FROM published ORDER BY ID DESC LIMIT 1000;")
         posts = get_files_by_time('p/posts/',newest_first=True)
         for p in posts:
-            l=loadjson('p/posts/'+p)
+            l=loadjson('p/posts/'+p+'/meta')
             goodies.append(l)
     #COMBO
     elif feedbase == "combo" and timebase == "today":
@@ -1104,7 +1102,7 @@ def getfeed():
         #goodies = db.query("SELECT * FROM published ORDER BY combines DESC LIMIT 1000;")
         posts = os.listdir('r/comborank/')
         for p in posts:
-            l=loadjson('p/posts/'+p)
+            l=loadjson('p/posts/'+p+'/meta')
             goodies.append(l)
     elif feedbase == "Idontevenknow":
         #goodies = db.query("SELECT * FROM published ORDER BY combines DESC LIMIT 1000;")
@@ -1122,25 +1120,27 @@ def getcombofeed(show):
     feedbase=session.feedbase
     if feedbase == "heart":
         #comboposts = db.query("SELECT * FROM published WHERE combine='"+show+"' ORDER BY hearts DESC LIMIT 1000;")
-        posts = os.listdir(basedir+'r/heartrank/')
+        posts = os.listdir(basedir+'p/posts/')
         comboposts=[]
         for p in posts:
-            l=loadjson('p/posts/'+p)
+            l=loadjson('p/posts/'+p+'/meta')
             comboposts.append(l)
     elif feedbase == "combo":
         #comboposts = db.query("SELECT * FROM published WHERE combine='"+show+"' ORDER BY combines DESC LIMIT 1000;")
-        posts = os.listdir(basedir+'r/combos/')
+        posts = os.listdir(basedir+'p/posts/')
         comboposts=[]
         for p in posts:
-            l=loadjson('p/posts/'+p)
+            l=loadjson('p/posts/'+p+'/meta')
             comboposts.append(l)
     else:
         #comboposts = db.query("SELECT * FROM published WHERE combine='"+show+"' ORDER BY ID DESC LIMIT 1000;")
-        posts = get_files_by_time('p/posts/',newest_first=True)
+        posts = get_dirs_by_time('p/posts/',reverse=True)
         comboposts=[]
         for p in posts:
-            l=loadjson('p/posts/'+p)
-            comboposts.append(l)
+            l=loadjson('p/posts/'+p+'/meta')
+            if 'combine' in l:
+                if l['combine'] == show:
+                    comboposts.append(l)
     return comboposts
 
 def userimage(user):
@@ -1197,7 +1197,7 @@ class heartranked:
                 #tot = db.query("SELECT Count(*) AS sound FROM published WHERE creator LIKE '%"+session.search+"%';")[0]
                 #b1 = tot.sound
                 for i in bilder_totalt:
-                    searchthis=loadjson('p/posts/'+i)
+                    searchthis=loadjson('p/posts/'+i+'/meta')
                     for p in dir(searchthis):
                         if session.search in p:
                             search_result.append(searchthis)
@@ -1264,7 +1264,9 @@ class heartranked:
                 #user = db.select('published', where="postid='"+i.remove+"'")[0]
                 post=loadjson('p/posts/'+i.remove+'/meta')
                 if post['creator'] == session.user:
-                    #os.system('mv -r '+basedir+'posts/'+i.remove+'/ deleted/'+i.remove)
+                    os.makedirs(basedir+'u/'+session.user+'/deleted/', exist_ok=True)
+                    os.system('mv '+basedir+'u/'+session.user+'/posts/'+i.remove+' '+basedir+'u/'+session.user+'/posts/deleted/')
+                    os.system('mv '+basedir+'p/posts/'+i.remove+' p/deleted/')
                     print('move to a deleted folder, make backend clean things up for real')
             except:
                 pass
@@ -1298,7 +1300,7 @@ class editor:
                     print('FUUUUUUU')
                     os.makedirs(basedir+'u/'+session.user+'/posts/'+session.postid, exist_ok=True)
                     thedict={'postid':session.postid, 'timeadded':formattime(datetime.datetime.now()), 'creator':session.user, 'combine':i.combine}
-                    savejson('u/'+session.user+'/posts/'+session.postid,thedict)
+                    savejson('u/'+session.user+'/posts/'+session.postid+'/meta',thedict)
                     os.makedirs(basedir+'p/posts/'+i.combine+'/combos', exist_ok=True)
                     savetext('p/posts/'+i.combine+'/combos/'+session.postid,session.user)
             if i.remix != None:
@@ -1362,76 +1364,18 @@ class editor:
                 text2 = ''
             if i.new == 'yes':
                 session.postid = ''
+                print('WTFWTFWTF')
                 raise web.seeother('/editor')
             if i.publish == 'yes' and text != '' and i.public == None and logged() and len(text) < 256:
                 description1 = text
                 description2 = text2
                 soundname = safe_filename(description1[0:27])
+                thedict={'soundname':soundname}
+                savejson('u/'+session.user+'/posts/'+session.postid+'/meta',thedict)
                 #session.postid = hashlib.sha256(str(random.getrandbits(256)).encode('utf-8')).hexdigest()[9:36]
                 if os.path.exists(basedir+'p/posts/'+session.postid+'/meta') == False:
-                    os.makedirs(basedir+'p/posts/'+session.postid,exist_ok=True)
-                    #db.update('published', where='postid="'+session.postid+'"', postid=session.postid, soundname=soundname, description=description1, description2=description2, timeadded=formattime(datetime.datetime.now()), creator=session.user)
-                    thedict={'postid':session.postid, 'soundname':soundname, 'timeadded':formattime(datetime.datetime.now()), 'creator':session.user}
-                    savejson('p/posts/'+session.postid+'/meta',thedict)
-                    savetext('p/posts/'+session.postid+'/intro', description1)
-                    savetext('p/posts/'+session.postid+'/post', description2) 
-                    raise web.seeother('/editor?public=yes')
-                else:
-                    print('make a new post')
-                    createpost=True
-                try:
-                    #db.update('unpublished', where='postid="'+session.postid+'"', postid=session.postid, soundname=soundname, description=description1, description2=description2, timeadded=formattime(datetime.datetime.now()), creator=session.user)
-                    thedict={'postid':session.postid, 'soundname':soundname, 'timeadded':formattime(datetime.datetime.now()), 'creator':session.user}
-                    savejson('u/'+session.user+'/posts/'+session.postid+'/meta',thedict)
-                    savetext('u/'+session.user+'/posts/'+session.postid+'/intro', description1)
-                    savetext('u/'+session.user+'/posts/'+session.postid+'/post', description2)
-                except:
-                    print('update unpublished')
-                if createpost == True:
-                    try:
-                        #combine = db.select('unpublished', where="postid='"+session.postid+"'")[0]
-                        combine=loadjson('u/'+session.user+'/posts/'+session.postid+'/meta')
-                        combine=combine['combo']
-                    except:
-                        combine = ''
-                    try:
-                        #remix = db.select('unpublished', where="postid='"+session.postid+"'")[0]
-                        remix=loadjson('u/'+session.user+'/posts/'+session.postid+'/meta')
-                        remix=remix['remix']
-                    except:
-                        remix = ''
-                    if combine != '':
-                        #get how many combos there was for this combined post befor and update count. this way we keep track of combo track. NO! make it creator. OBVIOUSLY.
-                        savetext('p/posts/'+combine+'/combos/'+session.postid,session.user)
-                    if remix != '':
-                        savetext('p/posts/'+remix+'/remixes/'+session.postid,session.user)
-                    #db.insert('published', postid=session.postid, soundname=soundname, description=description1, description2=description2, timeadded=formattime(datetime.datetime.now()), creator=session.user, combine=combine, remix=remix)
-                    print('update sahfajfhajfhahfHFLDHFODHFOHFDDOJFODUF')
-                    thedict={'postid':session.postid,'soundname':soundname,'timeadded':formattime(datetime.datetime.now()),'creator':session.user,'combine':combine,'remix':remix}
-                    savejson('p/posts/'+session.postid+'/meta',thedict)
-                    savetext('p/posts/'+session.postid+'/intro', description1)
-                    savetext('p/posts/'+session.postid+'/post', description2)                    
-                    try:
-                        #l = db.query("SELECT Count(*) AS combines FROM published WHERE combine='"+combine+"';")[0]
-                        l=len(os.listdir(basedir+'p/posts/'+postid+'/combos/'))
-                        thedict={'combines':l}
-                        savejson('p/posts/'+postid+'/meta',thedict)
-                        #m = db.query("SELECT * FROM likes WHERE bild='"+postid+"' AND user='"+user+"';")
-                        #db.update('published', where='postid="'+combine+'"', combines=l.combines)
-                    except:
-                        print('fuuuuuuuuuuuuuuuuuuuuuuu COMBINES NOT UPDATING! WARNING WARNING!')
-                        pass
-                    try:
-                        #l = db.query("SELECT Count(*) AS combines FROM published WHERE combine='"+combine+"';")[0]
-                        l=len(os.listdir(basedir+'p/posts/'+postid+'/remixes/'))
-                        thedict={'remixes':l}
-                        savejson('p/posts/'+postid+'/meta',thedict)
-                        #m = db.query("SELECT * FROM likes WHERE bild='"+postid+"' AND user='"+user+"';")
-                        #db.update('published', where='postid="'+combine+'"', combines=l.combines)
-                    except:
-                        print('fuuuuuuuuuuuuuuuuuuuuuuu COMBINES NOT UPDATING! WARNING WARNING!')
-                        pass
-                    raise web.seeother('/editor?public=yes')
+                    os.system('cp -r '+basedir+'u/'+session.user+'/posts/'+session.postid+' '+basedir+'p/posts/')
+                    #also zippit here!
                 raise web.seeother('/editor?public=yes')
                 #db.insert('pawning', pawning=i.remix, name=session.user, timeadded=formattime(datetime.datetime.now()))
             return rendersplash.editor(storage, text, text2, markdown, safe_filename, session.postid, i.public, logged(), session.user, i.combine, i.remix)
