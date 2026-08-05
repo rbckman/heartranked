@@ -899,10 +899,12 @@ def getcombines(postid):
         l=len(os.listdir(basedir+'p/posts/'+postid+'/combos/'))
     except:
         l=0
+    print('fffffffffffffffffff'+str(l))
+    print(postid)
     #m = db.query("SELECT * FROM likes WHERE bild='"+postid+"' AND user='"+user+"';")
     #db.update('published', where='postid="'+postid+'"', combines=0)
-    if l > 0:
-            return "⚭ " + str(l)
+    if int(l) > 0:
+        return "⚭ " + str(l)
     else:
         return ''
 
