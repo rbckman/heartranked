@@ -119,16 +119,13 @@ def savejson(thename, thedict):
         json.dump(thedict,f)
 
 def loadjson(thename):
+    settings = ''
     if os.path.exists(basedir+thename):
         with open(basedir+thename, 'r') as f:
             settings = json.load(f)
             #for key, i in settings.items():
             #    createpost(key,i)
-    print(settings)
-    if settings != None:
-        return settings
-    else:
-        return ''
+    return settings
 
 def deletepost(thefile):
     os.system('rm '+thefile)
@@ -146,8 +143,8 @@ def adduser(name, password, mail):
         adminlevel=3
     else:
         adminlevel=5
-    savedict={'name':name, 'displayname':originalname, 'password':password_hashed,'mail':mail,'adminlevel':adminlevel}
-    savejson('r/users/'+name, savedict)
+    thedict={'name':name, 'displayname':originalname, 'password':password_hashed,'mail':mail,'adminlevel':adminlevel}
+    savejson('r/users/'+name, thedict)
     #savetext('r/user/'+name,password_hashed)
     print("new user added")
     return
@@ -192,11 +189,11 @@ def stopresetpass(mail):
     if os.path.exists(basedir+'r/stopresetpass/'+mail) == True:
         t=loadjson('r/stopresetpass/'+mail)
     else:
-        savedict={'timeadded':time.time()}
-        savejson('r/stopresetpass/'+mail, savedict)
+        thedict={'timeadded':time.time()}
+        savejson('r/stopresetpass/'+mail, thedict)
         return
-    savedict={'timeadded':time.time()}
-    savejson('r/stopresetpass/'+mail, savedict)
+    thedict={'timeadded':time.time()}
+    savejson('r/stopresetpass/'+mail, thedict)
     latest = time.time() - t
     print(latest)
     if latest < 600:
@@ -210,11 +207,11 @@ def stopflood(ip,referer):
     if os.path.exists(basedir+'r/stopflood/'+ip) == True:
         t=loadjson('r/stopflood/'+ip)
     else:
-        savedict={'timeadded':time.time()}
-        savejson('r/stopflood/'+ip, savedict)
+        thedict={'timeadded':time.time()}
+        savejson('r/stopflood/'+ip, thedict)
         return
-    savedict={'timeadded':time.time()}
-    savejson('r/stopflood/'+ip, savedict)
+    thedict={'timeadded':time.time()}
+    savejson('r/stopflood/'+ip, thedict)
     try:
         latest = time.time() - t
         print(latest)
@@ -385,6 +382,7 @@ class like:
             postid = i.imghash
             #l = db.query("SELECT * FROM likes WHERE bild='"+postid+"' AND user='"+session.user+"';")
             os.makedirs(basedir+'p/posts/'+postid+'/hearts/',exist_ok=True)
+            os.makedirs(basedir+'p/heartrank/',exist_ok=True)
             os.makedirs(basedir+'u/'+session.user+'/posts/'+postid+'/hearts/',exist_ok=True)
             try:
                 l = loadjson('p/posts/'+postid+'/hearts/'+session.user)
@@ -404,14 +402,23 @@ class like:
                 #db.update('published', where='postid="'+postid+'"', hearts=l.likes)
                 thedict={'hearts':l}
                 savejson('p/posts/'+postid+'/meta',thedict)
-                savedict={'timeadded':formattime(datetime.datetime.now()),'siteurl':siteurl, 'hearts':l}
-                savejson('p/posts/'+postid+'/hearts/'+session.user, savedict)
-                savejson('u/'+session.user+'/posts/'+postid+'/hearts/'+session.user, savedict)
+                os.system('rm '+basedir+'p/heartrank/'+postid+'-'+str(int(l)).zfill(16))
+                os.system('cp '+basedir+'p/posts/'+postid+'/meta '+basedir+'p/heartrank/'+postid+'-'+str(int(l+1)).zfill(16))
+                savejson('p/posts/'+postid+'/hearts/'+session.user, thedict)
+                savejson('u/'+session.user+'/posts/'+postid+'/hearts/'+session.user, thedict)
                 user_likes = True
             elif user_likes == True:
                 #db.query("DELETE FROM likes WHERE bild='"+postid+"' AND user='"+session.user+"';")
-                deletepost(basedir+'p/posts/'+postid+'/hearts/'+session.user)
-                deletepost(basedir+'u/'+session.user+'/posts/'+postid+'/hearts/'+session.user)
+                #db.insert('likes', user=session.user, bild=postid, datum=formattime(datetime.datetime.now()))
+                try:
+                    l=len(os.listdir(basedir+'p/posts/'+postid+'/hearts/'))
+                except:
+                    l=0
+                if l > 0:
+                    deletepost(basedir+'u/'+session.user+'/posts/'+postid+'/hearts/'+session.user)
+                    deletepost(basedir+'p/posts/'+postid+'/hearts/'+session.user)
+                    os.system('rm '+basedir+'p/heartrank/'+postid+'-'+str(int(l)).zfill(16))
+                    os.system('cp '+basedir+'p/posts/'+postid+'/meta '+basedir+'p/heartrank/'+postid+'-'+str(int(l)-1).zfill(16))
                 user_likes = False
             #likes = db.query("SELECT Count(*) AS likes FROM likes WHERE bild='"+postid+"';")[0]
             likes = len(os.listdir(basedir+'p/posts/'+postid+'/hearts/'))
@@ -428,7 +435,7 @@ class user():
             if data.public and data.soundname:
                 #db.update('published', where="postid='" + data.soundname +"'", public=data.public)
                 public=data.public
-                savedict={'timeadded':formattime(datetime.datetime.now())}
+                thedict={'timeadded':formattime(datetime.datetime.now())}
                 savejson('p/posts/'+postid+'/meta')
             elif data.showuploads=='yes':
                 uploads = []
@@ -856,11 +863,7 @@ def getlikes(postid, user):
     except:
         l=0
     #db.update('published', where='postid="'+postid+'"', hearts=l.likes)
-    thedict={'hearts':l}
-    savejson('p/posts/'+postid+'/meta',thedict)
-    thedict={'hearts':l}
-    savejson('/p/posts/'+postid+'/hearts/'+user,thedict)
-    if user:
+    if user != None:
         #m = db.query("SELECT * FROM likes WHERE bild='"+postid+"' AND user='"+user+"';")
         m=loadjson('/p/posts/'+postid+'/hearts/'+user)
         if m:
@@ -945,13 +948,15 @@ def getfeed():
         #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY hearts DESC LIMIT 1000;")
         #posts=os.listdir('/p/posts/')
         #make function get_files_by_time newest_first and by today week month year
-        posts = os.listdir('heartrank/')
+        posts = os.listdir('/p/heartrank/')
         for p in posts:
             #check modtime here day
             lastupdate = os.path.getmtime(basedir+'p/posts/'+p+'/meta')
             if lastupdate > one_day_before:
-                l=loadjson('p/posts/'+p+'/meta')
+                l=loadjson('p/heartrank/'+p+'/meta')
                 goodies.append(l)
+        heartranked=[]
+
     elif feedbase == "heart" and timebase == "week":
         one_day_before = now - datetime.timedelta(weeks=1)
         now = now.strftime('%Y-%m-%d %H:%M:%S')
@@ -1248,7 +1253,7 @@ class heartranked:
             session.timebase = timebase
         if session.user=='':
             free_hash_for_user = hashlib.md5(str(random.getrandbits(256)).encode('utf-8')).hexdigest()[:4]
-            #session.user = 'rocker_'+free_hash_for_user
+            #session.user = 'heart_'+free_hash_for_user
             session.user = None
         ip = web.ctx['ip']
         referer = web.ctx.env.get('HTTP_REFERER', 'none')
@@ -1299,9 +1304,8 @@ class editor:
                 if session.user:
                     session.postid = hashlib.sha256(str(random.getrandbits(256)).encode('utf-8')).hexdigest()[9:36]
                     #db.insert('unpublished', postid=session.postid, description='', description2='', timeadded=formattime(datetime.datetime.now()), creator=session.user, combine=i.combine)
-                    print('FUUUUUUU')
                     os.makedirs(basedir+'u/'+session.user+'/posts/'+session.postid, exist_ok=True)
-                    thedict={'postid':session.postid, 'timeadded':formattime(datetime.datetime.now()), 'creator':session.user, 'combine':i.combine}
+                    thedict={'postid':session.postid, 'siteurl':siteurl, 'timeadded':formattime(datetime.datetime.now()), 'creator':session.user, 'combine':i.combine}
                     savejson('u/'+session.user+'/posts/'+session.postid+'/meta',thedict)
                     os.makedirs(basedir+'p/posts/'+i.combine+'/combos', exist_ok=True)
                     savetext('p/posts/'+i.combine+'/combos/'+session.postid,session.user)
@@ -1329,7 +1333,7 @@ class editor:
                     session.postid = hashlib.sha256(str(random.getrandbits(256)).encode('utf-8')).hexdigest()[9:36]
                     #db.insert('unpublished', postid=session.postid, description=text, description2=text2, timeadded=formattime(datetime.datetime.now()), creator=allcreators, remix=i.remix)
                     os.makedirs(basedir+'u/'+session.user+'/posts/'+session.postid, exist_ok=True)
-                    thedict={'postid':session.postid, 'timeadded':formattime(datetime.datetime.now()), 'creator':allcreators, 'remix':i.remix}
+                    thedict={'postid':session.postid,  'siteurl':siteurl,'timeadded':formattime(datetime.datetime.now()), 'creator':allcreators, 'remix':i.remix}
                     os.makedirs(basedir+'p/posts/'+i.remix+'/remix', exist_ok=True)
                     savetext('p/posts/'+i.remix+'/remix/'+session.postid,session.user)
 
@@ -1366,7 +1370,6 @@ class editor:
                 text2 = ''
             if i.new == 'yes':
                 session.postid = ''
-                print('WTFWTFWTF')
                 raise web.seeother('/editor')
             if i.publish == 'yes' and text != '' and i.public == None and logged() and len(text) < 256:
                 description1 = text
@@ -1386,13 +1389,11 @@ class savepost:
         data = json.loads(web.data())
         text = data.get("text", "")
         text2 = data.get("text2", "")
-        print(text)
-        print(text2 +'fuuuuuuuuuuuuu')
         if session.postid == '':
             session.postid = hashlib.sha256(str(random.getrandbits(256)).encode('utf-8')).hexdigest()[9:36]
             #db.insert('unpublished', postid=session.postid, description=text, description2=text2, timeadded=formattime(datetime.datetime.now()), creator=session.user)
             os.makedirs(basedir+'u/'+session.user+'/posts/'+session.postid,exist_ok=True)
-            thedict={'postid':session.postid, 'timeadded':formattime(datetime.datetime.now()), 'creator':session.user}
+            thedict={'postid':session.postid, 'siteurl':siteurl, 'timeadded':formattime(datetime.datetime.now()), 'creator':session.user}
             savejson('u/'+session.user+'/posts/'+session.postid+'/meta',thedict)
             savetext('u/'+session.user+'/posts/'+session.postid+'/intro', text)
             savetext('u/'+session.user+'/posts/'+session.postid+'/post', text2)
@@ -1406,14 +1407,14 @@ class savepost:
                 iftext = ''
             if iftext != '':
                 #db.update('unpublished', where='postid="'+session.postid+'"', description=text, description2=text2, timeadded=formattime(datetime.datetime.now()), creator=session.user)
-                thedict={'postid':session.postid, 'timeadded':formattime(datetime.datetime.now()), 'creator':session.user}
+                thedict={'postid':session.postid, 'siteurl':siteurl, 'timeadded':formattime(datetime.datetime.now()), 'creator':session.user}
                 savejson('u/'+session.user+'/posts/'+session.postid+'/meta',thedict)
                 savetext('u/'+session.user+'/posts/'+session.postid+'/intro', text)
                 savetext('u/'+session.user+'/posts/'+session.postid+'/post', text2)
             else:
                 #db.insert('unpublished', postid=session.postid, description=text, description2=text2, timeadded=formattime(datetime.datetime.now()), creator=session.user)
                 os.makedirs(basedir+'u/'+session.user+'/posts/'+session.postid,exist_ok=True)
-                thedict={'postid':session.postid, 'timeadded':formattime(datetime.datetime.now()), 'creator':session.user}
+                thedict={'postid':session.postid, 'siteurl':siteurl, 'timeadded':formattime(datetime.datetime.now()), 'creator':session.user}
                 savejson('u/'+session.user+'/posts/'+session.postid+'/meta',thedict)
                 savetext('u/'+session.user+'/posts/'+session.postid+'/intro', text)
                 savetext('u/'+session.user+'/posts/'+session.postid+'/post', text2)
