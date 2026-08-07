@@ -929,6 +929,17 @@ def pushcombines(postid):
 def formattime(timeadded):
     return timeadded.strftime("%Y-%m-%d %H:%M:%S")
 
+def sort_by_name_then_time(dir_path):
+    with os.scandir(basedir+dir_path) as entries:
+        # Sort by modification time (newest first)
+        sorted_by_modified = sorted(
+            entries,
+            key=lambda x: x.stat().st_mtime,
+            reverse=False
+        )
+    sorted_filenames = [entry.name for entry in sorted_by_modified]
+    return sorted_filenames
+
 def getfeed():
     timebase=session.timebase
     feedbase=session.feedbase
@@ -943,54 +954,49 @@ def getfeed():
     #backend program will also sync posts and likes to trustees
     if feedbase == "heart" and timebase == "today":
         one_day_before = now - datetime.timedelta(days=1)
-        now = now.strftime('%Y-%m-%d %H:%M:%S')
-        one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
         #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY hearts DESC LIMIT 1000;")
         #posts=os.listdir('/p/posts/')
         #make function get_files_by_time newest_first and by today week month year
-        posts = os.listdir('/p/heartrank/')
+        posts = sort_by_name_then_time('/p/heartrank/')
         for p in posts:
             #check modtime here day
+            p=p.split('-')[0]
             lastupdate = os.path.getmtime(basedir+'p/posts/'+p+'/meta')
-            if lastupdate > one_day_before:
-                l=loadjson('p/heartrank/'+p+'/meta')
+            if datetime.datetime.fromtimestamp(lastupdate) > one_day_before:
+                l=loadjson('p/posts/'+p+'/meta')
                 goodies.append(l)
-        heartranked=[]
-
     elif feedbase == "heart" and timebase == "week":
         one_day_before = now - datetime.timedelta(weeks=1)
-        now = now.strftime('%Y-%m-%d %H:%M:%S')
-        one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
         #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY hearts DESC LIMIT 1000;")
-        posts = os.listdir(basedir+'r/heartrank/')
+        posts = sort_by_name_then_time('/p/heartrank/')
         for p in posts:
             #check modtime here day
+            p=p.split('-')[0]
+            print(p)
             lastupdate = os.path.getmtime(basedir+'p/posts/'+p+'/meta')
-            if lastupdate > one_day_before:
+            print(lastupdate)
+            print(one_day_before)
+            if datetime.datetime.fromtimestamp(lastupdate) > one_day_before:
                 l=loadjson('p/posts/'+p+'/meta')
                 goodies.append(l)
     elif feedbase == "heart" and timebase == "month":
         one_day_before = now - datetime.timedelta(weeks=4)
-        now = now.strftime('%Y-%m-%d %H:%M:%S')
-        one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
         #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY hearts DESC LIMIT 1000;")
-        posts = os.listdir(basedir+'r/heartrank/')
+        posts = sort_by_name_then_time('/p/heartrank/')
         for p in posts:
             #check modtime here day
             lastupdate = os.path.getmtime(basedir+'p/posts/'+p+'/meta')
-            if lastupdate > one_day_before:
+            if datetime.datetime.fromtimestamp(lastupdate) > one_day_before:
                 l=loadjson('p/posts/'+p+'/meta')
                 goodies.append(l)
     elif feedbase == "heart" and timebase == "year":
         one_day_before = now - datetime.timedelta(weeks=54)
-        now = now.strftime('%Y-%m-%d %H:%M:%S')
-        one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
         #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY hearts DESC LIMIT 1000;")
         posts = os.listdir(basedir+'r/heartrank/')
         for p in posts:
             #check modtime here day
             lastupdate = os.path.getmtime(basedir+'p/posts/'+p+'/meta')
-            if lastupdate > one_day_before:
+            if datetime.datetime.fromtimestamp(lastupdate) > one_day_before:
                 l=loadjson('p/posts/'+p+'/meta')
                 goodies.append(l)
     elif feedbase == "heart" and timebase == "" or feedbase == "heart" and timebase == "all":
@@ -1002,15 +1008,13 @@ def getfeed():
     #TIME
     elif feedbase == "time" and timebase == "today":
         one_day_before = now - datetime.timedelta(days=1)
-        now = now.strftime('%Y-%m-%d %H:%M:%S')
-        one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
         #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY ID DESC LIMIT 1000;")
         posts = get_dirs_by_time('p/posts/', reverse=True)
         print(posts)
         for p in posts:
             #check modtime here day
             lastupdate = os.path.getmtime('p/posts/'+p+'/meta')
-            if lastupdate > one_day_before:
+            if datetime.datetime.fromtimestamp(lastupdate) > one_day_before:
                 l=loadjson('p/posts/'+p+'/meta')
                 goodies.append(l)
     elif feedbase == "time" and timebase == "week":
