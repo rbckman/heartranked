@@ -722,12 +722,6 @@ def get_dirs_by_time(path, reverse=False):
         )
 
 def get_files_by_time(directory: str = ".", newest_first: bool = True):
-    """
-    Returns a list of file names in the directory sorted by last modified time.
-    
-    - newest_first=True  → Newest files first (most recent modification)
-    - newest_first=False → Oldest files first
-    """
     path = Path(basedir+directory) 
     #Get all files (exclude directories and hidden files if you want)
     files = [f for f in path.iterdir() if f.is_file()]
@@ -876,7 +870,6 @@ def getlikes(postid, user):
         return likes
 
 def postexist(postid):
-    print('fucxkä')
     try:
         #l = db.select('published', where="postid='"+postid+"'")[0]
         l=loadjson('/p/posts/'+postid+'/meta')
@@ -897,7 +890,6 @@ def getcombines(postid):
         l=len(os.listdir(basedir+'p/posts/'+postid+'/combos/'))
     except:
         l=0
-    print('fffffffffffffffffff'+str(l))
     print(postid)
     #m = db.query("SELECT * FROM likes WHERE bild='"+postid+"' AND user='"+user+"';")
     #db.update('published', where='postid="'+postid+'"', combines=0)
