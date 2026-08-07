@@ -28,6 +28,7 @@ import settings
 
 urls = (
     '/?','heartranked',
+    '/trust', 'trust',
     "/stats?", "stats",
     "/login?", "login",
     "/logout", "logout",
@@ -236,6 +237,31 @@ def getinvitation(secretinvitation):
         if invite == '':
             return True
     return False
+
+class trust():
+    form = web.form.Form(
+    web.form.Textbox('servername', web.form.notnull, description="server:"),
+    web.form.Textbox('port', web.form.notnull, description="port:"),
+    web.form.Textbox('user', web.form.notnull, description="user:"),
+    web.form.Password('password', web.form.notnull, description="passcode:"),
+    web.form.Button('Trust'))
+    def GET(self):
+        trusted=os.listdir(basedir+'r/trusted/')
+        trustedlist=[]
+        for t in trusted:
+            trusted=loadjson('r/trusted/'+t)
+            trustedlist.append(trusted)
+        trustform = self.form()
+        return render.trust(trustform, trustedlist)
+    def POST(self):
+        referer = web.ctx.env.get('HTTP_REFERER',baseurl)
+        ip = web.ctx['ip']
+        stopflood(ip, referer)
+        loginform = self.form()
+        i = web.input()
+        thedict={'servername':i.servername, 'port':i.port, 'user':i.user, 'password':i.password}
+        savejson('r/trusted/'+i.servername,thedict)
+        return web.seeother('/trust')
 
 class login():
     form = web.form.Form(
@@ -1391,15 +1417,17 @@ class editor:
                 os.system('cp -r '+basedir+'u/'+session.user+'/posts/'+session.postid+' '+basedir+'p/posts/')
                 #also zippit here!
                 os.system('zip -r '+basedir+'p/zipped/'+session.postid+'.zip '+basedir+'p/posts/'+session.postid )
+                #LETS SHIPPIT!
                 trustedlist=[]
                 trusted=os.listdir('r/trusted/')
                 for t in trusted:
                     trusted=loadjson('r/trusted/'+t)
                     trustedlist.append(trusted)
                 for t in trustedlist:
-                    t['servername']
-                    t['user']
-                    t['key']
+                    url=t['servername']+':'+t['port']
+                    trustedlogin = ['curl','-b','X', url , '-i', '-b', basedir+'/sessions/cookies.txt', '-c',basedir+'/sessions/cookies.txt', '-d', '?user='+t['user']+'&password='+t['password']+'&Login']
+                    subprocess.check_output(trustedlogin)
+                #OK GOT EM COOKIES LES DO IT DO IT DO IT SHIPPIT!
                 raise web.seeother('/editor?public=yes')
                 #db.insert('pawning', pawning=i.remix, name=session.user, timeadded=formattime(datetime.datetime.now()))
             return rendersplash.editor(storage, text, text2, markdown, safe_filename, session.postid, i.public, logged(), session.user, i.combine, i.remix)
