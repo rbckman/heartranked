@@ -743,7 +743,6 @@ def get_files_by_time(directory: str = ".", newest_first: bool = True):
 def getfiles(filmfolder):
     #get a list of films, in order of settings.p file last modified
     films_sorted = []
-    print(filmfolder+'FUUUUUUUUUUUUUUUUUUUUUU')
     films = next(os.walk(filmfolder))[1]
     for i in films:
         uploaded = os.listdir(filmfolder + i + '/')
@@ -776,7 +775,6 @@ def visitorlog(ip, referer, environ):
                 country = country.split(':')[1].split(',')[1].strip()
             else:
                 country='none'
-            #print('fuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu: '+ country)
             #db.insert('visitors', ip=ip, referer=referer, environ=environ, country=country,  countrycode=countrycode, time=formattime(datetime.datetime.now()))
             thedict={'ip':ip,'referer':referer,'environ':environ,'country':country,'countrycode':countrycode,'time':formattime(datetime.datetime.now())}
             savejson('r/visitors/'+ip,thedict)
@@ -790,7 +788,6 @@ def visitorlog(ip, referer, environ):
             #print(soundtype)
             countrycode = country.split(':')[1].split(',')[0].lower().strip()
             country = country.split(':')[1].split(',')[1].strip()
-            #print('fuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu: '+ country)
             #db.insert('visitors', ip=ip, referer=referer, environ=environ, country=country,  countrycode=countrycode, time=formattime(datetime.datetime.now()))
             thedict={'ip':ip,'referer':referer,'environ':environ,'country':country,'countrycode':countrycode,'time':formattime(datetime.datetime.now())}
             savejson('r/visitors/'+ip,thedict)
@@ -837,7 +834,6 @@ def getvisits():
     for i in visitors:
         if i.countrycode not in countrylist:
             countrylist.append(i.countrycode)
-            #print('fuuuuuuuuuuuuuuu: '+i.countrycode)
     return countrylist, total, uniquevisits
 
 class stats:
@@ -859,7 +855,6 @@ def getlikes(postid, user):
     try:
         l=len(os.listdir(basedir+'p/posts/'+postid+'/hearts/'))
         print(os.listdir(basedir+'p/posts/'+postid+'/hearts/'))
-        print('fuuuuuukkk'+str(l))
     except:
         l=0
     #db.update('published', where='postid="'+postid+'"', hearts=l.likes)
@@ -929,16 +924,15 @@ def pushcombines(postid):
 def formattime(timeadded):
     return timeadded.strftime("%Y-%m-%d %H:%M:%S")
 
-def sort_by_name_then_time(dir_path):
-    with os.scandir(basedir+dir_path) as entries:
-        # Sort by modification time (newest first)
-        sorted_by_modified = sorted(
-            entries,
-            key=lambda x: x.stat().st_mtime,
-            reverse=False
-        )
-    sorted_filenames = [entry.name for entry in sorted_by_modified]
-    return sorted_filenames
+def sort_by_name_then_time(path):
+    sortedposts=[]
+    heartrank=os.listdir(basedir+path)
+    for h in heartrank:
+        postid=h.split('-')[0]
+        postrank=h.split('-')[1]
+        sortedposts.append((postrank,postid))
+    heartrank=sorted(sortedposts, reverse=True)
+    return heartrank
 
 def getfeed():
     timebase=session.timebase
@@ -960,7 +954,7 @@ def getfeed():
         posts = sort_by_name_then_time('/p/heartrank/')
         for p in posts:
             #check modtime here day
-            p=p.split('-')[0]
+            p=p[1]
             lastupdate = os.path.getmtime(basedir+'p/posts/'+p+'/meta')
             if datetime.datetime.fromtimestamp(lastupdate) > one_day_before:
                 l=loadjson('p/posts/'+p+'/meta')
@@ -971,11 +965,8 @@ def getfeed():
         posts = sort_by_name_then_time('/p/heartrank/')
         for p in posts:
             #check modtime here day
-            p=p.split('-')[0]
-            print(p)
+            p=p[1]
             lastupdate = os.path.getmtime(basedir+'p/posts/'+p+'/meta')
-            print(lastupdate)
-            print(one_day_before)
             if datetime.datetime.fromtimestamp(lastupdate) > one_day_before:
                 l=loadjson('p/posts/'+p+'/meta')
                 goodies.append(l)
@@ -985,6 +976,7 @@ def getfeed():
         posts = sort_by_name_then_time('/p/heartrank/')
         for p in posts:
             #check modtime here day
+            p=p[1]
             lastupdate = os.path.getmtime(basedir+'p/posts/'+p+'/meta')
             if datetime.datetime.fromtimestamp(lastupdate) > one_day_before:
                 l=loadjson('p/posts/'+p+'/meta')
@@ -992,17 +984,19 @@ def getfeed():
     elif feedbase == "heart" and timebase == "year":
         one_day_before = now - datetime.timedelta(weeks=54)
         #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY hearts DESC LIMIT 1000;")
-        posts = os.listdir(basedir+'r/heartrank/')
+        posts = sort_by_name_then_time('/p/heartrank/')
         for p in posts:
             #check modtime here day
+            p=p[1]
             lastupdate = os.path.getmtime(basedir+'p/posts/'+p+'/meta')
             if datetime.datetime.fromtimestamp(lastupdate) > one_day_before:
                 l=loadjson('p/posts/'+p+'/meta')
                 goodies.append(l)
     elif feedbase == "heart" and timebase == "" or feedbase == "heart" and timebase == "all":
         #goodies = db.query("SELECT * FROM published ORDER BY hearts DESC LIMIT 1000;")
-        posts = os.listdir(basedir+'r/heartrank/')
+        posts = sort_by_name_then_time('/p/heartrank/')
         for p in posts:
+            p=p[1]
             l=loadjson('p/posts/'+p+'/meta')
             goodies.append(l)
     #TIME
@@ -1170,7 +1164,6 @@ def userimage(user):
         imghtml='<img class="usrimg" src="'+usrimg+'">'
         return imghtml
     else:
-        print('FUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU')
         return 
 
 class heartranked:
