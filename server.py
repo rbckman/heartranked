@@ -412,8 +412,6 @@ class like:
                 savejson('u/'+session.user+'/posts/'+postid+'/hearts/'+session.user, thedict)
                 user_likes = True
             elif user_likes == True:
-                #db.query("DELETE FROM likes WHERE bild='"+postid+"' AND user='"+session.user+"';")
-                #db.insert('likes', user=session.user, bild=postid, datum=formattime(datetime.datetime.now()))
                 try:
                     l=len(os.listdir(basedir+'p/posts/'+postid+'/hearts/'))
                 except:
@@ -424,7 +422,6 @@ class like:
                     os.system('rm '+basedir+'p/heartrank/'+postid+'-'+str(int(l)).zfill(16))
                     os.system('cp '+basedir+'p/posts/'+postid+'/meta '+basedir+'p/heartrank/'+postid+'-'+str(int(l)-1).zfill(16))
                 user_likes = False
-            #likes = db.query("SELECT Count(*) AS likes FROM likes WHERE bild='"+postid+"';")[0]
             likes = len(os.listdir(basedir+'p/posts/'+postid+'/hearts/'))
             # Example: Update like count in your database
             # This is a placeholder; replace with your database logic
@@ -437,7 +434,6 @@ class user():
         data = web.input(soundname=None, onair=None, public=None, showuploads=None)
         if user == session.user:
             if data.public and data.soundname:
-                #db.update('published', where="postid='" + data.soundname +"'", public=data.public)
                 public=data.public
                 thedict={'timeadded':formattime(datetime.datetime.now())}
                 savejson('p/posts/'+postid+'/meta')
@@ -446,16 +442,12 @@ class user():
                 uploads = get_files_by_time('public_html/u/' + user + '/images/web/',newest_first=True)
                 return render.showuploads(uploads,user,allowedchar, random)
             elif data.onair and data.soundname:
-                #db.update('published', where="postid='" + data.soundname +"'", playing=data.onair)
                 onair={"onair":data.onair}
                 savejson('p/posts/'+postid+'/meta')
             #soundname='aurora_ruderalis-greatful_bread'
             #filetype='flac'
             #postid = hashlib.md5(str(random.getrandbits(256)).encode('utf-8')).hexdigest()
-            #db.insert('sound', postid=postid, filename=soundname, sort=filetype, title=soundname, uploaddate=formattime(datetime.datetime.now()), uppladdare=user, lastmod=formattime(datetime.datetime.now()), moddedby=user)
-            #usersounds = db.query("SELECT * FROM published WHERE creator='"+user+"' ORDER BY timeadded DESC;")
             usersounds=loadjson('r/users/'+user)
-            #sounds = db.select('published')
             #sounds=os.listdir(basedir+'p/posts/')
             creditsounds = []
             #for i in sounds:
@@ -477,9 +469,7 @@ class invites():
     web.form.Button('Skicka'))
     def GET(self):
         if session.login > 2:
-            #user = db.select('rymdadmin', where='name="'+session.user+'"')[0]
             user = loadjson('r/users/'+session.user)
-            #invites = db.select('invites', where='createdby="'+session.user+'"')
             invites = loadjson('r/invites/'+session.user)
             tuningform = self.form()
             w = web.input(epost=None, render=None)
@@ -488,13 +478,11 @@ class invites():
                 formfail = formfail + 'you have to put your email in'
             if w.render == 'yes':
                 secretinvitekey = hashlib.md5(str(random.getrandbits(256)).encode('utf-8')).hexdigest()
-                #db.insert('invites', secretinvitation=secretinvitekey, created=formattime(datetime.datetime.now()), createdby=session.user)
                 thedict={"secretinvitekey":secretinvitekey,"timeadded":formattime(datetime.datetime.now()),"creator":session.user}
                 savejson('r/invites/'+session.user, thedict)
             return render.invites(tuningform, formfail, user.name, invites)
     def POST(self):
         if session.login > 2:
-            #user = db.select('rymdadmin', where='name="'+session.user+'"')[0]
             user = loadjson('r/users/'+session.user)
             tuningform = self.form()
             i = web.input()
@@ -503,7 +491,6 @@ class invites():
             if '@' not in i.mail:
                 raise web.seeother('/tuning?fail=notmail') 
             secretinvitekey = hashlib.md5(str(random.getrandbits(256)).encode('utf-8')).hexdigest()
-            #db.insert('invites', secretinvitation=secretinvitekey, created=formattime(datetime.datetime.now()), createdby=session.user)
             thedict={"secretinvitekey":secretinvitekey,"timeadded":formattime(datetime.datetime.now()),"creator":session.user}
             savejson('r/invites/'+session.user, thedict)
             msg = "YO! You are the One! " + user.name + " is your Morpheous. Follow this rabbit https://robinbackman.com/register?invite="+secretinvitekey 
@@ -520,7 +507,6 @@ class tuning():
     web.form.Button('Spara'))
     def GET(self):
         if session.login > 2:
-            #user = db.select('rymdadmin', where='name="'+session.user+'"')[0]
             user = loadjson('r/users/'+session.user)
             tuningform = self.form()
             w = web.input(namn=None,epost=None,fail=None,upd=None)
@@ -577,14 +563,12 @@ class tuning():
                                 password = i.newpassword.encode("utf-8")
                                 salt = bcrypt.gensalt()
                                 password_hashed = bcrypt.hashpw(password, salt)
-                                #db.update('rymdadmin', where='name="'+session.user+'"', displayname=i.user, password=password_hashed, mail=i.mail.lower())
                                 thedict={'displayname':i.user,'password':password_hashed,'mail':i.mail.lower()}
                                 savejson('r/users/'+session.user, thedict)
                                 return web.seeother('/tuning?upd=yes')
                         if '@' not in i.mail:
                             raise web.seeother('/tuning?fail=notmail')
                         #update without passwordchange
-                        #db.update('rymdadmin', where='name="'+session.user+'"', displayname=i.user, mail=i.mail.lower())
                         thedict={'displayname':i.user,'mail':i.mail.lower()}
                         savejson('r/users/'+session.user, thedict)
                         return web.seeother('/tuning?upd=yes')
@@ -635,7 +619,6 @@ class forgotpass():
                     password = unencrypted_password.encode("utf-8")
                     salt = bcrypt.gensalt()
                     password_hashed = bcrypt.hashpw(password, salt)
-                    #db.update('rymdadmin', where='name="'+p.name+'"', password=password_hashed)
                     thedict={'password':password_hashed}
                     savejson('r/users/'+p.name, thedict)
                     print("lösenordet uppdaterat!")
@@ -706,7 +689,6 @@ def save_new_gif(new_frames, old_gif_information, new_path):
 
 def getdisplayname(user):
     try:
-        #displayname = db.query("SELECT displayname FROM rymdadmin WHERE name='"+user+"';")[0]
         displayname = loadjson('r/users/'+session.user)
         displayname = displayname.displayname
     except:
@@ -758,7 +740,6 @@ def callsubprocess(cmd):
     subprocess.call(cmd.split())
 
 def visitorlog(ip, referer, environ):
-    #last = db.query('SELECT ip AS ip FROM visitors WHERE id=(SELECT MAX(id) FROM visitors)')
     last = get_files_by_time('r/visitors/',newest_first=True)
     if last:
         lastip=loadjson('r/visitors/'+last[0])
@@ -773,7 +754,6 @@ def visitorlog(ip, referer, environ):
                 country = country.split(':')[1].split(',')[1].strip()
             else:
                 country='none'
-            #db.insert('visitors', ip=ip, referer=referer, environ=environ, country=country,  countrycode=countrycode, time=formattime(datetime.datetime.now()))
             thedict={'ip':ip,'referer':referer,'environ':environ,'country':country,'countrycode':countrycode,'time':formattime(datetime.datetime.now())}
             savejson('r/visitors/'+ip,thedict)
         except:
@@ -1335,8 +1315,8 @@ class editor:
                         l=0
                     thedict={'combos':l}
                     savejson('u/'+session.user+'/posts/'+session.postid+'/meta',thedict)
-                    os.system('rm '+basedir+'p/comborank/'+session.postid+'-'+str(int(l)).zfill(16))
-                    os.system('cp '+basedir+'u/'+session.user+'/posts/'+session.postid+'/meta '+basedir+'p/comborank/'+session.postid+'-'+str(int(l+1)).zfill(16))
+                    os.system('rm '+basedir+'p/comborank/'+session.postid+'-'+str(int(l-1)).zfill(16))
+                    os.system('cp '+basedir+'u/'+session.user+'/posts/'+session.postid+'/meta '+basedir+'p/comborank/'+session.postid+'-'+str(int(l)).zfill(16))
             if i.remix != None:
                 if session.user:
                     text=''
