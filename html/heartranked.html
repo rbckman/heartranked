@@ -116,7 +116,9 @@ $else:
                 </div>
                 </div>
         $else:
-            $:markdown.markdown('#welcome to HEART RANKED!')
+            <br>
+            <br>
+            $:markdown.markdown('###welcome to HEARTRANKED!')
     $else:
         $#goodies = db.select('published', where="postid='"+show+"'")
         $ g=loadjson('p/posts/'+show+'/meta')

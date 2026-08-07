@@ -932,6 +932,10 @@ def sort_by_name_then_time(path):
 
 def rankrender():
     posts = os.listdir('p/posts')
+    os.system('rm -r '+basedir+'p/heartrank')
+    os.system('rm -r '+basedir+'p/comborank')
+    os.makedirs(basedir+'p/comborank',exist_ok=True)
+    os.makedirs(basedir+'p/heartrank',exist_ok=True)
     for postid in posts:
         try:
             l=len(os.listdir(basedir+'p/posts/'+postid+'/hearts/'))
