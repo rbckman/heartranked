@@ -1136,18 +1136,24 @@ def getcombofeed(show):
     feedbase=session.feedbase
     if feedbase == "heart":
         #comboposts = db.query("SELECT * FROM published WHERE combine='"+show+"' ORDER BY hearts DESC LIMIT 1000;")
-        posts = os.listdir(basedir+'p/posts/')
+        posts = sort_by_name_then_time('p/heartrank/')
         comboposts=[]
-        for p in posts:
+        for p in posts: 
+            p=p[1]
             l=loadjson('p/posts/'+p+'/meta')
-            comboposts.append(l)
+            if 'combine' in l:
+                if l['combine'] == show:
+                    comboposts.append(l)
     elif feedbase == "combo":
         #comboposts = db.query("SELECT * FROM published WHERE combine='"+show+"' ORDER BY combines DESC LIMIT 1000;")
-        posts = os.listdir(basedir+'p/posts/')
+        posts = sort_by_name_then_time('p/comborank/')
         comboposts=[]
         for p in posts:
+            p=p[1]
             l=loadjson('p/posts/'+p+'/meta')
-            comboposts.append(l)
+            if 'combine' in l:
+                if l['combine'] == show:
+                    comboposts.append(l)
     else:
         #comboposts = db.query("SELECT * FROM published WHERE combine='"+show+"' ORDER BY ID DESC LIMIT 1000;")
         posts = get_dirs_by_time('p/posts/',reverse=True)
@@ -1320,13 +1326,13 @@ class editor:
                     #calculate comborank
                     os.makedirs(basedir+'p/heartrank/',exist_ok=True)
                     try:
-                        l=len(os.listdir(basedir+'p/posts/'+postid+'/combos/'))
+                        l=len(os.listdir(basedir+'p/posts/'+session.postid+'/combos/'))
                     except:
                         l=0
                     thedict={'combos':l}
-                    savejson('p/posts/'+postid+'/meta',thedict)
-                    os.system('rm '+basedir+'p/comborank/'+postid+'-'+str(int(l)).zfill(16))
-                    os.system('cp '+basedir+'p/posts/'+postid+'/meta '+basedir+'p/comborank/'+postid+'-'+str(int(l+1)).zfill(16))
+                    savejson('u/'+session.user+'/posts/'+session.postid+'/meta',thedict)
+                    os.system('rm '+basedir+'p/comborank/'+session.postid+'-'+str(int(l)).zfill(16))
+                    os.system('cp '+basedir+'u/'+session.user+'/posts/'+session.postid+'/meta '+basedir+'p/comborank/'+session.postid+'-'+str(int(l+1)).zfill(16))
             if i.remix != None:
                 if session.user:
                     text=''
