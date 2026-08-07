@@ -1427,6 +1427,7 @@ class editor:
                     url=t['servername']+':'+t['port']
                     trustedlogin = ['curl','-b','X', url , '-i', '-b', basedir+'/sessions/cookies.txt', '-c',basedir+'/sessions/cookies.txt', '-d', '?user='+t['user']+'&password='+t['password']+'&Login']
                     subprocess.check_output(trustedlogin)
+                    shippit = ['curl','-b','X', url , '-i', '-b', basedir+'/sessions/cookies.txt', '-c',basedir+'/sessions/cookies.txt', '-d', '?user='+t['user']+'&password='+t['password']+'&Login']
                 #OK GOT EM COOKIES LES DO IT DO IT DO IT SHIPPIT!
                 raise web.seeother('/editor?public=yes')
                 #db.insert('pawning', pawning=i.remix, name=session.user, timeadded=formattime(datetime.datetime.now()))
@@ -1590,7 +1591,11 @@ class upload:
                         imgname=filepath.split('/')[-1] # splits the and chooses the last part (the filename with extension)
                         filetype = imgname.split('.')[-1].lower()
                         soundfile=safe_name
-                        if filetype == 'pdf' or filetype == 'txt' or filetype == 'md':
+                        if filetype == 'zip':
+                            usersound = staticdir + 'users/' + session.user + '/zipped/'
+                            os.system('mkdir -p ' + usersound)
+                            os.system('mv ' + imgdir + soundfile + ' ' + usersound + soundfile)
+                        elif filetype == 'pdf' or filetype == 'txt' or filetype == 'md':
                             usersound = staticdir + 'users/' + session.user + '/docs/'
                             os.system('mkdir -p ' + usersound)
                             os.system('mv ' + imgdir + soundfile + ' ' + usersound + soundfile)
