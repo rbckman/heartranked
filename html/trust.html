@@ -1,0 +1,12 @@
+$def with (trustform, trustedlist)
+<div id="container">
+    <br>
+    <h3>TRUST</h3>
+    <div id="trust">
+    <form method="POST">
+    $:trustform.render()
+    </form>
+    <br>
+    $for t in trustedlist:
+        t['servername'] t['user'] t['password']
+</div>
