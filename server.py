@@ -67,12 +67,14 @@ allowedchar = '_','-','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o
 
 def runfirst():
     os.makedirs(basedir+'p/posts',exist_ok=True)
+    os.makedirs(basedir+'p/zipped',exist_ok=True)
     os.makedirs(basedir+'p/comborank',exist_ok=True)
     os.makedirs(basedir+'p/heartrank',exist_ok=True)
     os.makedirs(basedir+'p/deleted',exist_ok=True)
     os.makedirs(basedir+'u/',exist_ok=True)
     os.makedirs(basedir+'r/',exist_ok=True)
     os.makedirs(basedir+'r/visitors',exist_ok=True)
+    os.makedirs(basedir+'r/trusted',exist_ok=True)
     os.makedirs(basedir+'r/users',exist_ok=True)
     os.makedirs(basedir+'r/stopflood',exist_ok=True)
 
@@ -1388,6 +1390,16 @@ class editor:
                 #session.postid = hashlib.sha256(str(random.getrandbits(256)).encode('utf-8')).hexdigest()[9:36]
                 os.system('cp -r '+basedir+'u/'+session.user+'/posts/'+session.postid+' '+basedir+'p/posts/')
                 #also zippit here!
+                os.system('zip -r '+basedir+'p/zipped/'+session.postid+'.zip '+basedir+'p/posts/'+session.postid )
+                trustedlist=[]
+                trusted=os.listdir('r/trusted/')
+                for t in trusted:
+                    trusted=loadjson('r/trusted/'+t)
+                    trustedlist.append(trusted)
+                for t in trustedlist:
+                    t['servername']
+                    t['user']
+                    t['key']
                 raise web.seeother('/editor?public=yes')
                 #db.insert('pawning', pawning=i.remix, name=session.user, timeadded=formattime(datetime.datetime.now()))
             return rendersplash.editor(storage, text, text2, markdown, safe_filename, session.postid, i.public, logged(), session.user, i.combine, i.remix)
