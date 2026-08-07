@@ -67,6 +67,8 @@ allowedchar = '_','-','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o
 
 def runfirst():
     os.makedirs(basedir+'p/posts',exist_ok=True)
+    os.makedirs(basedir+'p/comborank',exist_ok=True)
+    os.makedirs(basedir+'p/heartrank',exist_ok=True)
     os.makedirs(basedir+'p/deleted',exist_ok=True)
     os.makedirs(basedir+'u/',exist_ok=True)
     os.makedirs(basedir+'r/',exist_ok=True)
@@ -75,6 +77,8 @@ def runfirst():
     os.makedirs(basedir+'r/stopflood',exist_ok=True)
 
 runfirst()
+
+
 
 def logged():
     if session.login > 0:
@@ -906,8 +910,8 @@ def pushcombines(postid):
         l=0
     #m = db.query("SELECT * FROM likes WHERE bild='"+postid+"' AND user='"+user+"';")
     #db.update('published', where='postid="'+postid+'"', combines=l.combines)
-    thedict={'combines':l}
-    savejson('/p/posts/'+postid+'/meta',thedict)
+    #thedict={'combines':l}
+    #savejson('/p/posts/'+postid+'/meta',thedict)
     if l >= 0:
             return "⚭ " + str(l)
     else:
@@ -926,6 +930,28 @@ def sort_by_name_then_time(path):
     heartrank=sorted(sortedposts, reverse=True)
     return heartrank
 
+def rankrender():
+    posts = os.listdir('p/posts')
+    for postid in posts:
+        try:
+            l=len(os.listdir(basedir+'p/posts/'+postid+'/hearts/'))
+        except:
+            l=0
+        #db.update('published', where='postid="'+postid+'"', hearts=l.likes)
+        thedict={'hearts':l}
+        savejson('p/posts/'+postid+'/meta',thedict)
+        os.system('cp '+basedir+'p/posts/'+postid+'/meta '+basedir+'p/heartrank/'+postid+'-'+str(int(l)).zfill(16))
+        try:
+            l=len(os.listdir(basedir+'p/posts/'+postid+'/combos/'))
+        except:
+            l=0
+        #db.update('published', where='postid="'+postid+'"', hearts=l.likes)
+        thedict={'combos':l}
+        savejson('p/posts/'+postid+'/meta',thedict)
+        os.system('cp '+basedir+'p/posts/'+postid+'/meta '+basedir+'p/comborank/'+postid+'-'+str(int(l)).zfill(16))
+
+rankrender()
+
 def getfeed():
     timebase=session.timebase
     feedbase=session.feedbase
@@ -943,7 +969,7 @@ def getfeed():
         #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY hearts DESC LIMIT 1000;")
         #posts=os.listdir('/p/posts/')
         #make function get_files_by_time newest_first and by today week month year
-        posts = sort_by_name_then_time('/p/heartrank/')
+        posts = sort_by_name_then_time('p/heartrank/')
         for p in posts:
             #check modtime here day
             p=p[1]
@@ -954,7 +980,7 @@ def getfeed():
     elif feedbase == "heart" and timebase == "week":
         one_day_before = now - datetime.timedelta(weeks=1)
         #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY hearts DESC LIMIT 1000;")
-        posts = sort_by_name_then_time('/p/heartrank/')
+        posts = sort_by_name_then_time('p/heartrank/')
         for p in posts:
             #check modtime here day
             p=p[1]
@@ -965,7 +991,7 @@ def getfeed():
     elif feedbase == "heart" and timebase == "month":
         one_day_before = now - datetime.timedelta(weeks=4)
         #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY hearts DESC LIMIT 1000;")
-        posts = sort_by_name_then_time('/p/heartrank/')
+        posts = sort_by_name_then_time('p/heartrank/')
         for p in posts:
             #check modtime here day
             p=p[1]
@@ -976,7 +1002,7 @@ def getfeed():
     elif feedbase == "heart" and timebase == "year":
         one_day_before = now - datetime.timedelta(weeks=54)
         #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY hearts DESC LIMIT 1000;")
-        posts = sort_by_name_then_time('/p/heartrank/')
+        posts = sort_by_name_then_time('p/heartrank/')
         for p in posts:
             #check modtime here day
             p=p[1]
@@ -991,6 +1017,7 @@ def getfeed():
             p=p[1]
             l=loadjson('p/posts/'+p+'/meta')
             goodies.append(l)
+
     #TIME
     elif feedbase == "time" and timebase == "today":
         one_day_before = now - datetime.timedelta(days=1)
@@ -1005,8 +1032,6 @@ def getfeed():
                 goodies.append(l)
     elif feedbase == "time" and timebase == "week":
         one_day_before = now - datetime.timedelta(weeks=1)
-        #now = now.strftime('%Y-%m-%d %H:%M:%S')
-        #one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
         #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY ID DESC LIMIT 1000;")
         posts = get_dirs_by_time('p/posts/', reverse=True)
         for p in posts:
@@ -1017,88 +1042,82 @@ def getfeed():
                 goodies.append(l)
     elif feedbase == "time" and timebase == "month":
         one_day_before = now - datetime.timedelta(weeks=4)
-        now = now.strftime('%Y-%m-%d %H:%M:%S')
-        one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
         #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY ID DESC LIMIT 1000;")
-        posts = get_files_by_time('p/posts/',newest_first=True)
+        posts = get_dirs_by_time('p/posts/', reverse=True)
         for p in posts:
             #check modtime here day
             lastupdate = os.path.getmtime(basedir+'p/posts/'+p+'/meta')
-            if lastupdate > one_day_before:
+            if datetime.datetime.fromtimestamp(lastupdate) > one_day_before:
                 l=loadjson('p/posts/'+p+'/meta')
                 goodies.append(l)
     elif feedbase == "time" and timebase == "year":
         one_day_before = now - datetime.timedelta(weeks=54)
-        now = now.strftime('%Y-%m-%d %H:%M:%S')
-        one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
         #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY ID DESC LIMIT 1000;")
-        posts = get_files_by_time('p/posts/',newest_first=True)
+        posts = get_dirs_by_time('p/posts/', reverse=True)
         for p in posts:
             #check modtime here day
             lastupdate = os.path.getmtime(basedir+'p/posts/'+p+'/meta')
-            if lastupdate > one_day_before:
+            if datetime.datetime.fromtimestamp(lastupdate) > one_day_before:
                 l=loadjson('p/posts/'+p+'/meta')
                 goodies.append(l)
     elif feedbase == "time" and timebase == "" or  feedbase == "time" and timebase == "all":
         #goodies = db.query("SELECT * FROM published ORDER BY ID DESC LIMIT 1000;")
-        posts = get_files_by_time('p/posts/',newest_first=True)
+        posts = get_dirs_by_time('p/posts/', reverse=True)
         for p in posts:
             l=loadjson('p/posts/'+p+'/meta')
             goodies.append(l)
+
     #COMBO
     elif feedbase == "combo" and timebase == "today":
         one_day_before = now - datetime.timedelta(days=1)
-        now = now.strftime('%Y-%m-%d %H:%M:%S')
-        one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
         #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY combines DESC LIMIT 1000;")
-        posts = os.listdir(basedir+'r/comborank/')
+        posts = sort_by_name_then_time('p/comborank/')
         for p in posts:
             #check modtime here day
+            p=p[1]
             lastupdate = os.path.getmtime(basedir+'p/posts/'+p+'/meta')
-            if lastupdate > one_day_before:
+            if datetime.datetime.fromtimestamp(lastupdate) > one_day_before:
                 l=loadjson('p/posts/'+p+'/meta')
                 goodies.append(l)
-        print(goodies)
     elif feedbase == "combo" and timebase == "week":
         one_day_before = now - datetime.timedelta(weeks=1)
-        now = now.strftime('%Y-%m-%d %H:%M:%S')
-        one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
         #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY combines DESC LIMIT 1000;")
-        posts = os.listdir('comborank/')
+        posts = sort_by_name_then_time('p/comborank/')
         for p in posts:
             #check modtime here day
+            p=p[1]
             lastupdate = os.path.getmtime(basedir+'p/posts/'+p+'/meta')
-            if lastupdate > one_day_before:
+            if datetime.datetime.fromtimestamp(lastupdate) > one_day_before:
                 l=loadjson('p/posts/'+p+'/meta')
                 goodies.append(l)
     elif feedbase == "combo" and timebase == "month":
         one_day_before = now - datetime.timedelta(weeks=4)
-        now = now.strftime('%Y-%m-%d %H:%M:%S')
-        one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
         #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY combines DESC LIMIT 1000;")
-        posts = os.listdir(basedir+'r/comborank/')
+        posts = sort_by_name_then_time('p/comborank/')
         for p in posts:
             #check modtime here day
+            p=p[1]
             lastupdate = os.path.getmtime(basedir+'p/posts/'+p+'/meta')
-            if lastupdate > one_day_before:
+            if datetime.datetime.fromtimestamp(lastupdate) > one_day_before:
                 l=loadjson('p/posts/'+p+'/meta')
                 goodies.append(l)
     elif feedbase == "combo" and timebase == "year":
         one_day_before = now - datetime.timedelta(weeks=54)
-        now = now.strftime('%Y-%m-%d %H:%M:%S')
-        one_day_before=one_day_before.strftime('%Y-%m-%d %H:%M:%S')
         #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY combines DESC LIMIT 1000;")
-        posts = os.listdir(basedir+'r/comborank/')
+        posts = sort_by_name_then_time('p/comborank/')
         for p in posts:
             #check modtime here day
+            p=p[1]
             lastupdate = os.path.getmtime(basedir+'p/posts/'+p+'/meta')
-            if lastupdate > one_day_before:
+            if datetime.datetime.fromtimestamp(lastupdate) > one_day_before:
                 l=loadjson('p/posts/'+p+'/meta')
                 goodies.append(l)
     elif feedbase == "combo" and timebase == "" or  feedbase == "combo" and timebase == "all":
         #goodies = db.query("SELECT * FROM published ORDER BY combines DESC LIMIT 1000;")
-        posts = os.listdir('r/comborank/')
+        posts = sort_by_name_then_time('p/comborank/')
         for p in posts:
+            #check modtime here day
+            p=p[1]
             l=loadjson('p/posts/'+p+'/meta')
             goodies.append(l)
     elif feedbase == "Idontevenknow":
@@ -1298,6 +1317,16 @@ class editor:
                     savejson('u/'+session.user+'/posts/'+session.postid+'/meta',thedict)
                     os.makedirs(basedir+'p/posts/'+i.combine+'/combos', exist_ok=True)
                     savetext('p/posts/'+i.combine+'/combos/'+session.postid,session.user)
+                    #calculate comborank
+                    os.makedirs(basedir+'p/heartrank/',exist_ok=True)
+                    try:
+                        l=len(os.listdir(basedir+'p/posts/'+postid+'/combos/'))
+                    except:
+                        l=0
+                    thedict={'combos':l}
+                    savejson('p/posts/'+postid+'/meta',thedict)
+                    os.system('rm '+basedir+'p/comborank/'+postid+'-'+str(int(l)).zfill(16))
+                    os.system('cp '+basedir+'p/posts/'+postid+'/meta '+basedir+'p/comborank/'+postid+'-'+str(int(l+1)).zfill(16))
             if i.remix != None:
                 if session.user:
                     text=''
