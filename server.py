@@ -1425,9 +1425,9 @@ class editor:
                     trustedlist.append(trusted)
                 for t in trustedlist:
                     url=t['servername']+':'+t['port']
-                    trustedlogin = ['curl','-X','POST', '-L', url+'/login', '-i', '-b', basedir+'/sessions/cookies.txt', '-c',basedir+'/sessions/cookies.txt', '-d', '?user='+t['user']+'&password='+t['password']+'&Login']
+                    trustedlogin = ['curl','-X','POST', '-L', url+'/login', '-i', '-b', basedir+'/sessions/cookies.txt', '-c',basedir+'/sessions/cookies.txt', '-d', '?user='+t['user']+'&password='+t['password']]
                     subprocess.check_output(trustedlogin)
-                    shippit = ['curl','-X', 'POST', '-L', url+'/upload' , '-d', 'file-input=@'+basedir+'p/zippit/'+session.postid+'.zip', '-b', basedir+'/sessions/cookies.txt', '-c',basedir+'/sessions/cookies.txt']
+                    shippit = ['curl','-X', 'POST', '-L', url+'/upload' , '-d', 'file-input[]=@'+basedir+'p/zippit/'+session.postid+'.zip', '-b', basedir+'/sessions/cookies.txt', '-c',basedir+'/sessions/cookies.txt']
                     subprocess.check_output(shippit)
                 #OK GOT EM COOKIES LES DO IT DO IT DO IT SHIPPIT!
                 raise web.seeother('/editor?public=yes')
@@ -1667,6 +1667,8 @@ class upload:
                 return f"✅ Successfully uploaded {len(saved_files)} file(s): {', '.join(saved_files)}"
             else:
                 return "❌ No files received. Check console for details."
+        else:
+            print('access denied')
 
 class uploads:
     def GET(self):
