@@ -1425,9 +1425,10 @@ class editor:
                     trustedlist.append(trusted)
                 for t in trustedlist:
                     url=t['servername']+':'+t['port']
-                    trustedlogin = ['curl','-b','X', url , '-i', '-b', basedir+'/sessions/cookies.txt', '-c',basedir+'/sessions/cookies.txt', '-d', '?user='+t['user']+'&password='+t['password']+'&Login']
+                    trustedlogin = ['curl','-X','POST', '-L', url+'/login', '-i', '-b', basedir+'/sessions/cookies.txt', '-c',basedir+'/sessions/cookies.txt', '-d', '?user='+t['user']+'&password='+t['password']+'&Login']
                     subprocess.check_output(trustedlogin)
-                    shippit = ['curl','-b','X', url , '-i', '-b', basedir+'/sessions/cookies.txt', '-c',basedir+'/sessions/cookies.txt', '-d', '?user='+t['user']+'&password='+t['password']+'&Login']
+                    shippit = ['curl','-X', 'POST', '-L', url+'/upload' , '-d', 'file-input=@'+basedir+'p/zippit/'+session.postid+'.zip', '-b', basedir+'/sessions/cookies.txt', '-c',basedir+'/sessions/cookies.txt']
+                    subprocess.check_output(shippit)
                 #OK GOT EM COOKIES LES DO IT DO IT DO IT SHIPPIT!
                 raise web.seeother('/editor?public=yes')
                 #db.insert('pawning', pawning=i.remix, name=session.user, timeadded=formattime(datetime.datetime.now()))
@@ -1592,6 +1593,7 @@ class upload:
                         filetype = imgname.split('.')[-1].lower()
                         soundfile=safe_name
                         if filetype == 'zip':
+                            print('incoming!')
                             usersound = staticdir + 'users/' + session.user + '/zipped/'
                             os.system('mkdir -p ' + usersound)
                             os.system('mv ' + imgdir + soundfile + ' ' + usersound + soundfile)
