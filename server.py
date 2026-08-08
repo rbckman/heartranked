@@ -1423,10 +1423,14 @@ class editor:
                     trusted=loadjson('r/trusted/'+t)
                     trustedlist.append(trusted)
                 for t in trustedlist:
-                    url=t['servername']+':'+t['port']
+                    url='http://'+t['servername']+':'+t['port']
                     trustedlogin = ['curl','-X','POST', url+'/login', '-i', '-b', basedir+'/sessions/cookies.txt', '-c',basedir+'/sessions/cookies.txt', '-d', 'user='+t['user']+'&password='+t['password']]
                     subprocess.check_output(trustedlogin)
-                    shippit = ['curl','-X', 'POST', '-L', url+'/upload' , '-d', 'file-input[]=@'+basedir+'p/zippit/'+session.postid+'.zip', '-b', basedir+'/sessions/cookies.txt', '-c',basedir+'/sessions/cookies.txt']
+                    shippit = ['curl','-X', 'POST', '--verbose', '--header', 'Content-Type: multipart/form-data', '-F', 'files=@'+basedir+'p/zipped/'+session.postid+'.zip;type=application/zip', '-b', basedir+'/sessions/cookies.txt', '-c',basedir+'/sessions/cookies.txt', url+'/upload']
+                    #shippit = ['curl','--request', 'POST', '--url', url+'/upload', '--verbose', '--header', 'Content-Type: multipart/form-data', '--form', 'file-input=@'+basedir+'p/zippit/'+session.postid+'.zip', '-b', basedir+'/sessions/cookies.txt', '-c',basedir+'/sessions/cookies.txt']
+                    #shippit = ['curl','-X', 'POST', '-L', url+'/upload' , '-d', 'file-input[]=@'+basedir+'p/zippit/'+session.postid+'.zip', '-b', basedir+'/sessions/cookies.txt', '-c',basedir+'/sessions/cookies.txt']
+                    #shippit = ['curl', '-F', 'file-input[]=@'+basedir+'p/zippit/'+session.postid+'.zip;filename='+session.postid, '-b', basedir+'/sessions/cookies.txt', '-c',basedir+'/sessions/cookies.txt', url+'/upload']
+                    #shippit = ['curl','-X', 'POST', '-F', 'file-input[]=@'+basedir+'p/zippit/'+session.postid+'.zip', '-b', basedir+'/sessions/cookies.txt', '-c',basedir+'/sessions/cookies.txt', url+'/upload']
                     subprocess.check_output(shippit)
                 #OK GOT EM COOKIES LES DO IT DO IT DO IT SHIPPIT!
                 raise web.seeother('/editor?public=yes')
