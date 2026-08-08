@@ -307,14 +307,13 @@ class login():
             if p['name'].lower() == i['user'].lower() or p['mail'].lower() == i['user'].lower():
                 try:
                     encodepass = p['password'].encode("utf-8")
-                    print('noooo')
                 except:
                     encodepass = p['password']
                 if bcrypt.checkpw(i['password'].encode('utf-8'), encodepass) == True:
                     session.user = p['name']
                     adminlevel(p['name'])
-                    print('BACKURL: '+session.backurl)
                     if session.login == 5:
+                        print('ACCESS!')
                         raise web.seeother('/')
                     if session.backurl != '':
                         backurl = session.backurl
@@ -1425,7 +1424,7 @@ class editor:
                     trustedlist.append(trusted)
                 for t in trustedlist:
                     url=t['servername']+':'+t['port']
-                    trustedlogin = ['curl','-X','POST', '-L', url+'/login', '-i', '-b', basedir+'/sessions/cookies.txt', '-c',basedir+'/sessions/cookies.txt', '-d', '?user='+t['user']+'&password='+t['password']]
+                    trustedlogin = ['curl','-X','POST', '-L', url+'/login', '-i', '-b', basedir+'/sessions/cookies.txt', '-c',basedir+'/sessions/cookies.txt', '-d', 'user='+t['user']+'&password='+t['password']]
                     subprocess.check_output(trustedlogin)
                     shippit = ['curl','-X', 'POST', '-L', url+'/upload' , '-d', 'file-input[]=@'+basedir+'p/zippit/'+session.postid+'.zip', '-b', basedir+'/sessions/cookies.txt', '-c',basedir+'/sessions/cookies.txt']
                     subprocess.check_output(shippit)
