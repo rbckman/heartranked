@@ -8,5 +8,5 @@ $def with (trustform, trustedlist)
     </form>
     <br>
     $for t in trustedlist:
-        t['servername'] t['user'] t['password']
+        $t['servername'] $t['user'] $t['password']
 </div>

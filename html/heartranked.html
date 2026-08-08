@@ -24,7 +24,7 @@ $unique UNICORNS 🦄 PEACE! ☮️
 $if rights=='mod' or rights=='admin':
     $#displayname = db.query("SELECT displayname FROM rymdadmin WHERE name='"+namn+"';")[0]
     $ displayname=loadjson('r/users/'+namn)
-    hey <b><a href="/tuning">$displayname['displayname']</a></b>, <a href="/invites">invite</a> or <a href="/editor?new=yes">write</a>
+    hey <b><a href="/tuning">$displayname['displayname']</a></b>, <a href="/invites">invite</a>, <a href="/trust">trust</a> or <a href="/editor?new=yes">write</a>
     <br>
 $else:
     <a href="/login">login</a> 
