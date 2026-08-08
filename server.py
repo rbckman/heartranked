@@ -1415,7 +1415,9 @@ class editor:
                 #session.postid = hashlib.sha256(str(random.getrandbits(256)).encode('utf-8')).hexdigest()[9:36]
                 os.system('cp -r '+basedir+'u/'+session.user+'/posts/'+session.postid+' '+basedir+'p/posts/')
                 #also zippit here!
-                os.system('zip -r '+basedir+'p/zipped/'+session.postid+'.zip '+basedir+'p/posts/'+session.postid )
+                #os.system('zip -r '+basedir+'p/zipped/'+session.postid+'.zip '+basedir+'p/posts/'+session.postid )
+                os.system('cd '+basedir+'p/posts/ && zip -o -r '+session.postid+'.zip '+session.postid )
+                os.system('mv '+basedir+'p/posts/'+session.postid+'.zip '+basedir+'/p/zipped/')
                 #LETS SHIPPIT!
                 trustedlist=[]
                 trusted=os.listdir('r/trusted/')
@@ -1423,10 +1425,14 @@ class editor:
                     trusted=loadjson('r/trusted/'+t)
                     trustedlist.append(trusted)
                 for t in trustedlist:
-                    url=t['servername']+':'+t['port']
+                    url='http://'+t['servername']+':'+t['port']
                     trustedlogin = ['curl','-X','POST', url+'/login', '-i', '-b', basedir+'/sessions/cookies.txt', '-c',basedir+'/sessions/cookies.txt', '-d', 'user='+t['user']+'&password='+t['password']]
                     subprocess.check_output(trustedlogin)
-                    shippit = ['curl','-X', 'POST', '-L', url+'/upload' , '-d', 'file-input[]=@'+basedir+'p/zippit/'+session.postid+'.zip', '-b', basedir+'/sessions/cookies.txt', '-c',basedir+'/sessions/cookies.txt']
+                    shippit = ['curl','-X', 'POST', '--verbose', '--header', 'Content-Type: multipart/form-data', '-F', 'files=@'+basedir+'p/zipped/'+session.postid+'.zip;type=application/zip', '-b', basedir+'/sessions/cookies.txt', '-c',basedir+'/sessions/cookies.txt', url+'/upload']
+                    #shippit = ['curl','--request', 'POST', '--url', url+'/upload', '--verbose', '--header', 'Content-Type: multipart/form-data', '--form', 'file-input=@'+basedir+'p/zippit/'+session.postid+'.zip', '-b', basedir+'/sessions/cookies.txt', '-c',basedir+'/sessions/cookies.txt']
+                    #shippit = ['curl','-X', 'POST', '-L', url+'/upload' , '-d', 'file-input[]=@'+basedir+'p/zippit/'+session.postid+'.zip', '-b', basedir+'/sessions/cookies.txt', '-c',basedir+'/sessions/cookies.txt']
+                    #shippit = ['curl', '-F', 'file-input[]=@'+basedir+'p/zippit/'+session.postid+'.zip;filename='+session.postid, '-b', basedir+'/sessions/cookies.txt', '-c',basedir+'/sessions/cookies.txt', url+'/upload']
+                    #shippit = ['curl','-X', 'POST', '-F', 'file-input[]=@'+basedir+'p/zippit/'+session.postid+'.zip', '-b', basedir+'/sessions/cookies.txt', '-c',basedir+'/sessions/cookies.txt', url+'/upload']
                     subprocess.check_output(shippit)
                 #OK GOT EM COOKIES LES DO IT DO IT DO IT SHIPPIT!
                 raise web.seeother('/editor?public=yes')
@@ -1625,45 +1631,48 @@ class upload:
                             except:
                                 print('Folders is')
 
-                            ##---------- RESIZE IMAGE -----------
-                            image.thumbnail((900,900), Image.Resampling.LANCZOS)
-                            image.save(userpics + 'web/' + soundfile)
-                            image.thumbnail((300,300), Image.Resampling.LANCZOS)
-                            image.save(userpics + 'thumb/' + soundfile)
+                                ##---------- RESIZE IMAGE -----------
+                                image.thumbnail((900,900), Image.Resampling.LANCZOS)
+                                image.save(userpics + 'web/' + soundfile)
+                                image.thumbnail((300,300), Image.Resampling.LANCZOS)
+                                image.save(userpics + 'thumb/' + soundfile)
 
-                    elif filetype == 'wav' or filetype == 'flac' or filetype == 'mp3' or filetype == 'ogg':
-                        usersound = staticdir + 'users/' + session.user + '/sounds/'
-                        os.system('mkdir -p ' + usersound)
-                        os.system('mv ' + imgdir + soundfile + ' ' + usersound + soundfile)
-                        soundlenght = os.popen('mediainfo --Inform="General;%Duration%" ' + usersound + soundfile).read()
-                        print('sound lenght:' + str(soundlenght))
-                        soundtype = os.popen('mediainfo --Inform="General;%Format%" ' + usersound + soundfile).read()
-                        print(soundtype)
-                        if 'Ogg' in soundtype:
-                            #os.system('ffmpeg -i '+usersound+soundfile+' '+usersound+soundname+'.wav')
-                            print('ogg file found, converting to flac')
-                            os.system('ffmpeg -i ' + usersound + soundfile +' '+ usersound + soundname + '.flac') 
-                            print('converting to mp3')
-                            os.system('ffmpeg -y -loglevel 1 -i ' + usersound + soundname + '.flac -c:a libmp3lame -b:a 192k ' + usersound + soundname + '.mp3') 
-                        if 'MPEG Audio' in soundtype:
-                            print('mp3 file found, converting to flac')
-                            os.system('ffmpeg -i ' + usersound + soundfile + ' ' + usersound + soundname + '.flac') 
-                            print('converting to ogg')
-                            os.system('ffmpeg -i ' + usersound + soundname +'.flac '+ usersound + soundname + '.ogg') 
-                            print('Wave file found, converting to flac')
-                        if 'Wave' in soundtype:
-                            print('Wave file found, converting to flac')
-                            os.system('flac ' + usersound + soundfile + ' ' + usersound + soundname + '.flac') 
-                            os.system('sox -V1 ' + usersound + soundfile + ' ' + usersound + soundname + '.ogg') 
-                            os.system('ffmpeg -y -loglevel 1 -i ' + usersound + soundfile + ' -c:a libmp3lame -b:a 192k ' + usersound + soundname + '.mp3') 
-                        if 'FLAC' in soundtype:
-                            print('FLAC file found, converting to mp3 and ogg')
-                            os.system('sox -V1 ' + usersound + soundfile + ' ' + usersound + soundname + '.ogg') 
-                            os.system('ffmpeg -y -loglevel 1 -i ' + usersound + soundfile + ' -c:a libmp3lame -b:a 192k ' + usersound + soundname + '.mp3')
-                    saved_files.append(safe_name)
-                    print(f"✅ Saved: {safe_name}")  # This will show in console for debugging
-                else:
-                    print("⚠️ Skipped invalid file object")
+                        elif filetype == 'wav' or filetype == 'flac' or filetype == 'mp3' or filetype == 'ogg':
+                            usersound = staticdir + 'users/' + session.user + '/sounds/'
+                            os.system('mkdir -p ' + usersound)
+                            os.system('mv ' + imgdir + soundfile + ' ' + usersound + soundfile)
+                            soundlenght = os.popen('mediainfo --Inform="General;%Duration%" ' + usersound + soundfile).read()
+                            print('sound lenght:' + str(soundlenght))
+                            soundtype = os.popen('mediainfo --Inform="General;%Format%" ' + usersound + soundfile).read()
+                            print(soundtype)
+                            if 'Ogg' in soundtype:
+                                #os.system('ffmpeg -i '+usersound+soundfile+' '+usersound+soundname+'.wav')
+                                print('ogg file found, converting to flac')
+                                os.system('ffmpeg -i ' + usersound + soundfile +' '+ usersound + soundname + '.flac') 
+                                print('converting to mp3')
+                                os.system('ffmpeg -y -loglevel 1 -i ' + usersound + soundname + '.flac -c:a libmp3lame -b:a 192k ' + usersound + soundname + '.mp3') 
+                            if 'MPEG Audio' in soundtype:
+                                print('mp3 file found, converting to flac')
+                                os.system('ffmpeg -i ' + usersound + soundfile + ' ' + usersound + soundname + '.flac') 
+                                print('converting to ogg')
+                                os.system('ffmpeg -i ' + usersound + soundname +'.flac '+ usersound + soundname + '.ogg') 
+                                print('Wave file found, converting to flac')
+                            if 'Wave' in soundtype:
+                                print('Wave file found, converting to flac')
+                                os.system('flac ' + usersound + soundfile + ' ' + usersound + soundname + '.flac') 
+                                os.system('sox -V1 ' + usersound + soundfile + ' ' + usersound + soundname + '.ogg') 
+                                os.system('ffmpeg -y -loglevel 1 -i ' + usersound + soundfile + ' -c:a libmp3lame -b:a 192k ' + usersound + soundname + '.mp3') 
+                            if 'FLAC' in soundtype:
+                                print('FLAC file found, converting to mp3 and ogg')
+                                os.system('sox -V1 ' + usersound + soundfile + ' ' + usersound + soundname + '.ogg') 
+                                os.system('ffmpeg -y -loglevel 1 -i ' + usersound + soundfile + ' -c:a libmp3lame -b:a 192k ' + usersound + soundname + '.mp3')
+                        saved_files.append(safe_name)
+                        print(f"✅ Saved: {safe_name}")  # This will show in console for debugging
+                    else:
+                        print("⚠️ Skipped invalid file object")
+            except Exception as e:
+                print("Upload error:", str(e))
+                return f"❌ Error: {str(e)}"
             if saved_files:
                 return f"✅ Successfully uploaded {len(saved_files)} file(s): {', '.join(saved_files)}"
             else:
