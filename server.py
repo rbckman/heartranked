@@ -1569,95 +1569,99 @@ class upload:
     def POST(self):
         if logged():
             saved_files = []
-            # Best way for multiple files in web.py
-            input_data = web.webapi.rawinput()
-            uploaded = input_data.get('files')
-            # Make sure it's always a list
-            if not isinstance(uploaded, list):
-                uploaded = [uploaded] if uploaded else []
-            for f in uploaded:
-                if f and hasattr(f, 'filename') and f.filename:
-                    # Sanitize filename a bit
-                    imgdir = staticdir + 'users/' + session.user + '/temp/'
-                    os.system('mkdir -p ' + imgdir)
-                    safe_name = safe_filename(os.path.basename(f.filename))
-                    filepath = os.path.join(imgdir, safe_name) 
-    
-                    with open(filepath, 'wb') as out:
-                        out.write(f.file.read())  # Important: use .file.read()
-                    saved_files.append(safe_name)
-                    ##---------- UPLOAD SOUND ----------
-                    imgname=filepath.split('/')[-1] # splits the and chooses the last part (the filename with extension)
-                    filetype = imgname.split('.')[-1].lower()
-                    soundfile=safe_name
-                    if filetype == 'zip':
-                        print('incoming!')
-                        usersound = staticdir + 'users/' + session.user + '/zipped/'
-                        os.system('mkdir -p ' + usersound)
-                        os.system('mv ' + imgdir + soundfile + ' ' + usersound + soundfile)
-                    elif filetype == 'pdf' or filetype == 'txt' or filetype == 'md':
-                        usersound = staticdir + 'users/' + session.user + '/docs/'
-                        os.system('mkdir -p ' + usersound)
-                        os.system('mv ' + imgdir + soundfile + ' ' + usersound + soundfile)
-                    elif filetype == 'mp4':
-                        usersound = staticdir + 'users/' + session.user + '/films/'
-                        os.system('mkdir -p ' + usersound)
-                        os.system('mv ' + imgdir + soundfile + ' ' + usersound + soundfile)
-                    elif filetype == 'jpeg' or filetype == 'jpg' or filetype == 'png' or filetype == 'gif':
-                        userpics = staticdir + 'users/' + session.user + '/images/'
-                        os.system('mkdir -p ' + userpics)
-                        os.system('mv ' + imgdir + soundfile + ' ' + userpics + soundfile)
-                        if filetype == 'gif':
-                            scale_gif(userpics+soundfile, [900,900], userpics+'web/'+soundfile)
-                            scale_gif(userpics+soundfile, [300,300], userpics+'thumb/'+soundfile)
-                        else:
-                            ##---------- OPEN FILE & CHEKC IF JPEG --------
-                            image = Image.open(userpics + soundfile)
-                            try:
-                                os.makedirs(userpics + 'web/', exist_ok=True)
-                                os.makedirs(userpics + 'thumb/', exist_ok=True)
-                            except:
-                                print('Folders is')
+            try:
+                # Best way for multiple files in web.py
+                input_data = web.webapi.rawinput()
+                uploaded = input_data.get('files')
+                # Make sure it's always a list
+                if not isinstance(uploaded, list):
+                    uploaded = [uploaded] if uploaded else []
+                for f in uploaded:
+                    if f and hasattr(f, 'filename') and f.filename:
+                        # Sanitize filename a bit
+                        imgdir = staticdir + 'users/' + session.user + '/temp/'
+                        os.system('mkdir -p ' + imgdir)
+                        safe_name = safe_filename(os.path.basename(f.filename))
+                        filepath = os.path.join(imgdir, safe_name) 
+        
+                        with open(filepath, 'wb') as out:
+                            out.write(f.file.read())  # Important: use .file.read()
+                        saved_files.append(safe_name)
+                        ##---------- UPLOAD SOUND ----------
+                        imgname=filepath.split('/')[-1] # splits the and chooses the last part (the filename with extension)
+                        filetype = imgname.split('.')[-1].lower()
+                        soundfile=safe_name
+                        if filetype == 'zip':
+                            print('incoming!')
+                            usersound = staticdir + 'users/' + session.user + '/zipped/'
+                            os.system('mkdir -p ' + usersound)
+                            os.system('mv ' + imgdir + soundfile + ' ' + usersound + soundfile)
+                        elif filetype == 'pdf' or filetype == 'txt' or filetype == 'md':
+                            usersound = staticdir + 'users/' + session.user + '/docs/'
+                            os.system('mkdir -p ' + usersound)
+                            os.system('mv ' + imgdir + soundfile + ' ' + usersound + soundfile)
+                        elif filetype == 'mp4':
+                            usersound = staticdir + 'users/' + session.user + '/films/'
+                            os.system('mkdir -p ' + usersound)
+                            os.system('mv ' + imgdir + soundfile + ' ' + usersound + soundfile)
+                        elif filetype == 'jpeg' or filetype == 'jpg' or filetype == 'png' or filetype == 'gif':
+                            userpics = staticdir + 'users/' + session.user + '/images/'
+                            os.system('mkdir -p ' + userpics)
+                            os.system('mv ' + imgdir + soundfile + ' ' + userpics + soundfile)
+                            if filetype == 'gif':
+                                scale_gif(userpics+soundfile, [900,900], userpics+'web/'+soundfile)
+                                scale_gif(userpics+soundfile, [300,300], userpics+'thumb/'+soundfile)
+                            else:
+                                ##---------- OPEN FILE & CHEKC IF JPEG --------
+                                image = Image.open(userpics + soundfile)
+                                try:
+                                    os.makedirs(userpics + 'web/', exist_ok=True)
+                                    os.makedirs(userpics + 'thumb/', exist_ok=True)
+                                except:
+                                    print('Folders is')
 
-                            ##---------- RESIZE IMAGE -----------
-                            image.thumbnail((900,900), Image.Resampling.LANCZOS)
-                            image.save(userpics + 'web/' + soundfile)
-                            image.thumbnail((300,300), Image.Resampling.LANCZOS)
-                            image.save(userpics + 'thumb/' + soundfile)
+                                ##---------- RESIZE IMAGE -----------
+                                image.thumbnail((900,900), Image.Resampling.LANCZOS)
+                                image.save(userpics + 'web/' + soundfile)
+                                image.thumbnail((300,300), Image.Resampling.LANCZOS)
+                                image.save(userpics + 'thumb/' + soundfile)
 
-                    elif filetype == 'wav' or filetype == 'flac' or filetype == 'mp3' or filetype == 'ogg':
-                        usersound = staticdir + 'users/' + session.user + '/sounds/'
-                        os.system('mkdir -p ' + usersound)
-                        os.system('mv ' + imgdir + soundfile + ' ' + usersound + soundfile)
-                        soundlenght = os.popen('mediainfo --Inform="General;%Duration%" ' + usersound + soundfile).read()
-                        print('sound lenght:' + str(soundlenght))
-                        soundtype = os.popen('mediainfo --Inform="General;%Format%" ' + usersound + soundfile).read()
-                        print(soundtype)
-                        if 'Ogg' in soundtype:
-                            #os.system('ffmpeg -i '+usersound+soundfile+' '+usersound+soundname+'.wav')
-                            print('ogg file found, converting to flac')
-                            os.system('ffmpeg -i ' + usersound + soundfile +' '+ usersound + soundname + '.flac') 
-                            print('converting to mp3')
-                            os.system('ffmpeg -y -loglevel 1 -i ' + usersound + soundname + '.flac -c:a libmp3lame -b:a 192k ' + usersound + soundname + '.mp3') 
-                        if 'MPEG Audio' in soundtype:
-                            print('mp3 file found, converting to flac')
-                            os.system('ffmpeg -i ' + usersound + soundfile + ' ' + usersound + soundname + '.flac') 
-                            print('converting to ogg')
-                            os.system('ffmpeg -i ' + usersound + soundname +'.flac '+ usersound + soundname + '.ogg') 
-                            print('Wave file found, converting to flac')
-                        if 'Wave' in soundtype:
-                            print('Wave file found, converting to flac')
-                            os.system('flac ' + usersound + soundfile + ' ' + usersound + soundname + '.flac') 
-                            os.system('sox -V1 ' + usersound + soundfile + ' ' + usersound + soundname + '.ogg') 
-                            os.system('ffmpeg -y -loglevel 1 -i ' + usersound + soundfile + ' -c:a libmp3lame -b:a 192k ' + usersound + soundname + '.mp3') 
-                        if 'FLAC' in soundtype:
-                            print('FLAC file found, converting to mp3 and ogg')
-                            os.system('sox -V1 ' + usersound + soundfile + ' ' + usersound + soundname + '.ogg') 
-                            os.system('ffmpeg -y -loglevel 1 -i ' + usersound + soundfile + ' -c:a libmp3lame -b:a 192k ' + usersound + soundname + '.mp3')
-                    saved_files.append(safe_name)
-                    print(f"✅ Saved: {safe_name}")  # This will show in console for debugging
-                else:
-                    print("⚠️ Skipped invalid file object")
+                        elif filetype == 'wav' or filetype == 'flac' or filetype == 'mp3' or filetype == 'ogg':
+                            usersound = staticdir + 'users/' + session.user + '/sounds/'
+                            os.system('mkdir -p ' + usersound)
+                            os.system('mv ' + imgdir + soundfile + ' ' + usersound + soundfile)
+                            soundlenght = os.popen('mediainfo --Inform="General;%Duration%" ' + usersound + soundfile).read()
+                            print('sound lenght:' + str(soundlenght))
+                            soundtype = os.popen('mediainfo --Inform="General;%Format%" ' + usersound + soundfile).read()
+                            print(soundtype)
+                            if 'Ogg' in soundtype:
+                                #os.system('ffmpeg -i '+usersound+soundfile+' '+usersound+soundname+'.wav')
+                                print('ogg file found, converting to flac')
+                                os.system('ffmpeg -i ' + usersound + soundfile +' '+ usersound + soundname + '.flac') 
+                                print('converting to mp3')
+                                os.system('ffmpeg -y -loglevel 1 -i ' + usersound + soundname + '.flac -c:a libmp3lame -b:a 192k ' + usersound + soundname + '.mp3') 
+                            if 'MPEG Audio' in soundtype:
+                                print('mp3 file found, converting to flac')
+                                os.system('ffmpeg -i ' + usersound + soundfile + ' ' + usersound + soundname + '.flac') 
+                                print('converting to ogg')
+                                os.system('ffmpeg -i ' + usersound + soundname +'.flac '+ usersound + soundname + '.ogg') 
+                                print('Wave file found, converting to flac')
+                            if 'Wave' in soundtype:
+                                print('Wave file found, converting to flac')
+                                os.system('flac ' + usersound + soundfile + ' ' + usersound + soundname + '.flac') 
+                                os.system('sox -V1 ' + usersound + soundfile + ' ' + usersound + soundname + '.ogg') 
+                                os.system('ffmpeg -y -loglevel 1 -i ' + usersound + soundfile + ' -c:a libmp3lame -b:a 192k ' + usersound + soundname + '.mp3') 
+                            if 'FLAC' in soundtype:
+                                print('FLAC file found, converting to mp3 and ogg')
+                                os.system('sox -V1 ' + usersound + soundfile + ' ' + usersound + soundname + '.ogg') 
+                                os.system('ffmpeg -y -loglevel 1 -i ' + usersound + soundfile + ' -c:a libmp3lame -b:a 192k ' + usersound + soundname + '.mp3')
+                        saved_files.append(safe_name)
+                        print(f"✅ Saved: {safe_name}")  # This will show in console for debugging
+                    else:
+                        print("⚠️ Skipped invalid file object")
+            except Exception as e:
+                print("Upload error:", str(e))
+                return f"❌ Error: {str(e)}"
             if saved_files:
                 return f"✅ Successfully uploaded {len(saved_files)} file(s): {', '.join(saved_files)}"
             else:
