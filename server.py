@@ -1574,68 +1574,69 @@ def save_new_gif(new_frames, old_gif_information, new_path):
 class upload:
     def POST(self):
         if logged():
-            saved_files = []
-            # Best way for multiple files in web.py
-            input_data = web.webapi.rawinput()
-            uploaded = input_data.get('files')
-            print('LETS GO!')
-            print(session.user)
-            print(input_data)
-            print(uploaded)
-            # Make sure it's always a list
-            if not isinstance(uploaded, list):
-                uploaded = [uploaded] if uploaded else []
-            for f in uploaded:
-                if f and hasattr(f, 'filename') and f.filename:
-                    # Sanitize filename a bit
-                    imgdir = staticdir + 'users/' + session.user + '/temp/'
-                    os.system('mkdir -p ' + imgdir)
-                    safe_name = safe_filename(os.path.basename(f.filename))
-                    filepath = os.path.join(imgdir, safe_name)
-                    with open(filepath, 'wb') as out:
-                        out.write(f.file.read())  # Important: use .file.read()
-                    saved_files.append(safe_name)
-                    ##---------- UPLOAD SOUND ----------
-                    imgname=filepath.split('/')[-1] # splits the and chooses the last part (the filename with extension)
-                    filetype = imgname.split('.')[-1].lower()
-                    soundfile=safe_name
-                    print(filetype)
-                    if filetype == 'zip':
-                        print('incoming!')
-                        usersound = basedir + 'u/' + session.user + '/zipped/'
-                        os.system('mkdir -p ' + usersound)
-                        os.system('mv ' + imgdir + soundfile + ' ' + usersound + soundfile)
-                        os.system('cd '+usersound+' && unzip -o '+soundfile+' -d '+basedir+'u/'+session.user+'/posts/')
-                        os.system('cd '+usersound+' && unzip -o '+soundfile+' -d '+basedir+'p/posts/')
-                    elif filetype == 'pdf' or filetype == 'txt' or filetype == 'md':
-                        usersound = staticdir + 'users/' + session.user + '/docs/'
-                        os.system('mkdir -p ' + usersound)
-                        os.system('mv ' + imgdir + soundfile + ' ' + usersound + soundfile)
-                    elif filetype == 'mp4':
-                        usersound = staticdir + 'users/' + session.user + '/films/'
-                        os.system('mkdir -p ' + usersound)
-                        os.system('mv ' + imgdir + soundfile + ' ' + usersound + soundfile)
-                    elif filetype == 'jpeg' or filetype == 'jpg' or filetype == 'png' or filetype == 'gif':
-                        userpics = staticdir + 'users/' + session.user + '/images/'
-                        os.system('mkdir -p ' + userpics)
-                        os.system('mv ' + imgdir + soundfile + ' ' + userpics + soundfile)
-                        if filetype == 'gif':
-                            scale_gif(userpics+soundfile, [900,900], userpics+'web/'+soundfile)
-                            scale_gif(userpics+soundfile, [300,300], userpics+'thumb/'+soundfile)
-                        else:
-                            ##---------- OPEN FILE & CHEKC IF JPEG --------
-                            image = Image.open(userpics + soundfile)
-                            try:
-                                os.makedirs(userpics + 'web/', exist_ok=True)
-                                os.makedirs(userpics + 'thumb/', exist_ok=True)
-                            except:
-                                print('Folders is')
+            try:
+                saved_files = []
+                # Best way for multiple files in web.py
+                input_data = web.webapi.rawinput()
+                uploaded = input_data.get('files')
+                print('LETS GO!')
+                print(session.user)
+                print(input_data)
+                print(uploaded)
+                # Make sure it's always a list
+                if not isinstance(uploaded, list):
+                    uploaded = [uploaded] if uploaded else []
+                for f in uploaded:
+                    if f and hasattr(f, 'filename') and f.filename:
+                        # Sanitize filename a bit
+                        imgdir = staticdir + 'users/' + session.user + '/temp/'
+                        os.system('mkdir -p ' + imgdir)
+                        safe_name = safe_filename(os.path.basename(f.filename))
+                        filepath = os.path.join(imgdir, safe_name)
+                        with open(filepath, 'wb') as out:
+                            out.write(f.file.read())  # Important: use .file.read()
+                        saved_files.append(safe_name)
+                        ##---------- UPLOAD SOUND ----------
+                        imgname=filepath.split('/')[-1] # splits the and chooses the last part (the filename with extension)
+                        filetype = imgname.split('.')[-1].lower()
+                        soundfile=safe_name
+                        print(filetype)
+                        if filetype == 'zip':
+                            print('incoming!')
+                            usersound = basedir + 'u/' + session.user + '/zipped/'
+                            os.system('mkdir -p ' + usersound)
+                            os.system('mv ' + imgdir + soundfile + ' ' + usersound + soundfile)
+                            os.system('cd '+usersound+' && unzip -o '+soundfile+' -d '+basedir+'u/'+session.user+'/posts/')
+                            os.system('cd '+usersound+' && unzip -o '+soundfile+' -d '+basedir+'p/posts/')
+                        elif filetype == 'pdf' or filetype == 'txt' or filetype == 'md':
+                            usersound = staticdir + 'users/' + session.user + '/docs/'
+                            os.system('mkdir -p ' + usersound)
+                            os.system('mv ' + imgdir + soundfile + ' ' + usersound + soundfile)
+                        elif filetype == 'mp4':
+                            usersound = staticdir + 'users/' + session.user + '/films/'
+                            os.system('mkdir -p ' + usersound)
+                            os.system('mv ' + imgdir + soundfile + ' ' + usersound + soundfile)
+                        elif filetype == 'jpeg' or filetype == 'jpg' or filetype == 'png' or filetype == 'gif':
+                            userpics = staticdir + 'users/' + session.user + '/images/'
+                            os.system('mkdir -p ' + userpics)
+                            os.system('mv ' + imgdir + soundfile + ' ' + userpics + soundfile)
+                            if filetype == 'gif':
+                                scale_gif(userpics+soundfile, [900,900], userpics+'web/'+soundfile)
+                                scale_gif(userpics+soundfile, [300,300], userpics+'thumb/'+soundfile)
+                            else:
+                                ##---------- OPEN FILE & CHEKC IF JPEG --------
+                                image = Image.open(userpics + soundfile)
+                                try:
+                                    os.makedirs(userpics + 'web/', exist_ok=True)
+                                    os.makedirs(userpics + 'thumb/', exist_ok=True)
+                                except:
+                                    print('Folders is')
 
-                                ##---------- RESIZE IMAGE -----------
-                                image.thumbnail((900,900), Image.Resampling.LANCZOS)
-                                image.save(userpics + 'web/' + soundfile)
-                                image.thumbnail((300,300), Image.Resampling.LANCZOS)
-                                image.save(userpics + 'thumb/' + soundfile)
+                                    ##---------- RESIZE IMAGE -----------
+                                    image.thumbnail((900,900), Image.Resampling.LANCZOS)
+                                    image.save(userpics + 'web/' + soundfile)
+                                    image.thumbnail((300,300), Image.Resampling.LANCZOS)
+                                    image.save(userpics + 'thumb/' + soundfile)
 
                         elif filetype == 'wav' or filetype == 'flac' or filetype == 'mp3' or filetype == 'ogg':
                             usersound = staticdir + 'users/' + session.user + '/sounds/'
