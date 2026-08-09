@@ -614,7 +614,7 @@ class tuning():
                                 raise web.seeother('/tuning?fail=kortlosen')
                             else:
                                 #update with password change
-                                updateuser(i.user,i.password,i.mail)
+                                updateuser(i.user,i.newpassword,i.mail)
                                 #password = i.newpassword.encode("utf-8")
                                 #salt = bcrypt.gensalt()
                                 #password_hashed = bcrypt.hashpw(password, salt)
