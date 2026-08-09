@@ -113,9 +113,10 @@ def savejson(thename, thedict):
     #hearts will be files as usernames with timestamp in a hearts folder in post folder. be stored and checked in u/hearts and post/hearts
     # be sure to add home domain setting to username
     #make save list a dict use same names
+    name=thename
     thename=basedir+thename
     if os.path.exists(thename):
-        p=loadjson(thename)
+        p=loadjson(name)
         if isinstance(p, dict):
             thedict.update(p)
     #for key, i in thedict.items():
