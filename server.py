@@ -1066,7 +1066,7 @@ def getfeed():
         print(posts)
         for p in posts:
             #check modtime here day
-            lastupdate = os.path.getmtime('p/posts/'+p+'/meta')
+            lastupdate = os.path.getmtime(basedir+'p/posts/'+p+'/meta')
             if datetime.datetime.fromtimestamp(lastupdate) > one_day_before:
                 l=loadjson('p/posts/'+p+'/meta')
                 goodies.append(l)
