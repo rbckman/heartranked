@@ -1429,20 +1429,21 @@ class editor:
                 raise web.seeother('/editor')
             if i.publish == 'yes' and text != '' and i.public == None and logged() and len(text) < 256:
                 c=loadjson('u/'+session.user+'/posts/'+session.postid+'/meta')
-                if c['combine'] != '':
-                    print('FUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU')
-                    #calculate comborank
-                    os.makedirs(basedir+'p/posts/'+c['combine']+'/combos', exist_ok=True)
-                    savetext('p/posts/'+c['combine']+'/combos/'+session.postid,session.user)
-                    os.makedirs(basedir+'p/heartrank/',exist_ok=True)
-                    try:
-                        l=len(os.listdir(basedir+'p/posts/'+session.postid+'/combos/'))
-                    except:
-                        l=0
-                    thedict={'combos':l}
-                    savejson('p/posts/'+c['combine']+'/meta',thedict)
-                    os.system('rm '+basedir+'p/comborank/'+session.postid+'-'+str(int(l)).zfill(16))
-                    os.system('cp '+basedir+'p/posts/'+session.postid+'/meta '+basedir+'p/comborank/'+session.postid+'-'+str(int(l)).zfill(16))
+                if 'combine' in c:
+                    if c['combine'] != '':
+                        print('FUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU')
+                        #calculate comborank
+                        os.makedirs(basedir+'p/posts/'+c['combine']+'/combos', exist_ok=True)
+                        savetext('p/posts/'+c['combine']+'/combos/'+session.postid,session.user)
+                        os.makedirs(basedir+'p/heartrank/',exist_ok=True)
+                        try:
+                            l=len(os.listdir(basedir+'p/posts/'+session.postid+'/combos/'))
+                        except:
+                            l=0
+                        thedict={'combos':l}
+                        savejson('p/posts/'+c['combine']+'/meta',thedict)
+                        os.system('rm '+basedir+'p/comborank/'+session.postid+'-'+str(int(l)).zfill(16))
+                        os.system('cp '+basedir+'p/posts/'+session.postid+'/meta '+basedir+'p/comborank/'+session.postid+'-'+str(int(l)).zfill(16))
                 description1 = text
                 description2 = text2
                 soundname = safe_filename(description1[0:27])
