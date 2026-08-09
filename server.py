@@ -834,33 +834,30 @@ def visitorlog(ip, referer, environ):
     return
 
 def getvisitors():
-    #visitors = db.select('visitors')
-    #visitors = db.query('SELECT * FROM visitors ORDER BY time DESC LIMIT 10000')
-    visitors = get_files_by_time('r/visitors/'+ip,newest_first=True) 
-    #total = db.query('SELECT COUNT(*) AS total_visits FROM visitors')
+    visitors=[]
+    v = get_files_by_time('r/visitors/',newest_first=True) 
+    if v:
+        for i in v:
+            visit=loadjson('r/visitors/'+i)
+            visitors.append(visit)
+            print(visit)
     total=len(os.listdir(basedir+'r/visitors/'))
-    #unique = db.query('SELECT COUNT(DISTINCT ip) AS unique_visits FROM visitors')
     unique=[]
     for i in visitors:
         for p in visitors:
-            if i == p:
+            if i['ip'] == p['ip']:
                 unique.append(i)
     uniquevisits=len(unique)
     return visitors, total, uniquevisits
 
 def getvisits():
-    #limit=100
-    #visits = db.query("SELECT * FROM visitors ORDER BY time DESC LIMIT " + str(limit))
     visitors=[]
-    v=os.listdir(basedir+'r/visitors/')
+    #v=os.listdir(basedir+'r/visitors/')
+    v = get_files_by_time('r/visitors/',newest_first=True) 
     for i in v:
         visit=loadjson('r/visitors/'+i)
         visitors.append(visit)
-    #visitors = db.select('visitors')
-    #visitors=loadjson('r/visitors/')
-    #total = db.query('SELECT COUNT(*) AS total_visits FROM visitors')
     total=len(os.listdir(basedir+'r/visitors/'))
-    #unique = db.query('SELECT COUNT(DISTINCT ip) AS unique_visits FROM visitors')
     unique=[]
     for i in visitors:
         for p in visitors:

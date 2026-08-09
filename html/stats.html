@@ -11,8 +11,7 @@ $ count = 0
 <head>
 <title>THE STATS</title>
 
-
-<a href="/dude">go back</a> | 
+<a href="/">go back</a> | 
 <a href="?">no filter</a> | 
 <a href="?logfilter=bots">filter bots</a> | 
 <a href="?logfilter=botsandme">filter bots and me</a> 
@@ -26,38 +25,38 @@ $ filters = ['SemrushBot', 'Windows NT', 'Applebot', 'Amazonbot', 'bingbot', 'Cl
 $for i in visitors:
     $if logfilter == 'bots':
         $for f in filters:
-            $if f in i.environ:
+            $if f in i['environ']:
                 $ show = False
                 $ break
             $else:
                 $ show = True
         $if show == True:
-            <img src="/static/flags/${i.countrycode}.png"> | $i.country | $i.ip | $i.referer | $i.environ | $i.time <br>
+            <img src="/static/flags/${i['countrycode']}.png"> | $i['country'] | $i['ip'] | $i['referer'] | $i['environ'] | $i['time'] <br>
             $ count = count + 1
             $ show = False
     $elif logfilter == 'botsandme':
         $for f in filters:
-            $if f in i.environ:
+            $if f in i['environ']:
                 $ show = False
                 $ break
             $else:
                 $ show = True
             $for ip in ip_filters:
-                $if ip in i.ip:
+                $if ip in i['ip']:
                     $ show = False
                     $ break
                 $else:
                     $ show = True
         $if show == True:
-            <img src="/static/flags/${i.countrycode}.png"> | $i.country | $i.ip | $i.referer | $i.environ | $i.time <br>
+            <img src="/static/flags/${i['countrycode']}.png"> | $i['country'] | $i['ip'] | $i['referer'] | $i['environ'] | $i['time'] <br>
             $ count = count + 1
             $ show = False
     $else:
-        <img src="/static/flags/${i.countrycode}.png"> | $i.country | $i.ip | $i.referer | $i.environ | $i.time <br>
+        <img src="/static/flags/${i['countrycode']}.png"> | $i['country'] | $i['ip'] | $i['referer'] | $i['environ'] | $i['time'] <br>
         $ count = count + 1
 
 <br>
-total potential real visitors:
+total potential real visitors
 $count
 </div>
 </head>
