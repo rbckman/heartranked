@@ -331,14 +331,31 @@ document.addEventListener('DOMContentLoaded', () => {
 lastSaved = '';
 lastSaved2 = '';
 
+// Fetch rendered content from server
+async function updateRendered() {
+    const textarea = document.getElementById("editor");
+    const currentText = textarea.value;
+    const textarea2 = document.getElementById("editor2");
+    const currentText2 = textarea2.value;
+    try {
+        const res = await fetch('/rendered');
+        const text = await res.text();
+        if (text != 'None') {
+            document.getElementById("rendered").innerHTML = text;}
+    } catch (e) {
+        console.error("Failed to fetch rendered content");
+    }
+}
+
 // Auto-save every 60 seconds
 async function autoSave() {
     const textarea = document.getElementById("editor");
     const currentText = textarea.value;
     const textarea2 = document.getElementById("editor2");
     const currentText2 = textarea2.value;
-    if (currentText === lastSaved && currentText2 === lastSaved2) return;
-
+    if ((currentText === lastSaved) && (currentText2 === lastSaved2)) return;
+    lastSaved = currentText;
+    lastSaved2 = currentText2;
     try {
         const res = await fetch('/save', {
             method: 'POST',
@@ -347,8 +364,7 @@ async function autoSave() {
         });
 
         if (res.ok) {
-            lastSaved = currentText;
-            lastSaved2 = currentText2;
+            updateRendered();
             const link = document.getElementById('publish');
             link.style.visibility = 'visible';
             document.getElementById("status").innerHTML = 
@@ -362,26 +378,11 @@ async function autoSave() {
 
 }
 
-// Fetch rendered content from server
-async function updateRendered() {
-    const textarea = document.getElementById("editor");
-    const currentText = textarea.value;
-    const textarea2 = document.getElementById("editor2");
-    const currentText2 = textarea2.value;
-    if (currentText === lastSaved && currentText2 === lastSaved2) return;
-    try {
-        const res = await fetch('/rendered');
-        const text = await res.text();
-        if (text != 'None') {
-            document.getElementById("rendered").innerHTML = text;}
-    } catch (e) {
-        console.error("Failed to fetch rendered content");
-    }
-}
+
 
 // Set up intervals
 setInterval(autoSave, 5000);           // Auto-save every 60s
-setInterval(updateRendered, 5000);      // Update rendered every 5s
+// setInterval(updateRendered, 5000);      // Update rendered every 5s
 
 // Manual save triggers
 document.getElementById("editor").addEventListener("blur", autoSave);
@@ -477,7 +478,6 @@ function insertAtCursor(text) {
 window.onload = trackActive;
 
 // Initial load
-updateRendered();
 </script>
 </body>
 </html>
