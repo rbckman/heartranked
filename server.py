@@ -113,10 +113,9 @@ def savejson(thename, thedict):
     #hearts will be files as usernames with timestamp in a hearts folder in post folder. be stored and checked in u/hearts and post/hearts
     # be sure to add home domain setting to username
     #make save list a dict use same names
-    name=thename
     thename=basedir+thename
     if os.path.exists(thename):
-        p=loadjson(name)
+        p=loadjson(thename)
         if isinstance(p, dict):
             thedict.update(p)
     #for key, i in thedict.items():
@@ -154,6 +153,17 @@ def adduser(name, password, mail):
     savejson('r/users/'+name, thedict)
     #savetext('r/user/'+name,password_hashed)
     print("new user added")
+    return
+
+def updateuser(displayname, password, mail):
+    password = password.encode("utf-8")
+    salt = bcrypt.gensalt()
+    password_hashed = bcrypt.hashpw(password, salt).decode('utf-8')
+    tot = len(os.listdir(basedir+'r/users/'))
+    savejson('r/users/'+session.user, {'displayname':displayname})
+    savejson('r/users/'+session.user, {'password':password_hashed})
+    savejson('r/users/'+session.user, {'mail':mail})
+    print("user info updated")
     return
 
 def safe_filename(name: str, max_length: int = 100, replacement: str = "-") -> str:
@@ -594,11 +604,13 @@ class tuning():
                                 raise web.seeother('/tuning?fail=kortlosen')
                             else:
                                 #update with password change
-                                password = i.newpassword.encode("utf-8")
-                                salt = bcrypt.gensalt()
-                                password_hashed = bcrypt.hashpw(password, salt)
-                                thedict={'displayname':i.user,'password':password_hashed,'mail':i.mail.lower()}
-                                savejson('r/users/'+session.user, thedict)
+                                updateuser(i.user,i.password,i.mail)
+                                #password = i.newpassword.encode("utf-8")
+                                #salt = bcrypt.gensalt()
+                                #password_hashed = bcrypt.hashpw(password, salt)
+                                #mail=i.mail.lower()
+                                #thedict={'displayname':i.user,'password':password_hashed,'mail':mail}
+                                #savejson('r/users/'+session.user, thedict)
                                 return web.seeother('/tuning?upd=yes')
                         if '@' not in i.mail:
                             raise web.seeother('/tuning?fail=notmail')
@@ -1430,7 +1442,7 @@ class editor:
                 os.system('mv '+basedir+'p/posts/'+session.postid+'.zip '+basedir+'/p/zipped/')
                 #LETS SHIPPIT!
                 trustedlist=[]
-                trusted=os.listdir('r/trusted/')
+                trusted=os.listdir(basedir+'r/trusted/')
                 for t in trusted:
                     trusted=loadjson('r/trusted/'+t)
                     trustedlist.append(trusted)
