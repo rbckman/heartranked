@@ -558,8 +558,8 @@ class tuning():
                 formfail = formfail + 'new passcode doesnt match'
             if w.upd == 'yes':
                 formfail = 'Yes, your account has been tuned in thanks!'
-            tuningform.fill(user=user.displayname, mail=user.mail, subscribe=user.subscribe)
-            return render.tuning(tuningform, formfail, user.name)
+            tuningform.fill(user=user['displayname'], mail=user['mail'])
+            return render.tuning(tuningform, formfail, user['name'])
         else:
             return web.seeother('/register')
     def POST(self):
@@ -568,17 +568,24 @@ class tuning():
             i = web.input()
             if i.password == '':
                 raise web.seeother('/tuning?fail=nopass')
-            rymdadmins = bildhistoriker()
+            rymdadmins = []
+            users = os.listdir(basedir+'r/users/')
+            for r in users:
+                admin=loadjson('r/users/'+r)
+                rymdadmins.append(admin)
             for p in rymdadmins:
                 print(p)
-                if p.name == session.user:
-                    if bcrypt.checkpw(i.password.encode('utf-8'), p.password):
+                if p['name'] == session.user:
+                    try:
+                        encodepass = p['password'].encode("utf-8")
+                    except:
+                        encodepass = p['password']
+                    if bcrypt.checkpw(i['password'].encode('utf-8'), encodepass) == True:
                         #check if display name taken
-                        b_displayname = bildhistoriker()
-                        for a in b_displayname:
-                            if i.user in a.displayname and a.name != session.user:
+                        for a in rymdadmins:
+                            if i.user in a['displayname'] and a['name'] != session.user:
                                 raise web.seeother('/tuning?fail=nametaken')
-                            if i.mail in a.mail and i.mail != p.mail:
+                            if i.mail in a['mail'] and i.mail != p['mail']:
                                 raise web.seeother('/tuning?fail=mailtaken')
                         if i.newpassword != '':
                             if i.newpassword != i.newpassword2:
@@ -635,8 +642,11 @@ class forgotpass():
             i = web.input()
             if '@' not in i.mail:
                 raise web.seeother('/forgotpass?error=fejl')
-            rymdadmin = []
-            rymdadmins = bildhistoriker()
+            rymdadmins = []
+            users = os.listdir(basedir+'r/users/')
+            for r in users:
+                admin=loadjson('r/users/'+r)
+                rymdadmins.append(admin)
             for p in rymdadmins:
                 if p.mail.lower() == i.mail.lower():
                     passfilter = stopresetpass(i.mail.lower())
@@ -832,13 +842,13 @@ def getvisits():
     unique=[]
     for i in visitors:
         for p in visitors:
-            if i.ip == p.ip:
+            if i['ip'] == p['ip']:
                 unique.append(i)
     uniquevisits=len(unique)
     countrylist=[]
     for i in visitors:
-        if i.countrycode not in countrylist:
-            countrylist.append(i.countrycode)
+        if i['countrycode'] not in countrylist:
+            countrylist.append(i['countrycode'])
     return countrylist, total, uniquevisits
 
 class stats:
@@ -938,7 +948,7 @@ def sort_by_name_then_time(path):
     return heartrank
 
 def rankrender():
-    posts = os.listdir('p/posts')
+    posts = os.listdir(basedir+'p/posts')
     os.system('rm -r '+basedir+'p/heartrank')
     os.system('rm -r '+basedir+'p/comborank')
     os.makedirs(basedir+'p/comborank',exist_ok=True)
@@ -1687,6 +1697,5 @@ class uploads:
             uploaded = getfiles(staticdir+'upload/')
             return render.uploads(uploaded)
 
-#application = app.wsgifunc()
-#application = app.run()
-app.run()
+application = app.wsgifunc()
+#app.run()
