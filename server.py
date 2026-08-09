@@ -167,7 +167,7 @@ def updateuser(displayname, password, mail):
     salt = bcrypt.gensalt()
     password_hashed = bcrypt.hashpw(password, salt).decode('utf-8')
     tot = len(os.listdir(basedir+'r/users/'))
-    thedict={'displayname':displayname}
+    thedict={'displayname':displayname, 'password':password_hashed,'mail':mail}
     savejson('r/users/'+session.user, thedict)
     print("user info updated")
     return
@@ -1719,5 +1719,5 @@ class uploads:
             uploaded = getfiles(staticdir+'upload/')
             return render.uploads(uploaded)
 
-#application = app.wsgifunc()
-app.run()
+application = app.wsgifunc()
+#app.run()
