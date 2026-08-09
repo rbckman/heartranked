@@ -450,7 +450,7 @@ class like:
                 #db.update('published', where='postid="'+postid+'"', hearts=l.likes)
                 thedict={'hearts':l}
                 savejson('p/posts/'+postid+'/meta',thedict)
-                os.system('rm '+basedir+'p/heartrank/'+postid+'-'+str(int(l)).zfill(16))
+                os.system('rm '+basedir+'p/heartrank/'+postid+'-'+str(int(l-1)).zfill(16))
                 os.system('cp '+basedir+'p/posts/'+postid+'/meta '+basedir+'p/heartrank/'+postid+'-'+str(int(l)).zfill(16))
                 savejson('p/posts/'+postid+'/hearts/'+session.user, thedict)
                 savejson('u/'+session.user+'/posts/'+postid+'/hearts/'+session.user, thedict)
@@ -466,7 +466,7 @@ class like:
                     savejson('p/posts/'+postid+'/meta',thedict)
                     deletepost(basedir+'u/'+session.user+'/posts/'+postid+'/hearts/'+session.user)
                     deletepost(basedir+'p/posts/'+postid+'/hearts/'+session.user)
-                    os.system('rm '+basedir+'p/heartrank/'+postid+'-'+str(int(l)).zfill(16))
+                    os.system('rm '+basedir+'p/heartrank/'+postid+'-'+str(int(l+1)).zfill(16))
                     os.system('cp '+basedir+'p/posts/'+postid+'/meta '+basedir+'p/heartrank/'+postid+'-'+str(int(l)).zfill(16))
                 user_likes = False
             likes = len(os.listdir(basedir+'p/posts/'+postid+'/hearts/'))
@@ -1359,23 +1359,12 @@ class editor:
             i = web.input(publish=None, public=None, new=None, combine=None, remix=None)
             if i.combine != None:
                 if session.user:
+                    text=''
+                    text2=''
                     session.postid = hashlib.sha256(str(random.getrandbits(256)).encode('utf-8')).hexdigest()[9:36]
-                    #db.insert('unpublished', postid=session.postid, description='', description2='', timeadded=formattime(datetime.datetime.now()), creator=session.user, combine=i.combine)
                     os.makedirs(basedir+'u/'+session.user+'/posts/'+session.postid, exist_ok=True)
                     thedict={'postid':session.postid, 'siteurl':siteurl, 'timeadded':formattime(datetime.datetime.now()), 'creator':session.user, 'combine':i.combine}
                     savejson('u/'+session.user+'/posts/'+session.postid+'/meta',thedict)
-                    os.makedirs(basedir+'p/posts/'+i.combine+'/combos', exist_ok=True)
-                    savetext('p/posts/'+i.combine+'/combos/'+session.postid,session.user)
-                    #calculate comborank
-                    os.makedirs(basedir+'p/heartrank/',exist_ok=True)
-                    try:
-                        l=len(os.listdir(basedir+'p/posts/'+session.postid+'/combos/'))
-                    except:
-                        l=0
-                    thedict={'combos':l}
-                    savejson('u/'+session.user+'/posts/'+session.postid+'/meta',thedict)
-                    os.system('rm '+basedir+'p/comborank/'+session.postid+'-'+str(int(l-1)).zfill(16))
-                    os.system('cp '+basedir+'u/'+session.user+'/posts/'+session.postid+'/meta '+basedir+'p/comborank/'+session.postid+'-'+str(int(l)).zfill(16))
             if i.remix != None:
                 if session.user:
                     text=''
@@ -1439,6 +1428,21 @@ class editor:
                 session.postid = ''
                 raise web.seeother('/editor')
             if i.publish == 'yes' and text != '' and i.public == None and logged() and len(text) < 256:
+                c=loadjson('u/'+session.user+'/posts/'+session.postid+'/meta')
+                if c['combine'] != '':
+                    print('FUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU')
+                    #calculate comborank
+                    os.makedirs(basedir+'p/posts/'+c['combine']+'/combos', exist_ok=True)
+                    savetext('p/posts/'+c['combine']+'/combos/'+session.postid,session.user)
+                    os.makedirs(basedir+'p/heartrank/',exist_ok=True)
+                    try:
+                        l=len(os.listdir(basedir+'p/posts/'+session.postid+'/combos/'))
+                    except:
+                        l=0
+                    thedict={'combos':l}
+                    savejson('p/posts/'+c['combine']+'/meta',thedict)
+                    os.system('rm '+basedir+'p/comborank/'+session.postid+'-'+str(int(l)).zfill(16))
+                    os.system('cp '+basedir+'p/posts/'+session.postid+'/meta '+basedir+'p/comborank/'+session.postid+'-'+str(int(l)).zfill(16))
                 description1 = text
                 description2 = text2
                 soundname = safe_filename(description1[0:27])
@@ -1478,34 +1482,18 @@ class savepost:
         text2 = data.get("text2", "")
         if session.postid == '':
             session.postid = hashlib.sha256(str(random.getrandbits(256)).encode('utf-8')).hexdigest()[9:36]
-            #db.insert('unpublished', postid=session.postid, description=text, description2=text2, timeadded=formattime(datetime.datetime.now()), creator=session.user)
             os.makedirs(basedir+'u/'+session.user+'/posts/'+session.postid,exist_ok=True)
             thedict={'postid':session.postid, 'siteurl':siteurl, 'timeadded':formattime(datetime.datetime.now()), 'creator':session.user}
             savejson('u/'+session.user+'/posts/'+session.postid+'/meta',thedict)
             savetext('u/'+session.user+'/posts/'+session.postid+'/intro', text)
             savetext('u/'+session.user+'/posts/'+session.postid+'/post', text2)
         else:
-            iftext = ''
-            try:
-                #iftext = db.select('unpublished', where="postid='"+session.postid+"'")[0]
-                iftext=loadtext('u/'+session.user+'/posts/'+session.postid+'/meta')
-                iftext = iftext['postid']
-            except:
-                iftext = ''
-            if iftext != '':
-                #db.update('unpublished', where='postid="'+session.postid+'"', description=text, description2=text2, timeadded=formattime(datetime.datetime.now()), creator=session.user)
-                thedict={'postid':session.postid, 'siteurl':siteurl, 'timeadded':formattime(datetime.datetime.now()), 'creator':session.user}
-                savejson('u/'+session.user+'/posts/'+session.postid+'/meta',thedict)
-                savetext('u/'+session.user+'/posts/'+session.postid+'/intro', text)
-                savetext('u/'+session.user+'/posts/'+session.postid+'/post', text2)
-            else:
-                #db.insert('unpublished', postid=session.postid, description=text, description2=text2, timeadded=formattime(datetime.datetime.now()), creator=session.user)
-                os.makedirs(basedir+'u/'+session.user+'/posts/'+session.postid,exist_ok=True)
-                thedict={'postid':session.postid, 'siteurl':siteurl, 'timeadded':formattime(datetime.datetime.now()), 'creator':session.user}
-                savejson('u/'+session.user+'/posts/'+session.postid+'/meta',thedict)
-                savetext('u/'+session.user+'/posts/'+session.postid+'/intro', text)
-                savetext('u/'+session.user+'/posts/'+session.postid+'/post', text2)
-                print('hmmm db seeems useless now')
+            os.makedirs(basedir+'u/'+session.user+'/posts/'+session.postid,exist_ok=True)
+            thedict={'postid':session.postid, 'siteurl':siteurl, 'timeadded':formattime(datetime.datetime.now()), 'creator':session.user}
+            savejson('u/'+session.user+'/posts/'+session.postid+'/meta',thedict)
+            savetext('u/'+session.user+'/posts/'+session.postid+'/intro', text)
+            savetext('u/'+session.user+'/posts/'+session.postid+'/post', text2)
+            print('post saved!')
         return "ok"  # simple response
 
 class imageapi:
@@ -1529,26 +1517,17 @@ class imageapi:
 
 class rendered:
     def GET(self):
-        i = web.input(public=None)
-        if session.postid != '':
-            if i.public == None:
-                #unpublished = db.select('unpublished', where='postid="'+session.postid+'"')[0]
-                description=loadtext('u/'+session.user+'/posts/'+session.postid+'/intro')
-                description2=loadtext('u/'+session.user+'/posts/'+session.postid+'/post')
-                if description == None or description2 == None:
-                    return ''
-                else:
-                    return markdown.markdown(description+'\n\n---\n\n'+description2)
-            elif i.public == 'yes':
-                #published = db.select('published', where='postid="'+session.postid+'"')[0]
-                description=loadtext('p/posts/'+session.postid+'/intro')
-                description2=loadtext('p/posts/'+session.postid+'/post')
-                if description == None or description2 == None:
-                    return ''
-                else:
-                    return markdown.markdown(description+'\n\n---\n\n'+description2)
-            else:
-                return ''
+        description=''
+        description2=''
+        try:
+            description=loadtext('u/'+session.user+'/posts/'+session.postid+'/intro')
+        except:
+            pass
+        try:
+            description2=loadtext('u/'+session.user+'/posts/'+session.postid+'/post')
+        except:
+            pass
+        return markdown.markdown(description+'\n\n---\n\n'+description2)
 
 def resize_gif(input_path, output_path, max_size):
     input_image = Image.open(input_path)
@@ -1663,13 +1642,12 @@ class upload:
                                     os.makedirs(userpics + 'thumb/', exist_ok=True)
                                 except:
                                     print('Folders is')
-
-                                    ##---------- RESIZE IMAGE -----------
-                                    image.thumbnail((900,900), Image.Resampling.LANCZOS)
-                                    image.save(userpics + 'web/' + soundfile)
-                                    image.thumbnail((300,300), Image.Resampling.LANCZOS)
-                                    image.save(userpics + 'thumb/' + soundfile)
-
+                                ##---------- RESIZE IMAGE -----------
+                                image.thumbnail((900,900), Image.Resampling.LANCZOS)
+                                image.save(userpics + 'web/' + soundfile)
+                                image.thumbnail((300,300), Image.Resampling.LANCZOS)
+                                image.save(userpics + 'thumb/' + soundfile)
+                                print('images resized images')
                         elif filetype == 'wav' or filetype == 'flac' or filetype == 'mp3' or filetype == 'ogg':
                             usersound = staticdir + 'users/' + session.user + '/sounds/'
                             os.system('mkdir -p ' + usersound)
