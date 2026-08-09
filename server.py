@@ -105,7 +105,7 @@ def loadtext(thename):
         return description
     return ''
 
-def savejson(thename, thedict):
+def savejson(name, thedict):
     #full path to filename
     #save to next line make an ID automatically, you have to check the save to know how to load it.
     #loadfile check if record exist, first in line is the record hash and update if it exists
@@ -113,22 +113,28 @@ def savejson(thename, thedict):
     #hearts will be files as usernames with timestamp in a hearts folder in post folder. be stored and checked in u/hearts and post/hearts
     # be sure to add home domain setting to username
     #make save list a dict use same names
-    name=thename
-    thename=basedir+thename
+    print(thedict)
+    print('this to be saved')
+    thename=basedir+name
     if os.path.exists(thename):
-        p=loadjson(name)
-        if isinstance(p, dict):
-            thedict.update(p)
-    #for key, i in thedict.items():
-    #    createpost(key,i)        
-    with open(thename, "w") as f:
-        #f.write(str(i) + ',')
-        json.dump(thedict,f)
+        with open(thename, 'r') as f:
+            p=json.load(f)
+        print(p)
+        print('this to be saved to')
+        p.update(thedict)
+        with open(thename, "w") as f:
+            json.dump(p,f)
+    else:
+        with open(thename, "w") as f:
+            #f.write(str(i) + ',')
+            print('saving json')
+            json.dump(thedict,f)
 
-def loadjson(thename):
+def loadjson(name):
     settings = ''
-    if os.path.exists(basedir+thename):
-        with open(basedir+thename, 'r') as f:
+    thename=basedir+name
+    if os.path.exists(thename):
+        with open(thename, 'r') as f:
             settings = json.load(f)
             #for key, i in settings.items():
             #    createpost(key,i)
@@ -161,9 +167,8 @@ def updateuser(displayname, password, mail):
     salt = bcrypt.gensalt()
     password_hashed = bcrypt.hashpw(password, salt).decode('utf-8')
     tot = len(os.listdir(basedir+'r/users/'))
-    savejson('r/users/'+session.user, {'displayname':displayname})
-    savejson('r/users/'+session.user, {'password':password_hashed})
-    savejson('r/users/'+session.user, {'mail':mail})
+    thedict={'displayname':displayname}
+    savejson('r/users/'+session.user, thedict)
     print("user info updated")
     return
 
@@ -441,11 +446,12 @@ class like:
                     l=len(os.listdir(basedir+'p/posts/'+postid+'/hearts/'))
                 except:
                     l=0
+                l=l+1
                 #db.update('published', where='postid="'+postid+'"', hearts=l.likes)
                 thedict={'hearts':l}
                 savejson('p/posts/'+postid+'/meta',thedict)
                 os.system('rm '+basedir+'p/heartrank/'+postid+'-'+str(int(l)).zfill(16))
-                os.system('cp '+basedir+'p/posts/'+postid+'/meta '+basedir+'p/heartrank/'+postid+'-'+str(int(l+1)).zfill(16))
+                os.system('cp '+basedir+'p/posts/'+postid+'/meta '+basedir+'p/heartrank/'+postid+'-'+str(int(l)).zfill(16))
                 savejson('p/posts/'+postid+'/hearts/'+session.user, thedict)
                 savejson('u/'+session.user+'/posts/'+postid+'/hearts/'+session.user, thedict)
                 user_likes = True
@@ -455,10 +461,13 @@ class like:
                 except:
                     l=0
                 if l > 0:
+                    l=l-1
+                    thedict={'hearts':l}
+                    savejson('p/posts/'+postid+'/meta',thedict)
                     deletepost(basedir+'u/'+session.user+'/posts/'+postid+'/hearts/'+session.user)
                     deletepost(basedir+'p/posts/'+postid+'/hearts/'+session.user)
                     os.system('rm '+basedir+'p/heartrank/'+postid+'-'+str(int(l)).zfill(16))
-                    os.system('cp '+basedir+'p/posts/'+postid+'/meta '+basedir+'p/heartrank/'+postid+'-'+str(int(l)-1).zfill(16))
+                    os.system('cp '+basedir+'p/posts/'+postid+'/meta '+basedir+'p/heartrank/'+postid+'-'+str(int(l)).zfill(16))
                 user_likes = False
             likes = len(os.listdir(basedir+'p/posts/'+postid+'/hearts/'))
             # Example: Update like count in your database
@@ -1710,5 +1719,5 @@ class uploads:
             uploaded = getfiles(staticdir+'upload/')
             return render.uploads(uploaded)
 
-application = app.wsgifunc()
-#app.run()
+#application = app.wsgifunc()
+app.run()
