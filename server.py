@@ -1702,7 +1702,7 @@ class uploads:
 
 #Load from settings
 standalone = settings.standaloneserver
-if standalone == 'yes' or 'True' or 'y' or 'Y':
+if standalone == 'yes' or standalone == 'True' or standalone == 'y' or standalone == 'Y':
     app.run()
 else:
     application = app.wsgifunc()
