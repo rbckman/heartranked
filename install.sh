@@ -25,50 +25,8 @@ EOF
 
 echo "Installing all dependencies..."
 apt-get update
-sudo apt install apache2 libapache2-mod-wsgi-py3 python3-pip python3-pil python3-bcrypt python3-webpy python3-markdown
-#pip3 install webpy-v.0.76.zip
-
-mkdir u r p
-
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-ACONF="/etc/apache2/sites-available/heartranked.conf"
-
-echo "Adding local site to /etc/apache2/sites-available/heartranked.conf"
-cat <<'EOF' > $ACONF
-<VirtualHost *:80>
-    ServerName localhost
-EOF
-echo "    DocumentRoot $DIR" >> $ACONF
-echo "    WSGIScriptAlias / $DIR/server.py" >> $ACONF
-echo "    WSGIPassAuthorization On" >> $ACONF
-echo "    AddType text/html .py" >> $ACONF
-echo "    Alias /static $DIR/public_html/" >> $ACONF
-echo "    <Directory $DIR/public_html>" >> $ACONF
-cat <<'EOF' >> $ACONF
-        Options FollowSymlinks
-	AllowOverride None
-	Require all granted
-    </Directory>
-    ScriptAlias /cgi-bin/ /usr/lib/cgi-bin/
-    <Directory "/usr/lib/cgi-bin">
-        AllowOverride None
-        Options +ExecCGI -MultiViews +SymLinksIfOwnerMatch
-        Require all granted
-    </Directory>
-EOF
-echo "    ErrorLog $DIR/error.log" >> $ACONF
-echo "</VirtualHost>" >> $ACONF
-
-echo "<Directory $DIR>" >> /etc/apache2/apache2.conf
-cat <<'EOF' >> /etc/apache2/apache2.conf
-	Options Indexes FollowSymLinks
-	AllowOverride None
-	Require all granted
-</Directory>
-EOF
-
-sudo a2ensite heartranked.conf
-sudo systemctl restart apache2
+sudo apt install python3 python3-pip python3-pil python3-bcrypt python3-webpy python3-markdown
+pip3 install webpy-v.0.76.zip
 
 cat <<'EOF'
                        .-.
