@@ -8,5 +8,9 @@ $def with (trustform, trustedlist)
     </form>
     <br>
     $for t in trustedlist:
-        $t['servername'] $t['user'] $t['password']
+        $t['servername'] $t['user'] <a href='trust?remove=$t['servername']'>remove</a>
+        <br>
+    <br>
+    <br>
+    <a href='/'>back</a>
 </div>

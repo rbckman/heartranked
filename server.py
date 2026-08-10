@@ -262,6 +262,10 @@ class trust():
     web.form.Password('password', web.form.notnull, description="passcode:"),
     web.form.Button('Trust'))
     def GET(self):
+        i = web.input(remove=None)
+        if i.remove != None:
+            os.system('rm '+basedir+'r/trusted/'+i.remove)
+            return web.seeother('/trust')
         trusted=os.listdir(basedir+'r/trusted/')
         trustedlist=[]
         for t in trusted:
