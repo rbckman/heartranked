@@ -64,7 +64,7 @@ renderop = web.template.render(templatedir, base="op")
 rendersplash = web.template.render(templatedir, base="splash")
 session = web.session.Session(app,store,initializer={'login':0, 'privilege':0, 'bag':[], 'sessionkey':'empty','postid':'','backurl':'','user':'','search':'', 'bildsida':'', 'feedbase':'', 'timebase':''})
 
-allowedchar = '_','-','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','1','2','3','4','5','6','7','8','9','0'
+allowedchar = 'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'
 
 def runfirst():
     os.makedirs(basedir+'p/posts',exist_ok=True)
@@ -257,7 +257,7 @@ def getinvitation(secretinvitation):
 class trust():
     form = web.form.Form(
     web.form.Textbox('servername', web.form.notnull, description="server:"),
-    web.form.Textbox('port', web.form.notnull, description="port:"),
+    web.form.Textbox('port', description="port:"),
     web.form.Textbox('user', web.form.notnull, description="user:"),
     web.form.Password('password', web.form.notnull, description="passcode:"),
     web.form.Button('Trust'))
@@ -274,6 +274,7 @@ class trust():
         trustform = self.form()
         return render.trust(trustform, trustedlist)
     def POST(self):
+        i = web.input(port='')
         referer = web.ctx.env.get('HTTP_REFERER',baseurl)
         ip = web.ctx['ip']
         stopflood(ip, referer)
@@ -1464,8 +1465,11 @@ class editor:
                     trusted=loadjson('r/trusted/'+t)
                     trustedlist.append(trusted)
                 for t in trustedlist:
-                    url='http://'+t['servername']+':'+t['port']
-                    trustedlogin = ['curl','-X','POST', url+'/login', '-i', '-b', basedir+'/sessions/cookies.txt', '-c',basedir+'/sessions/cookies.txt', '-d', 'user='+t['user']+'&password='+t['password']]
+                    url=t['servername']+':'+t['port']
+                    for a in allowedchar:
+                        if '.'+a in t['servername']: #is webaddress use https
+                            url='https://'+t['servername']+':'+t['port']
+                    trustedlogin = ['curl','-X','POST', url+'/login', '-i', '-b', basedir+'/sessions/cookies.txt', '-c',basedir+'/sessions/cookies.txt', '-d', 'user='+t['user'], '-d', 'password='+t['password']]
                     subprocess.check_output(trustedlogin)
                     shippit = ['curl','-X', 'POST', '--verbose', '--header', 'Content-Type: multipart/form-data', '-F', 'files=@'+basedir+'p/zipped/'+session.postid+'.zip;type=application/zip', '-b', basedir+'/sessions/cookies.txt', '-c',basedir+'/sessions/cookies.txt', url+'/upload']
                     #shippit = ['curl','--request', 'POST', '--url', url+'/upload', '--verbose', '--header', 'Content-Type: multipart/form-data', '--form', 'file-input=@'+basedir+'p/zippit/'+session.postid+'.zip', '-b', basedir+'/sessions/cookies.txt', '-c',basedir+'/sessions/cookies.txt']
