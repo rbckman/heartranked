@@ -9,5 +9,5 @@ baseurl = "https://robinbackman.com"
 postadmin="me@robinbackman.com"
 postadmin_signature="\n-~-\nGreetings\nKing Robin\nHEART RANKED\nPeace!\nhttps://robinbackman.com/heartranked\nme@robinbackman.com\n"
 
-
+standaloneserver="Y"
 

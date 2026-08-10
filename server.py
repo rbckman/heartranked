@@ -1696,5 +1696,9 @@ class uploads:
             uploaded = getfiles(staticdir+'upload/')
             return render.uploads(uploaded)
 
-application = app.wsgifunc()
-#app.run()
+#Load from settings
+standalone = settings.standaloneserver
+if standalone == 'yes' or 'True' or 'y' or 'Y':
+    app.run()
+else:
+    application = app.wsgifunc()

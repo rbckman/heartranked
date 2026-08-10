@@ -3,15 +3,13 @@
 
 # Make your settings here and change filename to settings.py
 
-#rpcauth 
-rpcauth = "http://rpcserver:secrethash@ip:port"
-rtl="https://ip:port/v1/"
+postadmin="cowabunga@local"
+postadmin_signature="\n-~-\nGreetings\nKing Robin\nHEART RANKED\nPeace!\nhttps://robinbackman.com/heartranked\nme@robinbackman.com\n"
 
 #mail to webmaster
-webmaster = "your@mail.com"
+webmaster = "heart@localcow.boya"
 
-baseurl = "https://url.com"
+baseurl = "HeartRanked Local Cowboy"
 
-#op
-allowed = (("admin", "secretpasscode"),)
+standaloneserver="Y"
 
