@@ -1612,6 +1612,7 @@ def getallmedia(media_dir, extensions):
     files = []
     for ext in extensions:
         files.extend(folder.rglob(f"*.{ext}"))
+    return files
 
 def symlinkmedia(mediafile): 
     mediafile_dir=''.join(mediafile.split('/')[0:-1])
