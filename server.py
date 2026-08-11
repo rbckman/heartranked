@@ -1619,12 +1619,11 @@ def getallmedia(media_dir, extensions):
     return files
 
 def symlinkmedia(mediafile,postid): 
-    mediafile_dir=''.join(mediafile.split('/')[0:-1])
     fixstatic = mediafile.split('/posts/'+postid+'/')[1]
     symlinkfile = staticdir + 'users/' + session.user + '/'+fixstatic
     symlinkdir=symlinkfile.rsplit('/',1)[0]
     os.makedirs(symlinkdir, exist_ok=True)
-    os.system('ln -s '+mediafile+' '+symlinkdir)
+    os.system('ln -s '+mediafile+' '+symlinkfile)
 
 def symlinkthis(postid):
     extensions=['zip','pdf','txt','md','mp4','jpeg','jpg','png','gif','wav','flac','mp3','ogg']
@@ -1654,7 +1653,7 @@ class upload:
                 for f in uploaded:
                     if f and hasattr(f, 'filename') and f.filename:
                         # Sanitize filename a bit
-                        imgdir = staticdir + 'u/' + session.user + 'posts/'+session.postid+'/temp/'
+                        imgdir = basedir + 'u/' + session.user + 'posts/'+session.postid+'/temp/'
                         os.system('mkdir -p ' + imgdir)
                         safe_name = safe_filename(os.path.basename(f.filename))
                         filepath = os.path.join(imgdir, safe_name)
@@ -1674,25 +1673,28 @@ class upload:
                             os.system('cd '+usersound+' && unzip -o '+soundfile+' -d '+basedir+'u/'+session.user+'/posts/')
                             os.system('cd '+usersound+' && unzip -o '+soundfile+' -d '+basedir+'p/posts/')
                             mediafiles = getallmedia(basedir+'p/posts/'+soundfile.split('.zip')[0],extensions)
+                            print('wowoweewaa')
+                            print(basedir+'p/posts/'+soundfile.split('.zip')[0])
+                            print(mediafiles)
                             for m in mediafiles:
-                                symlinkmedia(str(m),soundfile.split('.zip')[0])
+                                symlinkmedia(m,soundfile.split('.zip')[0])
                         elif filetype == 'pdf' or filetype == 'txt' or filetype == 'md':
                             usersound = basedir + 'u/' + session.user + '/posts/'+session.postid+'/docs/'
                             os.system('mkdir -p ' + usersound)
                             os.system('mv ' + imgdir + soundfile + ' ' + usersound + soundfile)
-                            symlinkmedia(usersound + soundfile)
+                            symlinkmedia(usersound + soundfile,session.postid)
                         elif filetype == 'mp4':
                             usersound = basedir + 'u/' + session.user + '/posts/'+session.postid+'/films/'
                             os.system('mkdir -p ' + usersound)
                             os.system('mv ' + imgdir + soundfile + ' ' + usersound + soundfile)
-                            symlinkmedia(usersound + soundfile)
+                            symlinkmedia(usersound + soundfile,session.postid)
                         elif filetype == 'jpeg' or filetype == 'jpg' or filetype == 'png' or filetype == 'gif':
                             usersound = basedir + 'u/' + session.user + '/posts/'+session.postid+'/images/'
                             os.system('mkdir -p ' + usersound)
                             os.makedirs(usersound + 'web/', exist_ok=True)
                             os.makedirs(usersound + 'thumb/', exist_ok=True)
                             os.system('mv ' + imgdir + soundfile + ' ' + usersound + soundfile)
-                            symlinkmedia(usersound + soundfile)
+                            symlinkmedia(usersound + soundfile,session.postid)
                             if filetype == 'gif':
                                 scale_gif(usersound+soundfile, [900,900], usersound+'web/'+soundfile)
                                 scale_gif(usersound+soundfile, [300,300], usersound+'thumb/'+soundfile)
@@ -1702,10 +1704,10 @@ class upload:
                                 ##---------- RESIZE IMAGE -----------
                                 image.thumbnail((900,900), Image.Resampling.LANCZOS)
                                 image.save(usersound + 'web/' + soundfile)
-                                symlinkmedia(usersound + 'web/' + soundfile)
+                                symlinkmedia(usersound + 'web/' + soundfile,session.postid)
                                 image.thumbnail((300,300), Image.Resampling.LANCZOS)
                                 image.save(usersound + 'thumb/' + soundfile)
-                                symlinkmedia(usersound + 'thumb/' + soundfile)
+                                symlinkmedia(usersound + 'thumb/' + soundfile,session.postid)
                                 print('images resized images')
                         elif filetype == 'wav' or filetype == 'flac' or filetype == 'mp3' or filetype == 'ogg':
                             usersound = basedir + 'u/' + session.user + '/posts/'+session.postid+'/sounds/'
