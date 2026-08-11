@@ -53,6 +53,14 @@ baseurl = settings.baseurl
 siteurl = baseurl
 postadmin = settings.postadmin
 postadmin_signature = settings.postadmin_signature
+heart=settings.heart
+hearted=settings.hearted
+#load msg
+postadmin_msg_new=settings.postadmin_msg_new
+postadmin_msg_new_long=settings.postadmin_msg_new_long
+welcome=settings.welcome
+welcome_long=settings.welcome_long
+
 basedir = os.path.dirname(os.path.realpath(__file__))+'/'
 templatedir = basedir + 'html/'
 staticdir = basedir + 'static/'
@@ -407,12 +415,10 @@ class register():
                 if p['mail'].lower() == i.mail.lower():
                     raise web.seeother('/register?invite='+i.invite+'&fail=mailtaken' +r)
             adduser(i.user, i.password, i.mail.lower())
-            #Send mail to Madbaker
-            msg = "Wowowowoweeewaaa! Lets Ride The INTERNET Wave Together, Bees as home, HEART RANKED ftw! " + i.user + ' ' + i.mail
-            sendmail(postadmin, 'Wowowoweewaaa!', msg)
+            #Send mail (change messages in settings.py)
+            sendmail(postadmin, postadmin_msg_new, postadmin_msg_new_long+i.user+' '+i.mail)
             #Send mail to new user
-            msg = "Wowowowoweeewaaa! "+i.user+" Lets Ride INTERNET Wave Together, Bee as home, HEART RANKED ftw! https://heartranked.com"
-            sendmail(i.mail, 'HEART RANKED VISIONARY Fleet', msg)
+            sendmail(i.mail, welcome, welcome_long+i.user)
             #session.login = 3
             #session.user = safe_filename(i.user)
             #add user to matrix
@@ -915,12 +921,12 @@ def getlikes(postid, user):
             user_likes = False
     if l >= 0:
         if user_likes: 
-            likes = "❤️ " + str(l)
+            likes = hearted+" " + str(l)
         else: 
             if l > 0:
-                likes = "🤍 " + str(l)
+                likes = heart+" " + str(l)
             else:
-                likes = "🤍 "
+                likes = heart
         return likes
 
 def postexist(postid):
