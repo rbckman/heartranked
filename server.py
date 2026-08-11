@@ -1478,13 +1478,9 @@ class editor:
                     for a in allowedchar:
                         if '.'+a in t['servername']: #is webaddress use https
                             url='https://'+t['servername']+':'+t['port']
-                    trustedlogin = ['curl','-X','POST', url+'/login', '-i', '-b', basedir+'/sessions/cookies.txt', '-c',basedir+'/sessions/cookies.txt', '-d', 'user='+t['user'], '-d', 'password='+t['password']]
+                    trustedlogin = ['curl','-X','POST', url+'/login', '-i', '-b', basedir+'/sessions/sessions-'+session.user, '-c',basedir+'/sessions/sessions-'+session.user, '-d', 'user='+t['user'], '-d', 'password='+t['password']]
                     subprocess.check_output(trustedlogin)
-                    shippit = ['curl','-X', 'POST', '--verbose', '--header', 'Content-Type: multipart/form-data', '-F', 'files=@'+basedir+'p/zipped/'+session.postid+'.zip;type=application/zip', '-b', basedir+'/sessions/cookies.txt', '-c',basedir+'/sessions/cookies.txt', url+'/upload']
-                    #shippit = ['curl','--request', 'POST', '--url', url+'/upload', '--verbose', '--header', 'Content-Type: multipart/form-data', '--form', 'file-input=@'+basedir+'p/zippit/'+session.postid+'.zip', '-b', basedir+'/sessions/cookies.txt', '-c',basedir+'/sessions/cookies.txt']
-                    #shippit = ['curl','-X', 'POST', '-L', url+'/upload' , '-d', 'file-input[]=@'+basedir+'p/zippit/'+session.postid+'.zip', '-b', basedir+'/sessions/cookies.txt', '-c',basedir+'/sessions/cookies.txt']
-                    #shippit = ['curl', '-F', 'file-input[]=@'+basedir+'p/zippit/'+session.postid+'.zip;filename='+session.postid, '-b', basedir+'/sessions/cookies.txt', '-c',basedir+'/sessions/cookies.txt', url+'/upload']
-                    #shippit = ['curl','-X', 'POST', '-F', 'file-input[]=@'+basedir+'p/zippit/'+session.postid+'.zip', '-b', basedir+'/sessions/cookies.txt', '-c',basedir+'/sessions/cookies.txt', url+'/upload']
+                    shippit = ['curl','-X', 'POST', '--verbose', '--header', 'Content-Type: multipart/form-data', '-F', 'files=@'+basedir+'p/zipped/'+session.postid+'.zip;type=application/zip', '-b', basedir+'/sessions/sessions-'+session.user, '-c',basedir+'/sessions/sessions-'+session.user, url+'/upload']
                     subprocess.check_output(shippit)
                 #OK GOT EM COOKIES LES DO IT DO IT DO IT SHIPPIT!
                 raise web.seeother('/editor?public=yes')
