@@ -1611,7 +1611,6 @@ def save_new_gif(new_frames, old_gif_information, new_path):
 def getallmedia(media_dir, extensions):
     files = []
     for ext in extensions:
-        files.extend(
         c=list(Path(media_dir).rglob('*.'+ext))
         for a in c:
             files.append(str(a))
@@ -1676,7 +1675,7 @@ class upload:
                             os.system('cd '+usersound+' && unzip -o '+soundfile+' -d '+basedir+'p/posts/')
                             mediafiles = getallmedia(basedir+'p/posts/'+soundfile.split('.zip')[0],extensions)
                             for m in mediafiles:
-                                symlinkmedia(str(m),soundfile.split('.zip'))
+                                symlinkmedia(str(m),soundfile.split('.zip')[0])
                         elif filetype == 'pdf' or filetype == 'txt' or filetype == 'md':
                             usersound = basedir + 'u/' + session.user + '/posts/'+session.postid+'/docs/'
                             os.system('mkdir -p ' + usersound)
