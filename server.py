@@ -1237,16 +1237,16 @@ def getcombofeed(show):
 
 def userimage(user):
     usrimg = ''
-    i = staticdir+'u/'+user+'/images/thumb/'+user
+    i = staticdir+'users/'+user+'/images/thumb/'+user
     print(i)
     if os.path.isfile(i+'.jpeg'):
-        usrimg='/u/users/'+user+'/images/thumb/'+user+'.jpeg'
+        usrimg='static/users/'+user+'/images/thumb/'+user+'.jpeg'
     elif os.path.isfile(i+'.jpg'):
-        usrimg='/u/users/'+user+'/images/thumb/'+user+'.jpg'
+        usrimg='static/users/'+user+'/images/thumb/'+user+'.jpg'
     elif os.path.isfile(i+'.png'):
-        usrimg='/u/users/'+user+'/images/thumb/'+user+'.png'
+        usrimg='static/users/'+user+'/images/thumb/'+user+'.png'
     elif os.path.isfile(i+'.gif'):
-        usrimg='/u/users/'+user+'/images/thumb/'+user+'.gif'
+        usrimg='static/users/'+user+'/images/thumb/'+user+'.gif'
     if usrimg != '':
         imghtml='<img class="usrimg" src="'+usrimg+'">'
         return imghtml
