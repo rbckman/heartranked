@@ -1611,7 +1611,10 @@ def save_new_gif(new_frames, old_gif_information, new_path):
 def getallmedia(media_dir, extensions):
     files = []
     for ext in extensions:
-        files.extend(list(Path(media_dir).rglob('*.'+ext)))
+        files.extend(
+        c=list(Path(media_dir).rglob('*.'+ext))
+        for a in c:
+            files.append(str(a))
     print('wasassssup!?')
     print(files)
     return files
