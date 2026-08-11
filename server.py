@@ -87,6 +87,7 @@ def runfirst():
     os.makedirs(basedir+'r/trusted',exist_ok=True)
     os.makedirs(basedir+'r/users',exist_ok=True)
     os.makedirs(basedir+'r/stopflood',exist_ok=True)
+    os.makedirs(basedir+'r/stopresetpass',exist_ok=True)
 
 runfirst()
 
@@ -223,10 +224,10 @@ def stopresetpass(mail):
     else:
         thedict={'timeadded':time.time()}
         savejson('r/stopresetpass/'+mail, thedict)
-        return
+        return 
     thedict={'timeadded':time.time()}
     savejson('r/stopresetpass/'+mail, thedict)
-    latest = time.time() - t
+    latest = time.time() - t['timeadded']
     print(latest)
     if latest < 600:
         print('mail is in password reset spam filter')
@@ -690,7 +691,7 @@ class forgotpass():
                 admin=loadjson('r/users/'+r)
                 rymdadmins.append(admin)
             for p in rymdadmins:
-                if p.mail.lower() == i.mail.lower():
+                if p['mail'].lower() == i.mail.lower():
                     passfilter = stopresetpass(i.mail.lower())
                     if passfilter == True:
                         raise web.seeother('/forgotpass?error=stopresetpass')
@@ -699,9 +700,9 @@ class forgotpass():
                     salt = bcrypt.gensalt()
                     password_hashed = bcrypt.hashpw(password, salt)
                     thedict={'password':password_hashed}
-                    savejson('r/users/'+p.name, thedict)
+                    savejson('r/users/'+p['name'], thedict)
                     print("lösenordet uppdaterat!")
-                    msg = "Your new passcode is: " + unencrypted_password + ' , once you logg in with this enter a new passcode by pressin your name, it a um link. Take care now bye bye then.'
+                    msg = "Your new passcode is: " + unencrypted_password
                     sendmail(p.mail, 'Heart Ranked Passcode', msg)
                     raise web.seeother('/forgotpass?error=done')
             raise web.seeother('/forgotpass?error=fejl')
