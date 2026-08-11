@@ -272,6 +272,7 @@ class trust():
     web.form.Password('password', web.form.notnull, description="passcode:"),
     web.form.Button('Trust'))
     def GET(self):
+
         i = web.input(remove=None)
         if i.remove != None:
             os.system('rm '+basedir+'r/trusted/'+i.remove)
@@ -304,6 +305,7 @@ class login():
         result = subprocess.run(['whoami'], capture_output=True, text=True)
         adduser('op', 'blessyou', result.stdout.rstrip()+'@localhost')
     def GET(self):
+        visitorlog()
         fejl = ''
         resetpasslink = False
         i = web.input(error=None)
@@ -320,6 +322,7 @@ class login():
         if session.login == 5:
             raise web.seeother('/')
     def POST(self):
+        visitorlog()
         referer = web.ctx.env.get('HTTP_REFERER',baseurl)
         ip = web.ctx['ip']
         stopflood(ip, referer)
@@ -362,6 +365,7 @@ class register():
     web.form.Textbox('mail', description="mail:"),
     web.form.Button('JOIN'))
     def GET(self):
+        visitorlog()
         registerform = self.form()
         w = web.input(invite=None)
         formfail = ''
@@ -393,6 +397,7 @@ class register():
         else:
             return web.seeother('/oopsie')
     def POST(self):
+        visitorlog()
         registerform = self.form()
         i = web.input(invite=None)
         if getinvitation(i.invite):
@@ -491,7 +496,7 @@ class like:
             # This is a placeholder; replace with your database logic
             # Return JSON response
             web.header('Content-Type', 'application/json')
-            return json.dumps({'likes': likes, 'user_likes': user_likes })
+            return json.dumps({'likes': likes, 'user_likes': user_likes ,'heart':heart,'hearted':hearted})
 
 class user():
     def GET(self, user):
@@ -819,8 +824,12 @@ def getfiles(filmfolder):
 def callsubprocess(cmd):
     subprocess.call(cmd.split())
 
-def visitorlog(ip, referer, environ):
+def visitorlog():
+    ip = web.ctx['ip']
+    referer = web.ctx.env.get('HTTP_REFERER', 'none')
+    environ = web.ctx.env.get('HTTP_USER_AGENT', 'dunno')
     last = get_files_by_time('r/visitors/',newest_first=True)
+    stopflood(ip, referer)
     if last:
         lastip=loadjson('r/visitors/'+last[0])
     else:
@@ -1247,6 +1256,11 @@ def userimage(user):
 class heartranked:
     form = web.form.Form(web.form.Textbox('search', web.form.notnull, description="or search"))
     def GET(self):
+        visitorlog()
+        visitors, total, unique = getvisits()
+        print(visitors)
+        print(str(total))
+        print(str(unique))
         searchform = self.form()
         bildpersida = 1000
         session.search = ''
@@ -1330,14 +1344,7 @@ class heartranked:
             free_hash_for_user = hashlib.md5(str(random.getrandbits(256)).encode('utf-8')).hexdigest()[:4]
             #session.user = 'heart_'+free_hash_for_user
             session.user = None
-        ip = web.ctx['ip']
-        referer = web.ctx.env.get('HTTP_REFERER', 'none')
-        environ = web.ctx.env.get('HTTP_USER_AGENT', 'dunno')
-        visitorlog(ip,referer,environ)
-        visitors, total, unique = getvisits()
-        print(visitors)
-        print(str(total))
-        print(str(unique))
+
         if i.edit != None:
             session.postid=i.edit
             raise web.seeother('/editor?public=yes') 
@@ -1364,7 +1371,7 @@ class heartranked:
             rights = 'mod'
         else:
             rights = 'spacer'
-        return rendersplash.heartranked(markdown, visitors, total, unique, logged, rights, session.user, getlikes, formattime, feedbase, tot, limit, offset, bildpersida, session.search, bilder, searchform, getcombines, timebase, getfeed, getcombofeed, userimage, postexist, i.show, loadjson, loadtext, len)
+        return rendersplash.heartranked(markdown, visitors, total, unique, logged, rights, session.user, getlikes, formattime, feedbase, tot, limit, offset, bildpersida, session.search, bilder, searchform, getcombines, timebase, getfeed, getcombofeed, userimage, postexist, i.show, loadjson, loadtext, len, heart, hearted)
     def POST(self):
         searchform = self.form()
         i = web.input()

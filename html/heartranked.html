@@ -1,4 +1,4 @@
-$def with (markdown, visitors, total, unique, logged, rights, namn, getlikes, formattime, feedbase, totbilder, limit, offset, bildpersida, search, bilder, searchform, getcombines, timebase, getfeed, getcombofeed, userimage, postexist, show, loadjson, loadtext, len)
+$def with (markdown, visitors, total, unique, logged, rights, namn, getlikes, formattime, feedbase, totbilder, limit, offset, bildpersida, search, bilder, searchform, getcombines, timebase, getfeed, getcombofeed, userimage, postexist, show, loadjson, loadtext, len, heart, hearted)
 
 <HEAD>
     <meta charset="utf-8">
@@ -230,9 +230,9 @@ async function like(id) {
     })
     const responseJson = await response.json()
     if (responseJson.user_likes === true) {
-        megalike.innerText = '❤️ '+responseJson.likes; 
+        megalike.innerText = responseJson.hearted+' '+responseJson.likes; 
     } else {
-        megalike.innerText = '🤍 '+responseJson.likes;
+        megalike.innerText = responseJson.heart+' '+responseJson.likes;
     }
 }
 </script>
