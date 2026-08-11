@@ -1476,7 +1476,7 @@ class editor:
                 thedict={'soundname':soundname}
                 savejson('u/'+session.user+'/posts/'+session.postid+'/meta',thedict)
                 #session.postid = hashlib.sha256(str(random.getrandbits(256)).encode('utf-8')).hexdigest()[9:36]
-                os.system('cp -r '+basedir+'u/'+session.user+'/posts/'+session.postid+' '+basedir+'p/posts/')
+                os.system('cp -r -P '+basedir+'u/'+session.user+'/posts/'+session.postid+' '+basedir+'p/posts/')
                 #also zippit here!
                 #os.system('zip -r '+basedir+'p/zipped/'+session.postid+'.zip '+basedir+'p/posts/'+session.postid )
                 os.system('cd '+basedir+'p/posts/ && zip -o -r '+session.postid+'.zip '+session.postid )
@@ -1608,10 +1608,24 @@ def save_new_gif(new_frames, old_gif_information, new_path):
                        extension = old_gif_information['extension'] ,
                        transparency = old_gif_information['transparency'])
 
+def getallmedia(media_dir, extensions):
+    files = []
+    for ext in extensions:
+        files.extend(folder.rglob(f"*.{ext}"))
+
+def symlinkmedia(mediafile): 
+    mediafile_dir=''.join(mediafile.split('/')[0:-1])
+    fixstatic = mediafile.split('/posts/'+session.postid+'/')[1]
+    symlinkfile = staticdir + 'users/' + session.user + '/'+fixstatic
+    symlinkdir=symlinkfile.rsplit('/',1)[0]
+    os.makedirs(symlinkdir, exist_ok=True)
+    os.system('ln -s '+mediafile+' '+symlinkdir)
+
 class upload:
     def POST(self):
         if logged():
             try:
+                extensions=['zip','pdf','txt','md','mp4','jpeg','jpg','png','gif','wav','flac','mp3','ogg']
                 saved_files = []
                 # Best way for multiple files in web.py
                 input_data = web.webapi.rawinput()
@@ -1620,13 +1634,12 @@ class upload:
                 print(session.user)
                 print(input_data)
                 print(uploaded)
-                # Make sure it's always a list
                 if not isinstance(uploaded, list):
                     uploaded = [uploaded] if uploaded else []
                 for f in uploaded:
                     if f and hasattr(f, 'filename') and f.filename:
                         # Sanitize filename a bit
-                        imgdir = staticdir + 'users/' + session.user + '/temp/'
+                        imgdir = staticdir + 'u/' + session.user + 'posts/'+session.postid+'/temp/'
                         os.system('mkdir -p ' + imgdir)
                         safe_name = safe_filename(os.path.basename(f.filename))
                         filepath = os.path.join(imgdir, safe_name)
@@ -1645,37 +1658,42 @@ class upload:
                             os.system('mv ' + imgdir + soundfile + ' ' + usersound + soundfile)
                             os.system('cd '+usersound+' && unzip -o '+soundfile+' -d '+basedir+'u/'+session.user+'/posts/')
                             os.system('cd '+usersound+' && unzip -o '+soundfile+' -d '+basedir+'p/posts/')
+                            mediafiles = getmediafiles(basedir+'p/posts/'+soundfile.split('.zip')[0],extensions)
+                            for m in mediafiles:
+                                symlinkmedia(str(m))
                         elif filetype == 'pdf' or filetype == 'txt' or filetype == 'md':
-                            usersound = staticdir + 'users/' + session.user + '/docs/'
+                            usersound = basedir + 'u/' + session.user + '/posts/'+session.postid+'/docs/'
                             os.system('mkdir -p ' + usersound)
                             os.system('mv ' + imgdir + soundfile + ' ' + usersound + soundfile)
+                            symlinkmedia(usersound + soundfile)
                         elif filetype == 'mp4':
-                            usersound = staticdir + 'users/' + session.user + '/films/'
+                            usersound = basedir + 'u/' + session.user + '/posts/'+session.postid+'/films/'
                             os.system('mkdir -p ' + usersound)
                             os.system('mv ' + imgdir + soundfile + ' ' + usersound + soundfile)
+                            symlinkmedia(usersound + soundfile)
                         elif filetype == 'jpeg' or filetype == 'jpg' or filetype == 'png' or filetype == 'gif':
-                            userpics = staticdir + 'users/' + session.user + '/images/'
-                            os.system('mkdir -p ' + userpics)
-                            os.system('mv ' + imgdir + soundfile + ' ' + userpics + soundfile)
+                            usersound = basedir + 'u/' + session.user + '/posts/'+session.postid+'/images/'
+                            os.system('mkdir -p ' + usersound)
+                            os.makedirs(usersound + 'web/', exist_ok=True)
+                            os.makedirs(usersound + 'thumb/', exist_ok=True)
+                            os.system('mv ' + imgdir + soundfile + ' ' + usersound + soundfile)
+                            symlinkmedia(usersound + soundfile)
                             if filetype == 'gif':
-                                scale_gif(userpics+soundfile, [900,900], userpics+'web/'+soundfile)
-                                scale_gif(userpics+soundfile, [300,300], userpics+'thumb/'+soundfile)
+                                scale_gif(usersound+soundfile, [900,900], usersound+'web/'+soundfile)
+                                scale_gif(usersound+soundfile, [300,300], usersound+'thumb/'+soundfile)
                             else:
                                 ##---------- OPEN FILE & CHEKC IF JPEG --------
-                                image = Image.open(userpics + soundfile)
-                                try:
-                                    os.makedirs(userpics + 'web/', exist_ok=True)
-                                    os.makedirs(userpics + 'thumb/', exist_ok=True)
-                                except:
-                                    print('Folders is')
+                                image = Image.open(usersound + soundfile)
                                 ##---------- RESIZE IMAGE -----------
                                 image.thumbnail((900,900), Image.Resampling.LANCZOS)
-                                image.save(userpics + 'web/' + soundfile)
+                                image.save(usersound + 'web/' + soundfile)
+                                symlinkmedia(usersound + 'web/' + soundfile)
                                 image.thumbnail((300,300), Image.Resampling.LANCZOS)
-                                image.save(userpics + 'thumb/' + soundfile)
+                                image.save(usersound + 'thumb/' + soundfile)
+                                symlinkmedia(usersound + 'thumb/' + soundfile)
                                 print('images resized images')
                         elif filetype == 'wav' or filetype == 'flac' or filetype == 'mp3' or filetype == 'ogg':
-                            usersound = staticdir + 'users/' + session.user + '/sounds/'
+                            usersound = basedir + 'u/' + session.user + '/posts/'+session.postid+'/sounds/'
                             os.system('mkdir -p ' + usersound)
                             os.system('mv ' + imgdir + soundfile + ' ' + usersound + soundfile)
                             soundlenght = os.popen('mediainfo --Inform="General;%Duration%" ' + usersound + soundfile).read()
