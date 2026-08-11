@@ -8,15 +8,16 @@ $def with (tuningform, formfail, user, invites)
     </form>
     <h2>$formfail</h2>
     <br>
+    <br>
 
         <a href="/invites?render=yes">make new invite link</a>
         <br>
     $for i in invites:
-        $if i.accepted == '' or i.accepted == None:
-            <br><a href="/register?invite=$i.secretinvitation">$i.secretinvitation</a><br> created: $i.created.strftime('%d-%m-%y %H:%M') <br>
+        $if i['accepted'] == '' or i['accepted'] == None:
+            <br><a href="/register?invite=$i['secretinvitekey']">$i['secretinvitekey']</a><br> created: $i['timeadded']<br>
         $else:
-            <br><a href="/register?invite=$i.secretinvitation">$i.secretinvitation</a><br> accepted $i.accepted.strftime('%d-%m-%y %H:%M') <br>
+            <br><a href="/register?invite=$i['secretinvitekey']">$i['secretinvitekey']</a><br> accepted $i['accepted'] <br>
 
-    <a href="/heartranked"><-- back</a>
+    <a href="/"><-- back</a>
     </div>
 </div>

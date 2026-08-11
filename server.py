@@ -75,6 +75,7 @@ def runfirst():
     os.makedirs(basedir+'u/',exist_ok=True)
     os.makedirs(basedir+'r/',exist_ok=True)
     os.makedirs(basedir+'r/visitors',exist_ok=True)
+    os.makedirs(basedir+'r/invites',exist_ok=True)
     os.makedirs(basedir+'r/trusted',exist_ok=True)
     os.makedirs(basedir+'r/users',exist_ok=True)
     os.makedirs(basedir+'r/stopflood',exist_ok=True)
@@ -249,9 +250,9 @@ def stopflood(ip,referer):
 
 def getinvitation(secretinvitation):
     invite=loadjson('r/invites/'+secretinvitation)
-    if invitation == secretinvitation:
-        if invite == '':
-            return True
+    print(invite)
+    if invite['secretinvitekey'] == secretinvitation:
+        return True
     return False
 
 class trust():
@@ -395,7 +396,11 @@ class register():
             if len(i.password) < 5:
                 raise web.seeother('/register?invite='+i.invite+'&fail=kortlosen'+r)
             #rymdadmins = db.select('rymdadmin', what='name, mail')
-            rymdadmins = os.listdir(basedir+'r/users/')
+            rymdadmins = []
+            users = os.listdir(basedir+'r/users/')
+            for r in users:
+                admin=loadjson('r/users/'+r)
+                rymdadmins.append(admin)
             for p in rymdadmins:
                 if p['name'].lower() == i.user.lower():
                     raise web.seeother('/register?invite='+i.invite+'&fail=nametaken' +r)
@@ -403,10 +408,10 @@ class register():
                     raise web.seeother('/register?invite='+i.invite+'&fail=mailtaken' +r)
             adduser(i.user, i.password, i.mail.lower())
             #Send mail to Madbaker
-            msg = "Wowowowoweeewaaa! Lets Ride The INTERNET Wave Together, Bee as home, HEART RANKED ftw! " + i.user + ' ' + i.mail
+            msg = "Wowowowoweeewaaa! Lets Ride The INTERNET Wave Together, Bees as home, HEART RANKED ftw! " + i.user + ' ' + i.mail
             sendmail(postadmin, 'Wowowoweewaaa!', msg)
             #Send mail to new user
-            msg = "Wowowowoweeewaaa! "+i.user+" Lets Ride INTERNET Wave Together, Bee as home, HEART RANKED ftw! https://robinbackman.com/heartranked"
+            msg = "Wowowowoweeewaaa! "+i.user+" Lets Ride INTERNET Wave Together, Bee as home, HEART RANKED ftw! https://heartranked.com"
             sendmail(i.mail, 'HEART RANKED VISIONARY Fleet', msg)
             #session.login = 3
             #session.user = safe_filename(i.user)
@@ -521,8 +526,12 @@ class invites():
     web.form.Button('Skicka'))
     def GET(self):
         if session.login > 2:
-            user = loadjson('r/users/'+session.user)
-            invites = loadjson('r/invites/'+session.user)
+            invites=[]
+            v = get_files_by_time('r/invites/',newest_first=True) 
+            if v:
+                for i in v:
+                    invite=loadjson('r/invites/'+i)
+                    invites.append(invite)
             tuningform = self.form()
             w = web.input(epost=None, render=None)
             formfail = ''
@@ -530,9 +539,9 @@ class invites():
                 formfail = formfail + 'you have to put your email in'
             if w.render == 'yes':
                 secretinvitekey = hashlib.md5(str(random.getrandbits(256)).encode('utf-8')).hexdigest()
-                thedict={"secretinvitekey":secretinvitekey,"timeadded":formattime(datetime.datetime.now()),"creator":session.user}
-                savejson('r/invites/'+session.user, thedict)
-            return render.invites(tuningform, formfail, user.name, invites)
+                thedict={"secretinvitekey":secretinvitekey,"timeadded":formattime(datetime.datetime.now()),"creator":session.user, "accepted":''}
+                savejson('r/invites/'+secretinvitekey, thedict)
+            return render.invites(tuningform, formfail, session.user, invites)
     def POST(self):
         if session.login > 2:
             user = loadjson('r/users/'+session.user)
@@ -543,8 +552,8 @@ class invites():
             if '@' not in i.mail:
                 raise web.seeother('/tuning?fail=notmail') 
             secretinvitekey = hashlib.md5(str(random.getrandbits(256)).encode('utf-8')).hexdigest()
-            thedict={"secretinvitekey":secretinvitekey,"timeadded":formattime(datetime.datetime.now()),"creator":session.user}
-            savejson('r/invites/'+session.user, thedict)
+            thedict={"secretinvitekey":secretinvitekey,"timeadded":formattime(datetime.datetime.now()),"creator":session.user, "accepted":''}
+            savejson('r/invites/'+secretinvitekey, thedict)
             msg = "YO! You are the One! " + user.name + " is your Morpheous. Follow this rabbit https://robinbackman.com/register?invite="+secretinvitekey 
             sendmail(i.mail, 'Invitation to HEART RANKED!', msg)
         return web.seeother('/')
