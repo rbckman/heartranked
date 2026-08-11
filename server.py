@@ -1611,16 +1611,28 @@ def save_new_gif(new_frames, old_gif_information, new_path):
 def getallmedia(media_dir, extensions):
     files = []
     for ext in extensions:
-        files.extend(folder.rglob(f"*.{ext}"))
+        files.extend(list(Path(media_dir).rglob('*.'+ext)))
+    print('wasassssup!?')
+    print(files)
     return files
 
-def symlinkmedia(mediafile): 
+def symlinkmedia(mediafile,postid): 
     mediafile_dir=''.join(mediafile.split('/')[0:-1])
-    fixstatic = mediafile.split('/posts/'+session.postid+'/')[1]
+    fixstatic = mediafile.split('/posts/'+postid+'/')[1]
     symlinkfile = staticdir + 'users/' + session.user + '/'+fixstatic
     symlinkdir=symlinkfile.rsplit('/',1)[0]
     os.makedirs(symlinkdir, exist_ok=True)
     os.system('ln -s '+mediafile+' '+symlinkdir)
+
+def symlinkthis(postid):
+    extensions=['zip','pdf','txt','md','mp4','jpeg','jpg','png','gif','wav','flac','mp3','ogg']
+    mediafiles = getallmedia(basedir+'p/posts/'+postid,extensions)
+    for m in mediafiles:
+        symlinkmedia(str(m),postid)
+    print('FUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU')
+    print(mediafiles)
+
+#symlinkthis('cd449464ec08fc7aa967d9b2795')
 
 class upload:
     def POST(self):
@@ -1659,9 +1671,9 @@ class upload:
                             os.system('mv ' + imgdir + soundfile + ' ' + usersound + soundfile)
                             os.system('cd '+usersound+' && unzip -o '+soundfile+' -d '+basedir+'u/'+session.user+'/posts/')
                             os.system('cd '+usersound+' && unzip -o '+soundfile+' -d '+basedir+'p/posts/')
-                            mediafiles = getmediafiles(basedir+'p/posts/'+soundfile.split('.zip')[0],extensions)
+                            mediafiles = getallmedia(basedir+'p/posts/'+soundfile.split('.zip')[0],extensions)
                             for m in mediafiles:
-                                symlinkmedia(str(m))
+                                symlinkmedia(str(m),soundfile.split('.zip'))
                         elif filetype == 'pdf' or filetype == 'txt' or filetype == 'md':
                             usersound = basedir + 'u/' + session.user + '/posts/'+session.postid+'/docs/'
                             os.system('mkdir -p ' + usersound)
