@@ -1475,8 +1475,8 @@ class editor:
                 thedict={'soundname':soundname}
                 savejson('u/'+session.user+'/posts/'+session.postid+'/meta',thedict)
                 #session.postid = hashlib.sha256(str(random.getrandbits(256)).encode('utf-8')).hexdigest()[9:36]
-                symlinkthis()
                 os.system('cp -r -P '+basedir+'u/'+session.user+'/posts/'+session.postid+' '+basedir+'p/posts/')
+                symlinkthis()
                 #also zippit here!
                 #os.system('zip -r '+basedir+'p/zipped/'+session.postid+'.zip '+basedir+'p/posts/'+session.postid )
                 os.system('cd '+basedir+'p/posts/ && zip -o -r '+session.postid+'.zip '+session.postid )
