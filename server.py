@@ -1627,7 +1627,7 @@ def symlinkmedia(mediafile,postid):
 
 def symlinkthis():
     extensions=['zip','pdf','txt','md','mp4','jpeg','jpg','png','gif','wav','flac','mp3','ogg']
-    mediafiles = getallmedia(basedir+'u/'+session.user+'/posts/'+sesion.postid,extensions)
+    mediafiles = getallmedia(basedir+'u/'+session.user+'/posts/'+session.postid,extensions)
     for m in mediafiles:
         symlinkmedia(m,session.postid)
     print(mediafiles)
