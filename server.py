@@ -272,15 +272,15 @@ class trust():
     web.form.Password('password', web.form.notnull, description="passcode:"),
     web.form.Button('Trust'))
     def GET(self):
-
+        os.makedirs('r/trusted/'+session.user+'/',exist_ok=True)
         i = web.input(remove=None)
         if i.remove != None:
-            os.system('rm '+basedir+'r/trusted/'+i.remove)
+            os.system('rm '+basedir+'r/trusted/'+session.user+'/'+i.remove)
             return web.seeother('/trust')
-        trusted=os.listdir(basedir+'r/trusted/')
+        trusted=os.listdir(basedir+'r/trusted/'+session.user+'/')
         trustedlist=[]
         for t in trusted:
-            trusted=loadjson('r/trusted/'+t)
+            trusted=loadjson('r/trusted/'+session.user+'/'+t)
             trustedlist.append(trusted)
         trustform = self.form()
         return render.trust(trustform, trustedlist)
@@ -292,7 +292,7 @@ class trust():
         loginform = self.form()
         i = web.input()
         thedict={'servername':i.servername, 'port':i.port, 'user':i.user, 'password':i.password}
-        savejson('r/trusted/'+i.servername,thedict)
+        savejson('r/trusted/'+session.user+'/'+i.servername,thedict)
         return web.seeother('/trust')
 
 class login():
@@ -1496,9 +1496,9 @@ class editor:
                 os.system('mv '+basedir+'p/posts/'+session.postid+'.zip '+basedir+'/p/zipped/')
                 #LETS SHIPPIT!
                 trustedlist=[]
-                trusted=os.listdir(basedir+'r/trusted/')
+                trusted=os.listdir(basedir+'r/trusted/'+session.user+'/')
                 for t in trusted:
-                    trusted=loadjson('r/trusted/'+t)
+                    trusted=loadjson('r/trusted/'+session.user+'/'+t)
                     trustedlist.append(trusted)
                 for t in trustedlist:
                     url=t['servername']+':'+t['port']
