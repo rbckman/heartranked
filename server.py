@@ -1457,7 +1457,6 @@ class editor:
                 c=loadjson('u/'+session.user+'/posts/'+session.postid+'/meta')
                 if 'combine' in c:
                     if c['combine'] != '':
-                        print('FUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU')
                         #calculate comborank
                         os.makedirs(basedir+'p/posts/'+c['combine']+'/combos', exist_ok=True)
                         savetext('p/posts/'+c['combine']+'/combos/'+session.postid,session.user)
@@ -1476,6 +1475,7 @@ class editor:
                 thedict={'soundname':soundname}
                 savejson('u/'+session.user+'/posts/'+session.postid+'/meta',thedict)
                 #session.postid = hashlib.sha256(str(random.getrandbits(256)).encode('utf-8')).hexdigest()[9:36]
+                symlinkthis()
                 os.system('cp -r -P '+basedir+'u/'+session.user+'/posts/'+session.postid+' '+basedir+'p/posts/')
                 #also zippit here!
                 #os.system('zip -r '+basedir+'p/zipped/'+session.postid+'.zip '+basedir+'p/posts/'+session.postid )
@@ -1494,9 +1494,9 @@ class editor:
                             url='https://'+t['servername']+':'+t['port']
                     trustedlogin = ['curl','-X','POST', url+'/login', '-i', '-b', basedir+'/sessions/sessions-'+session.user, '-c',basedir+'/sessions/sessions-'+session.user, '-d', 'user='+t['user'], '-d', 'password='+t['password']]
                     subprocess.check_output(trustedlogin)
+                    #OK GOT EM COOKIES LES DO IT DO IT DO IT SHIPPIT!
                     shippit = ['curl','-X', 'POST', '--verbose', '--header', 'Content-Type: multipart/form-data', '-F', 'files=@'+basedir+'p/zipped/'+session.postid+'.zip;type=application/zip', '-b', basedir+'/sessions/sessions-'+session.user, '-c',basedir+'/sessions/sessions-'+session.user, url+'/upload']
                     subprocess.check_output(shippit)
-                #OK GOT EM COOKIES LES DO IT DO IT DO IT SHIPPIT!
                 raise web.seeother('/')
                 #db.insert('pawning', pawning=i.remix, name=session.user, timeadded=formattime(datetime.datetime.now()))
             return rendersplash.editor(storage, text, text2, markdown, safe_filename, session.postid, i.public, logged(), session.user, i.combine, i.remix)
@@ -1625,12 +1625,11 @@ def symlinkmedia(mediafile,postid):
     os.makedirs(symlinkdir, exist_ok=True)
     os.system('ln -s '+mediafile+' '+symlinkfile)
 
-def symlinkthis(postid):
+def symlinkthis():
     extensions=['zip','pdf','txt','md','mp4','jpeg','jpg','png','gif','wav','flac','mp3','ogg']
-    mediafiles = getallmedia(basedir+'p/posts/'+postid,extensions)
+    mediafiles = getallmedia(basedir+'u/'+session.user+'/posts/'+sesion.postid,extensions)
     for m in mediafiles:
-        symlinkmedia(str(m),postid)
-    print('FUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU')
+        symlinkmedia(m,session.postid)
     print(mediafiles)
 
 #symlinkthis('cd449464ec08fc7aa967d9b2795')
