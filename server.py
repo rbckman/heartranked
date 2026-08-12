@@ -1664,32 +1664,34 @@ class upload:
                             usersound = basedir + 'u/' + session.user + '/posts/'+session.postid+'/docs/'
                             os.system('mkdir -p ' + usersound)
                             os.system('mv ' + imgdir + soundfile + ' ' + usersound + soundfile)
-                            #symlinkmedia(usersound + soundfile,session.postid,session.user)
+                            symlinkmedia(usersound + soundfile,session.postid,session.user)
                         elif filetype == 'mp4':
                             usersound = basedir + 'u/' + session.user + '/posts/'+session.postid+'/films/'
                             os.system('mkdir -p ' + usersound)
                             os.system('mv ' + imgdir + soundfile + ' ' + usersound + soundfile)
-                            #symlinkmedia(usersound + soundfile,session.postid,session.user)
+                            symlinkmedia(usersound + soundfile,session.postid,session.user)
                         elif filetype == 'jpeg' or filetype == 'jpg' or filetype == 'png' or filetype == 'gif':
                             usersound = basedir + 'u/' + session.user + '/posts/'+session.postid+'/images/'
                             os.system('mkdir -p ' + usersound)
                             os.makedirs(usersound + 'web/', exist_ok=True)
                             os.makedirs(usersound + 'thumb/', exist_ok=True)
                             os.system('mv ' + imgdir + soundfile + ' ' + usersound + soundfile)
-                            #symlinkmedia(usersound + soundfile,session.postid,session.user)
+                            symlinkmedia(usersound + soundfile,session.postid,session.user)
                             if filetype == 'gif':
                                 scale_gif(usersound+soundfile, [900,900], usersound+'web/'+soundfile)
                                 scale_gif(usersound+soundfile, [300,300], usersound+'thumb/'+soundfile)
+                                symlinkmedia(usersound + 'web/' + soundfile,session.postid,session.user)
+                                symlinkmedia(usersound + 'thumb/' + soundfile,session.postid,session.user)
                             else:
                                 ##---------- OPEN FILE & CHEKC IF JPEG --------
                                 image = Image.open(usersound + soundfile)
                                 ##---------- RESIZE IMAGE -----------
                                 image.thumbnail((900,900), Image.Resampling.LANCZOS)
                                 image.save(usersound + 'web/' + soundfile)
-                                #symlinkmedia(usersound + 'web/' + soundfile,session.postid,session.user)
+                                symlinkmedia(usersound + 'web/' + soundfile,session.postid,session.user)
                                 image.thumbnail((300,300), Image.Resampling.LANCZOS)
                                 image.save(usersound + 'thumb/' + soundfile)
-                                #symlinkmedia(usersound + 'thumb/' + soundfile,session.postid,session.user)
+                                symlinkmedia(usersound + 'thumb/' + soundfile,session.postid,session.user)
                                 print('images resized images')
                         elif filetype == 'wav' or filetype == 'flac' or filetype == 'mp3' or filetype == 'ogg':
                             usersound = basedir + 'u/' + session.user + '/posts/'+session.postid+'/sounds/'
