@@ -1,0 +1,38 @@
+Heartranked runs on web.py. It's python for the internet.
+
+to not make things complicated I downloaded the latest webpy to this cloned repo.
+
+the install script will take care of it installing it. If you don't believe me you can download the latest webpy yourself from [https://webpy.org](https://webpy.org)
+
+or you can install your distributions version of web.py
+
+web.py was written by Aaron Swartz and has since had a strong dedicated following due to it's simplistic architecture.
+[http://www.aaronsw.com/](http://www.aaronsw.com/)
+
+INSTALL HEARTRANKED LOCALLY AND RUN IT
+
+`git clone https://git.tarina.org/heartranked`
+
+`cd heartranked`
+
+`sudo ./install.sh`
+
+or install packages manually.
+
+it's not a lot.
+
+look at the `install.sh` file
+
+`cp settings.py.sample settings.py`
+
+make your own configs to `settings.py`
+
+`python3 server.py`
+
+once it runs it will print the web address. open your favorite web browser.
+
+write in address `0.0.0.0:8080` is standard.
+
+login. congratz you are a heartranked local cowboy.
+
+click `op` to change passcode.
