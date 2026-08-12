@@ -449,6 +449,19 @@ class like:
             i = web.input(unlike=None, like=None, hate=None, unhate=None, user=None, imghash=None)
             user = i.user
             postid = i.imghash
+            mail=''
+            displayname=''
+            rymdadmins=[]
+            users = os.listdir(basedir+'r/users/')
+            for r in users:
+                admin=loadjson('r/users/'+r)
+                rymdadmins.append(admin)
+            for r in rymdadmins:
+                if r['name']==session.user:
+                    if 'displayname' in r:
+                        displayname=r['displayname']
+                    if 'mail' in r:
+                        mail=r['mail']
             #l = db.query("SELECT * FROM likes WHERE bild='"+postid+"' AND user='"+session.user+"';")
             os.makedirs(basedir+'p/posts/'+postid+'/hearts/',exist_ok=True)
             os.makedirs(basedir+'p/heartrank/',exist_ok=True)
@@ -469,8 +482,7 @@ class like:
                 except:
                     l=0
                 l=l+1
-                #db.update('published', where='postid="'+postid+'"', hearts=l.likes)
-                thedict={'hearts':l}
+                thedict={'hearts':l,'name':session.user,'mail':mail,'displayname':displayname,'timeadded':formattime(datetime.datetime.now())}
                 savejson('p/posts/'+postid+'/meta',thedict)
                 os.system('rm '+basedir+'p/heartrank/'+postid+'-'+str(int(l-1)).zfill(16))
                 os.system('cp '+basedir+'p/posts/'+postid+'/meta '+basedir+'p/heartrank/'+postid+'-'+str(int(l)).zfill(16))
@@ -484,7 +496,7 @@ class like:
                     l=0
                 if l > 0:
                     l=l-1
-                    thedict={'hearts':l}
+                    thedict={'hearts':l,'name':session.user,'mail':mail,'displayname':displayname,'timeadded':formattime(datetime.datetime.now())}
                     savejson('p/posts/'+postid+'/meta',thedict)
                     deletepost(basedir+'u/'+session.user+'/posts/'+postid+'/hearts/'+session.user)
                     deletepost(basedir+'p/posts/'+postid+'/hearts/'+session.user)
