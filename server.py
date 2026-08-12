@@ -1475,8 +1475,8 @@ class editor:
                 thedict={'soundname':soundname}
                 savejson('u/'+session.user+'/posts/'+session.postid+'/meta',thedict)
                 #session.postid = hashlib.sha256(str(random.getrandbits(256)).encode('utf-8')).hexdigest()[9:36]
-                os.system('cp -r -P '+basedir+'u/'+session.user+'/posts/'+session.postid+' '+basedir+'p/posts/')
-                symlinkthis(session.postid, session.user)
+                os.system('cp -r '+basedir+'u/'+session.user+'/posts/'+session.postid+' '+basedir+'p/posts/')
+                #symlinkthis(session.postid, session.user)
                 #also zippit here!
                 #os.system('zip -r '+basedir+'p/zipped/'+session.postid+'.zip '+basedir+'p/posts/'+session.postid )
                 os.system('cd '+basedir+'p/posts/ && zip -o -r '+session.postid+'.zip '+session.postid )
@@ -1652,7 +1652,7 @@ class upload:
                 for f in uploaded:
                     if f and hasattr(f, 'filename') and f.filename:
                         # Sanitize filename a bit
-                        imgdir = basedir + 'u/' + session.user + 'posts/'+session.postid+'/temp/'
+                        imgdir = basedir + 'u/' + session.user + '/temp/'
                         os.system('mkdir -p ' + imgdir)
                         safe_name = safe_filename(os.path.basename(f.filename))
                         filepath = os.path.join(imgdir, safe_name)
@@ -1681,19 +1681,19 @@ class upload:
                             usersound = basedir + 'u/' + session.user + '/posts/'+session.postid+'/docs/'
                             os.system('mkdir -p ' + usersound)
                             os.system('mv ' + imgdir + soundfile + ' ' + usersound + soundfile)
-                            symlinkmedia(usersound + soundfile,session.postid,session.user)
+                            #symlinkmedia(usersound + soundfile,session.postid,session.user)
                         elif filetype == 'mp4':
                             usersound = basedir + 'u/' + session.user + '/posts/'+session.postid+'/films/'
                             os.system('mkdir -p ' + usersound)
                             os.system('mv ' + imgdir + soundfile + ' ' + usersound + soundfile)
-                            symlinkmedia(usersound + soundfile,session.postid,session.user)
+                            #symlinkmedia(usersound + soundfile,session.postid,session.user)
                         elif filetype == 'jpeg' or filetype == 'jpg' or filetype == 'png' or filetype == 'gif':
                             usersound = basedir + 'u/' + session.user + '/posts/'+session.postid+'/images/'
                             os.system('mkdir -p ' + usersound)
                             os.makedirs(usersound + 'web/', exist_ok=True)
                             os.makedirs(usersound + 'thumb/', exist_ok=True)
                             os.system('mv ' + imgdir + soundfile + ' ' + usersound + soundfile)
-                            symlinkmedia(usersound + soundfile,session.postid,session.user)
+                            #symlinkmedia(usersound + soundfile,session.postid,session.user)
                             if filetype == 'gif':
                                 scale_gif(usersound+soundfile, [900,900], usersound+'web/'+soundfile)
                                 scale_gif(usersound+soundfile, [300,300], usersound+'thumb/'+soundfile)
@@ -1703,10 +1703,10 @@ class upload:
                                 ##---------- RESIZE IMAGE -----------
                                 image.thumbnail((900,900), Image.Resampling.LANCZOS)
                                 image.save(usersound + 'web/' + soundfile)
-                                symlinkmedia(usersound + 'web/' + soundfile,session.postid,session.user)
+                                #symlinkmedia(usersound + 'web/' + soundfile,session.postid,session.user)
                                 image.thumbnail((300,300), Image.Resampling.LANCZOS)
                                 image.save(usersound + 'thumb/' + soundfile)
-                                symlinkmedia(usersound + 'thumb/' + soundfile,session.postid,session.user)
+                                #symlinkmedia(usersound + 'thumb/' + soundfile,session.postid,session.user)
                                 print('images resized images')
                         elif filetype == 'wav' or filetype == 'flac' or filetype == 'mp3' or filetype == 'ogg':
                             usersound = basedir + 'u/' + session.user + '/posts/'+session.postid+'/sounds/'
