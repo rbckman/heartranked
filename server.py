@@ -47,6 +47,7 @@ urls = (
     '/upload', 'upload',
     '/rendered', 'rendered',
     '/uploads?', 'uploads',
+    '/pull?', 'pull',
     '/config', 'config')
 
 #Load from settings
@@ -1396,6 +1397,28 @@ class heartranked:
         if i.search != '':
             raise web.seeother('/?search='+i.search)
 
+def zippitandshippit(postid):
+    #also zippit here!
+    #os.system('zip -r '+basedir+'p/zipped/'+session.postid+'.zip '+basedir+'p/posts/'+session.postid )
+    os.system('cd '+basedir+'p/posts/ && zip -o -r '+postid+'.zip '+postid )
+    os.system('mv '+basedir+'p/posts/'+postid+'.zip '+basedir+'/p/zipped/')
+    #LETS SHIPPIT!
+    trustedlist=[]
+    trusted=os.listdir(basedir+'r/trusted/'+session.user+'/')
+    for t in trusted:
+        trusted=loadjson('r/trusted/'+session.user+'/'+t)
+        trustedlist.append(trusted)
+    for t in trustedlist:
+        url=t['servername']+':'+t['port']
+        for a in allowedchar:
+            if '.'+a in t['servername']: #is webaddress use https
+                url='https://'+t['servername']+':'+t['port']
+        trustedlogin = ['curl','-X','POST', url+'/login', '-i', '-b', basedir+'/sessions/sessions-'+session.user, '-c',basedir+'/sessions/sessions-'+session.user, '-d', 'user='+t['user'], '-d', 'password='+t['password']]
+        subprocess.check_output(trustedlogin)
+        #OK GOT EM COOKIES LES DO IT DO IT DO IT SHIPPIT!
+        shippit = ['curl','-X', 'POST', '--verbose', '--header', 'Content-Type: multipart/form-data', '-F', 'files=@'+basedir+'p/zipped/'+postid+'.zip;type=application/zip', '-b', basedir+'/sessions/sessions-'+session.user, '-c',basedir+'/sessions/sessions-'+session.user, url+'/upload']
+        subprocess.check_output(shippit)
+
 storage = {"content": ""}
 class editor:
     def GET(self):
@@ -1499,22 +1522,7 @@ class editor:
                 #os.system('zip -r '+basedir+'p/zipped/'+session.postid+'.zip '+basedir+'p/posts/'+session.postid )
                 os.system('cd '+basedir+'p/posts/ && zip -o -r '+session.postid+'.zip '+session.postid )
                 os.system('mv '+basedir+'p/posts/'+session.postid+'.zip '+basedir+'/p/zipped/')
-                #LETS SHIPPIT!
-                trustedlist=[]
-                trusted=os.listdir(basedir+'r/trusted/'+session.user+'/')
-                for t in trusted:
-                    trusted=loadjson('r/trusted/'+session.user+'/'+t)
-                    trustedlist.append(trusted)
-                for t in trustedlist:
-                    url=t['servername']+':'+t['port']
-                    for a in allowedchar:
-                        if '.'+a in t['servername']: #is webaddress use https
-                            url='https://'+t['servername']+':'+t['port']
-                    trustedlogin = ['curl','-X','POST', url+'/login', '-i', '-b', basedir+'/sessions/sessions-'+session.user, '-c',basedir+'/sessions/sessions-'+session.user, '-d', 'user='+t['user'], '-d', 'password='+t['password']]
-                    subprocess.check_output(trustedlogin)
-                    #OK GOT EM COOKIES LES DO IT DO IT DO IT SHIPPIT!
-                    shippit = ['curl','-X', 'POST', '--verbose', '--header', 'Content-Type: multipart/form-data', '-F', 'files=@'+basedir+'p/zipped/'+session.postid+'.zip;type=application/zip', '-b', basedir+'/sessions/sessions-'+session.user, '-c',basedir+'/sessions/sessions-'+session.user, url+'/upload']
-                    subprocess.check_output(shippit)
+                zippitandshippit(session.postid)
                 raise web.seeother('/')
                 #db.insert('pawning', pawning=i.remix, name=session.user, timeadded=formattime(datetime.datetime.now()))
             return rendersplash.editor(storage, text, text2, markdown, safe_filename, session.postid, i.public, logged(), session.user, i.combine, i.remix)
@@ -1758,6 +1766,23 @@ class uploads:
         if logged():
             uploaded = getfiles(staticdir+'upload/')
             return render.uploads(uploaded)
+
+class pull:
+    def GET(self):
+        if logged():
+            i = web.input(name=None,postid=None,passcode=None)
+            posts = get_dirs_by_time(basedir+'p/posts')[postid:]
+            shippandzipp=[]
+            if i.name!=None:
+                users = os.listdir(basedir+'r/users/')
+                for r in users:
+                    if r['name']==i.name:
+                        for p in posts:
+                            if p['creator']==p.name:
+                                zippandshipp.append(p['postid'])
+            print(zippandshipp)
+            for z in userposts:
+                zippitandshippit(z)
 
 #Load from settings
 standalone = settings.standaloneserver
