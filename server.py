@@ -1781,7 +1781,7 @@ class pull:
                             if p['creator']==p.name:
                                 zippandshipp.append(p['postid'])
             print(zippandshipp)
-            for z in userposts:
+            for z in zippandshipp:
                 zippitandshippit(z)
 
 #Load from settings
