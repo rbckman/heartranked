@@ -50,6 +50,8 @@ urls = (
 #Load from settings
 webmaster = settings.webmaster
 baseurl = settings.baseurl
+sitename = settings.sitename
+siteslogan = settings.siteslogan
 siteurl = baseurl
 postadmin = settings.postadmin
 postadmin_signature = settings.postadmin_signature
@@ -1269,6 +1271,7 @@ def userimage(user):
 class heartranked:
     form = web.form.Form(web.form.Textbox('search', web.form.notnull, description="or search"))
     def GET(self):
+        siterendered=formattime(datetime.datetime.now())
         visitorlog()
         visitors, total, unique = getvisits()
         print(visitors)
@@ -1384,7 +1387,7 @@ class heartranked:
             rights = 'mod'
         else:
             rights = 'spacer'
-        return rendersplash.heartranked(markdown, visitors, total, unique, logged, rights, session.user, getlikes, formattime, feedbase, tot, limit, offset, bildpersida, session.search, bilder, searchform, getcombines, timebase, getfeed, getcombofeed, userimage, postexist, i.show, loadjson, loadtext, len, heart, hearted)
+        return rendersplash.heartranked(markdown, visitors, total, unique, logged, rights, session.user, getlikes, formattime, feedbase, tot, limit, offset, bildpersida, session.search, bilder, searchform, getcombines, timebase, getfeed, getcombofeed, userimage, postexist, i.show, loadjson, loadtext, len, heart, hearted, sitename, siteslogan, siterendered, siteurl)
     def POST(self):
         searchform = self.form()
         i = web.input()

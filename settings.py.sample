@@ -3,6 +3,9 @@
 
 # Make your settings here and change filename to settings.py
 
+sitename="Heart Ranked"
+siteslogan="It's like AC/DC for electricity but for TCP/IP and knowledge."
+
 postadmin="cowabunga@local"
 postadmin_signature="\n-~-\nGreetings\nKing Robin\nHEART RANKED\nPeace!\nhttps://robinbackman.com/heartranked\nme@robinbackman.com\n"
 
