@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-#heartranked is FREEDOM SOFTWARE by Robin Johannes Bäckman
+#heartranked is FREEDOM SOFTWARE by King Robin Johannes
 #don't worry, information want's to be free. nobody can stop it. Bless.
 
 import time, datetime, os, sys
