@@ -1772,7 +1772,7 @@ class pull:
         if logged():
             i = web.input(name=None,postid=None,passcode=None)
             posts = get_dirs_by_time(basedir+'p/posts')[postid:]
-            shippandzipp=[]
+            zippandshipp=[]
             if i.name!=None:
                 users = os.listdir(basedir+'r/users/')
                 for r in users:
