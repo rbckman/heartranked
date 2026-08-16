@@ -75,7 +75,7 @@ store = web.session.DiskStore(basedir + 'sessions')
 render = web.template.render(templatedir, base="base")
 renderop = web.template.render(templatedir, base="op")
 rendersplash = web.template.render(templatedir, base="splash")
-session = web.session.Session(app,store,initializer={'login':0, 'privilege':0, 'bag':[], 'sessionkey':'empty','postid':'','backurl':'','user':'','search':'', 'bildsida':'', 'feedbase':'', 'timebase':''})
+session = web.session.Session(app,store,initializer={'login':0, 'privilege':0, 'bag':[], 'sessionkey':'empty','postid':'','backurl':'','user':'','search':'', 'bildsida':'', 'feedbase':'', 'timebase':'', 'usrfeed':''})
 
 allowedchar = 'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'
 
@@ -1043,6 +1043,9 @@ rankrender()
 def getfeed():
     timebase=session.timebase
     feedbase=session.feedbase
+    usr=session.usrfeed
+    print('fuuuuuu')
+    print(usr)
     if feedbase == '':
         feedbase = 'time'
     if timebase == '':
@@ -1064,7 +1067,10 @@ def getfeed():
             lastupdate = os.path.getmtime(basedir+'p/posts/'+p+'/meta')
             if datetime.datetime.fromtimestamp(lastupdate) > one_day_before:
                 l=loadjson('p/posts/'+p+'/meta')
-                goodies.append(l)
+                if usr=='':
+                    goodies.append(l)
+                if usr==l['creator']:
+                    goodies.append(l)
     elif feedbase == "heart" and timebase == "week":
         one_day_before = now - datetime.timedelta(weeks=1)
         #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY hearts DESC LIMIT 1000;")
@@ -1075,7 +1081,10 @@ def getfeed():
             lastupdate = os.path.getmtime(basedir+'p/posts/'+p+'/meta')
             if datetime.datetime.fromtimestamp(lastupdate) > one_day_before:
                 l=loadjson('p/posts/'+p+'/meta')
-                goodies.append(l)
+                if usr=='':
+                    goodies.append(l)
+                if usr==l['creator']:
+                    goodies.append(l)
     elif feedbase == "heart" and timebase == "month":
         one_day_before = now - datetime.timedelta(weeks=4)
         #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY hearts DESC LIMIT 1000;")
@@ -1086,7 +1095,10 @@ def getfeed():
             lastupdate = os.path.getmtime(basedir+'p/posts/'+p+'/meta')
             if datetime.datetime.fromtimestamp(lastupdate) > one_day_before:
                 l=loadjson('p/posts/'+p+'/meta')
-                goodies.append(l)
+                if usr=='':
+                    goodies.append(l)
+                if usr==l['creator']:
+                    goodies.append(l)
     elif feedbase == "heart" and timebase == "year":
         one_day_before = now - datetime.timedelta(weeks=54)
         #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY hearts DESC LIMIT 1000;")
@@ -1097,15 +1109,20 @@ def getfeed():
             lastupdate = os.path.getmtime(basedir+'p/posts/'+p+'/meta')
             if datetime.datetime.fromtimestamp(lastupdate) > one_day_before:
                 l=loadjson('p/posts/'+p+'/meta')
-                goodies.append(l)
+                if usr=='':
+                    goodies.append(l)
+                if usr==l['creator']:
+                    goodies.append(l)
     elif feedbase == "heart" and timebase == "" or feedbase == "heart" and timebase == "all":
         #goodies = db.query("SELECT * FROM published ORDER BY hearts DESC LIMIT 1000;")
         posts = sort_by_name_then_time('/p/heartrank/')
         for p in posts:
             p=p[1]
             l=loadjson('p/posts/'+p+'/meta')
-            goodies.append(l)
-
+            if usr=='':
+                goodies.append(l)
+            if usr==l['creator']:
+                goodies.append(l)
     #TIME
     elif feedbase == "time" and timebase == "today":
         one_day_before = now - datetime.timedelta(days=1)
@@ -1117,7 +1134,10 @@ def getfeed():
             lastupdate = os.path.getmtime(basedir+'p/posts/'+p+'/meta')
             if datetime.datetime.fromtimestamp(lastupdate) > one_day_before:
                 l=loadjson('p/posts/'+p+'/meta')
-                goodies.append(l)
+                if usr=='':
+                    goodies.append(l)
+                if usr==l['creator']:
+                    goodies.append(l)
     elif feedbase == "time" and timebase == "week":
         one_day_before = now - datetime.timedelta(weeks=1)
         #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY ID DESC LIMIT 1000;")
@@ -1127,7 +1147,10 @@ def getfeed():
             lastupdate = os.path.getmtime(basedir+'p/posts/'+p+'/meta')
             if datetime.datetime.fromtimestamp(lastupdate) > one_day_before:
                 l=loadjson('p/posts/'+p+'/meta')
-                goodies.append(l)
+                if usr=='':
+                    goodies.append(l)
+                if usr==l['creator']:
+                    goodies.append(l)
     elif feedbase == "time" and timebase == "month":
         one_day_before = now - datetime.timedelta(weeks=4)
         #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY ID DESC LIMIT 1000;")
@@ -1137,7 +1160,10 @@ def getfeed():
             lastupdate = os.path.getmtime(basedir+'p/posts/'+p+'/meta')
             if datetime.datetime.fromtimestamp(lastupdate) > one_day_before:
                 l=loadjson('p/posts/'+p+'/meta')
-                goodies.append(l)
+                if usr=='':
+                    goodies.append(l)
+                if usr==l['creator']:
+                    goodies.append(l)
     elif feedbase == "time" and timebase == "year":
         one_day_before = now - datetime.timedelta(weeks=54)
         #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY ID DESC LIMIT 1000;")
@@ -1147,13 +1173,19 @@ def getfeed():
             lastupdate = os.path.getmtime(basedir+'p/posts/'+p+'/meta')
             if datetime.datetime.fromtimestamp(lastupdate) > one_day_before:
                 l=loadjson('p/posts/'+p+'/meta')
-                goodies.append(l)
+                if usr=='':
+                    goodies.append(l)
+                if usr==l['creator']:
+                    goodies.append(l)
     elif feedbase == "time" and timebase == "" or  feedbase == "time" and timebase == "all":
         #goodies = db.query("SELECT * FROM published ORDER BY ID DESC LIMIT 1000;")
         posts = get_dirs_by_time('p/posts/', reverse=True)
         for p in posts:
             l=loadjson('p/posts/'+p+'/meta')
-            goodies.append(l)
+            if usr=='':
+                goodies.append(l)
+            if usr==l['creator']:
+                goodies.append(l)
 
     #COMBO
     elif feedbase == "combo" and timebase == "today":
@@ -1166,7 +1198,10 @@ def getfeed():
             lastupdate = os.path.getmtime(basedir+'p/posts/'+p+'/meta')
             if datetime.datetime.fromtimestamp(lastupdate) > one_day_before:
                 l=loadjson('p/posts/'+p+'/meta')
-                goodies.append(l)
+                if usr=='':
+                    goodies.append(l)
+                if usr==l['creator']:
+                    goodies.append(l)
     elif feedbase == "combo" and timebase == "week":
         one_day_before = now - datetime.timedelta(weeks=1)
         #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY combines DESC LIMIT 1000;")
@@ -1177,7 +1212,10 @@ def getfeed():
             lastupdate = os.path.getmtime(basedir+'p/posts/'+p+'/meta')
             if datetime.datetime.fromtimestamp(lastupdate) > one_day_before:
                 l=loadjson('p/posts/'+p+'/meta')
-                goodies.append(l)
+                if usr=='':
+                    goodies.append(l)
+                if usr==l['creator']:
+                    goodies.append(l)
     elif feedbase == "combo" and timebase == "month":
         one_day_before = now - datetime.timedelta(weeks=4)
         #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY combines DESC LIMIT 1000;")
@@ -1188,7 +1226,10 @@ def getfeed():
             lastupdate = os.path.getmtime(basedir+'p/posts/'+p+'/meta')
             if datetime.datetime.fromtimestamp(lastupdate) > one_day_before:
                 l=loadjson('p/posts/'+p+'/meta')
-                goodies.append(l)
+                if usr=='':
+                    goodies.append(l)
+                if usr==l['creator']:
+                    goodies.append(l)
     elif feedbase == "combo" and timebase == "year":
         one_day_before = now - datetime.timedelta(weeks=54)
         #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY combines DESC LIMIT 1000;")
@@ -1199,7 +1240,10 @@ def getfeed():
             lastupdate = os.path.getmtime(basedir+'p/posts/'+p+'/meta')
             if datetime.datetime.fromtimestamp(lastupdate) > one_day_before:
                 l=loadjson('p/posts/'+p+'/meta')
-                goodies.append(l)
+                if usr=='':
+                    goodies.append(l)
+                if usr==l['creator']:
+                    goodies.append(l)
     elif feedbase == "combo" and timebase == "" or  feedbase == "combo" and timebase == "all":
         #goodies = db.query("SELECT * FROM published ORDER BY combines DESC LIMIT 1000;")
         posts = sort_by_name_then_time('p/comborank/')
@@ -1207,7 +1251,10 @@ def getfeed():
             #check modtime here day
             p=p[1]
             l=loadjson('p/posts/'+p+'/meta')
-            goodies.append(l)
+            if usr=='':
+                goodies.append(l)
+            if usr==l['creator']:
+                goodies.append(l)
     elif feedbase == "Idontevenknow":
         #goodies = db.query("SELECT * FROM published ORDER BY combines DESC LIMIT 1000;")
         print('write your own custom feed here')
@@ -1216,7 +1263,10 @@ def getfeed():
         posts = os.listdir('p/posts/')
         for p in posts:
             l=loadjson('p/posts/'+p+'/meta')
-            goodies.append(l)
+            if usr=='':
+                goodies.append(l)
+            if usr==l['creator']:
+                goodies.append(l)
     return goodies
 
 def getcombofeed(show):
@@ -1284,7 +1334,7 @@ class heartranked:
         bildpersida = 1000
         session.search = ''
         session.bildsida = 0
-        i = web.input(publised=None, public=None, show=None, remove=None, edit=None, feedbase=None, timebase=None)
+        i = web.input(publised=None, public=None, show=None, remove=None, edit=None, feedbase=None, timebase=None, usrfeed=None)
         #search
         try:
             #bilder_totalt = db.query("SELECT COUNT(*) AS sound FROM published")[0]
@@ -1359,11 +1409,20 @@ class heartranked:
         else:
             timebase = i.timebase
             session.timebase = timebase
+        if i.timebase == None:
+            timebase = ''
+        else:
+            timebase = i.timebase
+            session.timebase = timebase
+        if i.usrfeed == None:
+            usrfeed = ''
+        else:
+            usrfeed = i.usrfeed
+            session.usrfeed = usrfeed
         if session.user=='':
             free_hash_for_user = hashlib.md5(str(random.getrandbits(256)).encode('utf-8')).hexdigest()[:4]
             #session.user = 'heart_'+free_hash_for_user
             session.user = None
-
         if i.edit != None:
             session.postid=i.edit
             raise web.seeother('/editor?public=yes') 
@@ -1390,7 +1449,7 @@ class heartranked:
             rights = 'mod'
         else:
             rights = 'spacer'
-        return rendersplash.heartranked(markdown, visitors, total, unique, logged, rights, session.user, getlikes, formattime, feedbase, tot, limit, offset, bildpersida, session.search, bilder, searchform, getcombines, timebase, getfeed, getcombofeed, userimage, postexist, i.show, loadjson, loadtext, len, heart, hearted, sitename, siteslogan, siterendered, siteurl)
+        return rendersplash.heartranked(markdown, visitors, total, unique, logged, rights, session.user, getlikes, formattime, feedbase, tot, limit, offset, bildpersida, session.search, bilder, searchform, getcombines, timebase, getfeed, getcombofeed, userimage, postexist, i.show, loadjson, loadtext, len, heart, hearted, sitename, siteslogan, siterendered, siteurl, session.usrfeed)
     def POST(self):
         searchform = self.form()
         i = web.input()
@@ -1399,6 +1458,7 @@ class heartranked:
 
 def zippitandshippit(postid):
     #also zippit here!
+    os.makedirs(basedir+'r/trusted/'+session.user+'/', exist_ok=True)
     #os.system('zip -r '+basedir+'p/zipped/'+session.postid+'.zip '+basedir+'p/posts/'+session.postid )
     os.system('cd '+basedir+'p/posts/ && zip -o -r '+postid+'.zip '+postid )
     os.system('mv '+basedir+'p/posts/'+postid+'.zip '+basedir+'/p/zipped/')

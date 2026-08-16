@@ -1,4 +1,4 @@
-$def with (markdown, visitors, total, unique, logged, rights, namn, getlikes, formattime, feedbase, totbilder, limit, offset, bildpersida, search, bilder, searchform, getcombines, timebase, getfeed, getcombofeed, userimage, postexist, show, loadjson, loadtext, len, heart, hearted, sitename, siteslogan, siterendered, siteaddress)
+$def with (markdown, visitors, total, unique, logged, rights, namn, getlikes, formattime, feedbase, totbilder, limit, offset, bildpersida, search, bilder, searchform, getcombines, timebase, getfeed, getcombofeed, userimage, postexist, show, loadjson, loadtext, len, heart, hearted, sitename, siteslogan, siterendered, siteaddress, usrfeed)
 
 <HEAD>
     <meta charset="utf-8">
@@ -69,6 +69,13 @@ $if search != '':
             </div>
 $else:
     $if show == None:
+        $if usrfeed != '':
+            <br>
+            <b>showing only $usrfeed's
+            $:userimage(usrfeed)
+            feed now <a href='/?usrfeed='>show all</a></b>
+            <br>
+            <br>
         $#<small><a href="/?feedbase=timebased">timebased🌍</a> <a href="/?feedbase=heart1day">heartbased❤️day</a> <a href="/?feedbase=heart1week">week</a> <a href="/?feedbase=heart1month">month</a> <a href="/?feedbase=heart1year">year</a> <a href="/?feedbase=alltime">alltime</a></small>
         <small>🌍 <a href="/?feedbase=time">time</a> ❤️ <a href="/?feedbase=heart">heart</a> ⚭ <a href="/?feedbase=combo">combo</a> for <a href="/?timebase=today">day</a> <a href="/?timebase=week">week</a> <a href="/?timebase=month">month</a> <a href="/?timebase=year">year</a> <a href="/?timebase=all">all</a></small>
         <br>
@@ -83,7 +90,7 @@ $else:
                 </div>
                 <div class="postmenu">
                 <small><small>$g['timeadded']</small></small>
-                <small>by $g['creator']</small>
+                <small>by <a href='?usrfeed=$g['creator']'>$g['creator']</a></small>
                 $:userimage(g['creator'])
                 <br>
                 $getcombines(g['postid'])
