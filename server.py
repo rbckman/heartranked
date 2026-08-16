@@ -263,7 +263,8 @@ def stopflood(ip,referer):
         return False
 
 def getinvitation(secretinvitation):
-    invite=loadjson('r/invites/'+secretinvitation)
+    os.makedirs('r/invites/'+session.user+'/',exist_ok=True)
+    invite=loadjson('r/invites/'+session.user+'/'+secretinvitation)
     print(invite)
     if invite['secretinvitekey'] == secretinvitation:
         return True
@@ -555,11 +556,12 @@ class invites():
     web.form.Button('Skicka'))
     def GET(self):
         if session.login > 2:
+            os.makedirs('r/invites/'+session.user+'/',exist_ok=True)
             invites=[]
-            v = get_files_by_time('r/invites/',newest_first=True) 
+            v = get_files_by_time('r/invites/'+session.user,newest_first=True) 
             if v:
                 for i in v:
-                    invite=loadjson('r/invites/'+i)
+                    invite=loadjson('r/invites/'+session.user+'/'+i)
                     invites.append(invite)
             tuningform = self.form()
             w = web.input(epost=None, render=None)
@@ -569,7 +571,8 @@ class invites():
             if w.render == 'yes':
                 secretinvitekey = hashlib.md5(str(random.getrandbits(256)).encode('utf-8')).hexdigest()
                 thedict={"secretinvitekey":secretinvitekey,"timeadded":formattime(datetime.datetime.now()),"creator":session.user, "accepted":''}
-                savejson('r/invites/'+secretinvitekey, thedict)
+                savejson('r/invites/'+session.user+'/'+secretinvitekey, thedict)
+                raise web.seeother('/invites')
             return render.invites(tuningform, formfail, session.user, invites)
     def POST(self):
         if session.login > 2:
@@ -582,7 +585,7 @@ class invites():
                 raise web.seeother('/tuning?fail=notmail') 
             secretinvitekey = hashlib.md5(str(random.getrandbits(256)).encode('utf-8')).hexdigest()
             thedict={"secretinvitekey":secretinvitekey,"timeadded":formattime(datetime.datetime.now()),"creator":session.user, "accepted":''}
-            savejson('r/invites/'+secretinvitekey, thedict)
+            savejson('r/invites/'+session.user+'/'+secretinvitekey, thedict)
             msg = "YO! You are the One! " + user.name + " is your Morpheous. Follow this rabbit https://robinbackman.com/register?invite="+secretinvitekey 
             sendmail(i.mail, 'Invitation to HEART RANKED!', msg)
         return web.seeother('/')
@@ -731,10 +734,13 @@ class forgotpass():
 
 def sendmail(email, subject, msg):
     #Send mail
-    echomsg = subprocess.Popen(('echo', msg+'\n'+postadmin_signature), stdout=subprocess.PIPE)
-    sendmsg = subprocess.check_output(('mail', '-r', postadmin, '-s', subject, email), stdin=echomsg.stdout)
-    echomsg.wait()
-    #subprocess.call(['echo', msg, '|', 'mail', '-r', postadmin,'-s', subject, email])
+    try:
+        echomsg = subprocess.Popen(('echo', msg+'\n'+postadmin_signature), stdout=subprocess.PIPE)
+        sendmsg = subprocess.check_output(('mail', '-r', postadmin, '-s', subject, email), stdin=echomsg.stdout)
+        echomsg.wait()
+    except:
+        print('no mail server found')
+        #subprocess.call(['echo', msg, '|', 'mail', '-r', postadmin,'-s', subject, email])
 
 def get_new_frames(gif, scale):
     new_frames = []
