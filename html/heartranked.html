@@ -145,7 +145,7 @@ $else:
             </div>
             <div class="postmenu">
             <small><small>$g['timeadded']</small></small>
-            <small>by $g['creator']</small>
+            <small>by <a href='?usrfeed=$g['creator']'>$g['creator']</a></small>
             $:userimage(g['creator'])
             <br>
             $getcombines(g['postid'])
@@ -187,7 +187,7 @@ $else:
             </div>
             <div class="postmenu">
             <small><small>$c['timeadded']</small></small>
-            <small>by $c['creator']</small>
+            <small>by <a href='?usrfeed=$c['creator']'>$c['creator']</a></small>
             $:userimage(c['creator'])
             <br>
             $getcombines(c['postid'])
