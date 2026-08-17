@@ -339,7 +339,8 @@ class trust():
         stopflood(ip, referer)
         loginform = self.form()
         i = web.input()
-        thedict={'servername':i.servername, 'port':i.port, 'user':i.user, 'password':i.password}
+        password_hashed=hash_password(i.password).hex()
+        thedict={'servername':i.servername, 'port':i.port, 'user':i.user, 'password':password_hashed}
         savejson('r/trusted/'+session.user+'/'+i.servername,thedict)
         return web.seeother('/trust')
 
@@ -1513,7 +1514,8 @@ def zippitandshippit(postid):
         for a in allowedchar:
             if '.'+a in t['servername']: #is webaddress use https
                 url='https://'+t['servername']+':'+t['port']
-        trustedlogin = ['curl','-X','POST', url+'/login', '-i', '-b', basedir+'/sessions/sessions-'+session.user, '-c',basedir+'/sessions/sessions-'+session.user, '-d', 'user='+t['user'], '-d', 'password='+t['password']]
+        passcode=bytes.fromhex(t['password'])
+        trustedlogin = ['curl','-X','POST', url+'/login', '-i', '-b', basedir+'/sessions/sessions-'+session.user, '-c',basedir+'/sessions/sessions-'+session.user, '-d', 'user='+t['user'], '-d', 'password='+passcode]
         subprocess.check_output(trustedlogin)
         #OK GOT EM COOKIES LES DO IT DO IT DO IT SHIPPIT!
         shippit = ['curl','-X', 'POST', '--verbose', '--header', 'Content-Type: multipart/form-data', '-F', 'files=@'+basedir+'p/zipped/'+postid+'.zip;type=application/zip', '-b', basedir+'/sessions/sessions-'+session.user, '-c',basedir+'/sessions/sessions-'+session.user, url+'/upload']
