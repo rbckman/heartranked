@@ -1,10 +1,9 @@
 #!/bin/bash
 
 echo " THIS SCRIPT WILL INSTALL HEARTRANKED BEEING SERVED WITH APACHE2"
-echo ""
+echo " I RECOMMEND INSTALLING HEARTRANKED IN DEFAULT /var/www/ FOLDER to NOT run into write issues."
 echo " YOU MUST UNINSTALL ANY OLD DEBIAN python-webpy packages otherwise it won't update"
-echo ""
-echo "also you must install web.py as sudo so apache2 can run it. BLESS!"
+echo " apt purge python3-webpu"
 
 ROOT_UID=0   # Root has $UID 0.
 
@@ -31,8 +30,9 @@ EOF
 
 echo "Installing all dependencies..."
 apt-get update
-sudo apt install apache2 libapache2-mod-wsgi-py3 python3-pip python3-pil python3-markdown
+sudo apt install apache2 python3-pip python3-pil python3-markdown
 sudo pip3 install webpy-v.0.76.zip --break-system-packages
+sudo apt install libapache2-mod-wsgi-py3
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 ACONF="/etc/apache2/sites-available/heartranked.conf"
@@ -70,6 +70,7 @@ cat <<'EOF' >> /etc/apache2/apache2.conf
 </Directory>
 EOF
 
+sudo a2dissite 000-default.conf
 sudo a2ensite heartranked.conf
 sudo systemctl restart apache2
 

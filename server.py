@@ -65,7 +65,6 @@ postadmin_msg_new=settings.postadmin_msg_new
 postadmin_msg_new_long=settings.postadmin_msg_new_long
 welcome=settings.welcome
 welcome_long=settings.welcome_long
-
 basedir = os.path.dirname(os.path.realpath(__file__))+'/'
 templatedir = basedir + 'html/'
 staticdir = basedir + 'static/'
@@ -78,6 +77,16 @@ rendersplash = web.template.render(templatedir, base="splash")
 session = web.session.Session(app,store,initializer={'login':0, 'privilege':0, 'bag':[], 'sessionkey':'empty','postid':'','backurl':'','user':'','search':'', 'bildsida':'', 'feedbase':'', 'timebase':'', 'usrfeed':''})
 
 allowedchar = 'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'
+
+# --- Parameters (often called N, r, p) ---
+# N (n): CPU/Memory cost factor. Must be a power of 2 (e.g., 2**14 = 16384).
+# r: Block size factor (typically 8).
+# p: Parallelization factor (typically 1).
+# klen: Desired key length (e.g., 32 for a 256-bit key).
+N_COST = 16384  # Adjust this for desired security/speed tradeoff
+R_BLOCK_SIZE = 8
+P_PARALLELIZATION = 1
+KEY_LENGTH = 32
 
 def runfirst():
     os.makedirs(basedir+'p/posts',exist_ok=True)
@@ -97,6 +106,44 @@ def runfirst():
 runfirst()
 
 
+def hash_password(password: str) -> bytes:
+    # 1. Generate a random, unique salt for each password
+    salt = os.urandom(16) 
+    # 2. Derive the key (hash)
+    # The 'password' must be bytes, so we use .encode('utf-8')
+    key = hashlib.scrypt(
+        password.encode('utf-8'),
+        salt=salt,
+        n=N_COST,
+        r=R_BLOCK_SIZE,
+        p=P_PARALLELIZATION,
+        dklen=KEY_LENGTH
+    ) 
+    # 3. Store the salt AND the key (hash) together
+    return salt + key
+
+def verify_password(stored_hash_with_salt: bytes, provided_password: str) -> bool:
+    # 1. Separate the salt and the stored key
+    salt = stored_hash_with_salt[:16] # Assuming 16 bytes for the salt
+    stored_key = stored_hash_with_salt[16:]
+    # 2. Re-derive the key from the provided password using the stored salt and parameters
+    # **Crucially, use the exact same n, r, p, and dklen parameters!**
+    try:
+        derived_key = hashlib.scrypt(
+            provided_password.encode('utf-8'),
+            salt=salt,
+            n=N_COST,
+            r=R_BLOCK_SIZE,
+            p=P_PARALLELIZATION,
+            dklen=KEY_LENGTH
+        )
+        # 3. Compare the newly derived key with the stored key
+        # Use a constant-time comparison (like `hmac.compare_digest` if available,
+        # but Python's standard byte comparison is often okay here too)
+        return derived_key == stored_key
+    except ValueError:
+        # This can happen if parameters like dklen are wrong during verification
+        return False
 
 def logged():
     if session.login > 0:
@@ -161,32 +208,24 @@ def deletepost(thefile):
 def adduser(name, password, mail):
     originalname=name
     name=safe_filename(name[:12])
-    password = password.encode("utf-8")
-    #salt = bcrypt.gensalt()
-    salt=os.random(16)
-    #password_hashed = bcrypt.hashpw(password, salt).decode('utf-8')
-    password_hashed=hashlib.scrypt(password.encode(),salt=salt,n=16384,r=8,p=1)
+    password_hashed=hash_password(password).hex()
     tot = len(os.listdir(basedir+'r/users/'))
-    print(password_hashed)
+    #print(password_hashed)
     print('users alltsomallt: ' + str(tot))
     if tot > 1:
         adminlevel=3
     else:
         adminlevel=5
-    thedict={'name':name, 'displayname':originalname, 'password':salt+password_hashed,'mail':mail,'adminlevel':adminlevel}
+    thedict={'name':name, 'displayname':originalname, 'password':password_hashed,'mail':mail,'adminlevel':adminlevel}
     savejson('r/users/'+name, thedict)
     #savetext('r/user/'+name,password_hashed)
     print("new user added")
     return
 
 def updateuser(displayname, password, mail):
-    password = password.encode("utf-8")
-    #salt = bcrypt.gensalt()
-    salt = os.urandom(16)
-    #password_hashed = bcrypt.hashpw(password, salt).decode('utf-8')
-    password_hashed=hashlib.scrypt(password.encode(),salt=salt,n=16384,r=8,p=1)
+    password_hashed=hash_password(password).hex()
     tot = len(os.listdir(basedir+'r/users/'))
-    thedict={'displayname':displayname, 'password':salt+password_hashed,'mail':mail}
+    thedict={'displayname':displayname, 'password':password_hashed,'mail':mail}
     savejson('r/users/'+session.user, thedict)
     print("user info updated")
     return
@@ -310,11 +349,11 @@ class login():
     web.form.Textbox('user', web.form.notnull, description="your registered mail account:"),
     web.form.Password('password', web.form.notnull, description="and your passcode please:"),
     web.form.Button('Login'))
-    users=os.listdir(basedir+'r/users/')
-    if len(users) == 0:
-        result = subprocess.run(['whoami'], capture_output=True, text=True)
-        adduser('op', 'blessyou', result.stdout.rstrip()+'@localhost')
     def GET(self):
+        users=os.listdir(basedir+'r/users/')
+        if len(users) == 0:
+            result = subprocess.run(['whoami'], capture_output=True, text=True)
+            adduser('op', 'blessyou', result.stdout.rstrip()+'@localhost')
         visitorlog()
         fejl = ''
         resetpasslink = False
@@ -349,14 +388,8 @@ class login():
         #    raise web.seeother('/register')
         for p in rymdadmins:
             if p['name'].lower() == i['user'].lower() or p['mail'].lower() == i['user'].lower():
-                #try:
-                #    encodepass = p['password'].encode("utf-8")
-                #except:
-                #    encodepass = p['password']
-                salt=p['password'][:16]
-                passcode=p['password'][16:]
-                key=hashlib.scrypt(p['password'].encode(), salt=salt, n=16384, r=8, p=1)
-                if key == passcode:
+                passcode=bytes.fromhex(p['password'])
+                if verify_password(passcode,i.password):
                     session.user = p['name']
                     adminlevel(p['name'])
                     if session.login == 5:
@@ -656,7 +689,7 @@ class tuning():
                     #if bcrypt.checkpw(i['password'].encode('utf-8'), encodepass) == True:
                     salt=p['password'][:16]
                     passcode=p['password'][16:]
-                    key=hashlib.scrypt(p['password'].encode(), salt=salt, n=16384, r=8, p=1)
+                    key=hashlib.scrypt(p['password'], salt=salt, n=16384, r=8, p=1)
                     if key == passcode:
                         #check if display name taken
                         for a in rymdadmins:
@@ -739,7 +772,7 @@ class forgotpass():
                     #salt = bcrypt.gensalt()
                     salt = os.urandom(16)
                     #password_hashed = bcrypt.hashpw(password, salt).decode('utf-8')
-                    password_hashed=hashlib.scrypt(password.encode(),salt=salt,n=16384,r=8,p=1)
+                    password_hashed=hashlib.scrypt(password,salt=salt,n=16384,r=8,p=1)
                     thedict={'password':salt+password_hashed}
                     savejson('r/users/'+p['name'], thedict)
                     print("lösenordet uppdaterat!")
@@ -870,6 +903,8 @@ def visitorlog():
     environ = web.ctx.env.get('HTTP_USER_AGENT', 'dunno')
     last = get_files_by_time('r/visitors/',newest_first=True)
     stopflood(ip, referer)
+    country='local loco'
+    countrycode='fi'
     if last:
         lastip=loadjson('r/visitors/'+last[0])
     else:
