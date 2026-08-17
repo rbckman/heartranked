@@ -867,10 +867,11 @@ def visitorlog():
                 country = country.split(':')[1].split(',')[1].strip()
             else:
                 country='none'
-            thedict={'ip':ip,'referer':referer,'environ':environ,'country':country,'countrycode':countrycode,'time':formattime(datetime.datetime.now())}
-            savejson('r/visitors/'+ip,thedict)
         except:
-            pass
+            country='local loco'
+            countrycode='fi'
+        thedict={'ip':ip,'referer':referer,'environ':environ,'country':country,'countrycode':countrycode,'time':formattime(datetime.datetime.now())}
+        savejson('r/visitors/'+ip,thedict)
         print("added to visitor log")
     if lastip != ip:
         try:
