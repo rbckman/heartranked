@@ -1,6 +1,6 @@
 Heart Ranked or heartranked is a combo, heart and remixed based publishing and social media, file-server-media-network-platform built on top of web.py with a super simple new-state-of-the-art everything is a file UNIX LINUX kinda way keeping your posts, MARKDOWN'n'HTML and media organized with addable META data. EVERY POST is then zipped'n'shipped.
 
-![heartranked.jpg](/static/heartranked.jpg, 'heartranked.jpg')
+![heartranked.jpg](static/heartranked.jpg, 'heartranked.jpg')
 
 heartranked runs on web.py. it's python for the internet.
 
@@ -41,4 +41,4 @@ login. congratz you are a heartranked local cowboy.
 
 click `op` to change passcode. `blessyou` is default.
 
-![heartranked-editor.jpg](/static/heartranked-editor.jpeg, 'heartranked-editor.jpg')
+![heartranked-editor.jpg](static/heartranked-editor.jpeg, 'heartranked-editor.jpg')
