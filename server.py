@@ -17,7 +17,6 @@ import random
 import settings
 import markdown
 import re
-import bcrypt
 import unicodedata
 import urllib
 from pathlib import Path
@@ -163,8 +162,10 @@ def adduser(name, password, mail):
     originalname=name
     name=safe_filename(name[:12])
     password = password.encode("utf-8")
-    salt = bcrypt.gensalt()
-    password_hashed = bcrypt.hashpw(password, salt).decode('utf-8')
+    #salt = bcrypt.gensalt()
+    salt=os.random(16)
+    #password_hashed = bcrypt.hashpw(password, salt).decode('utf-8')
+    password_hashed=hashlib.scrypt(password.encode(),salt=salt,n=16384,r=8,p=1)
     tot = len(os.listdir(basedir+'r/users/'))
     print(password_hashed)
     print('users alltsomallt: ' + str(tot))
@@ -172,7 +173,7 @@ def adduser(name, password, mail):
         adminlevel=3
     else:
         adminlevel=5
-    thedict={'name':name, 'displayname':originalname, 'password':password_hashed,'mail':mail,'adminlevel':adminlevel}
+    thedict={'name':name, 'displayname':originalname, 'password':salt+password_hashed,'mail':mail,'adminlevel':adminlevel}
     savejson('r/users/'+name, thedict)
     #savetext('r/user/'+name,password_hashed)
     print("new user added")
@@ -180,10 +181,12 @@ def adduser(name, password, mail):
 
 def updateuser(displayname, password, mail):
     password = password.encode("utf-8")
-    salt = bcrypt.gensalt()
-    password_hashed = bcrypt.hashpw(password, salt).decode('utf-8')
+    #salt = bcrypt.gensalt()
+    salt = os.urandom(16)
+    #password_hashed = bcrypt.hashpw(password, salt).decode('utf-8')
+    password_hashed=hashlib.scrypt(password.encode(),salt=salt,n=16384,r=8,p=1)
     tot = len(os.listdir(basedir+'r/users/'))
-    thedict={'displayname':displayname, 'password':password_hashed,'mail':mail}
+    thedict={'displayname':displayname, 'password':salt+password_hashed,'mail':mail}
     savejson('r/users/'+session.user, thedict)
     print("user info updated")
     return
@@ -346,11 +349,14 @@ class login():
         #    raise web.seeother('/register')
         for p in rymdadmins:
             if p['name'].lower() == i['user'].lower() or p['mail'].lower() == i['user'].lower():
-                try:
-                    encodepass = p['password'].encode("utf-8")
-                except:
-                    encodepass = p['password']
-                if bcrypt.checkpw(i['password'].encode('utf-8'), encodepass) == True:
+                #try:
+                #    encodepass = p['password'].encode("utf-8")
+                #except:
+                #    encodepass = p['password']
+                salt=p['password'][:16]
+                passcode=p['password'][16:]
+                key=hashlib.scrypt(p['password'].encode(), salt=salt, n=16384, r=8, p=1)
+                if key == passcode:
                     session.user = p['name']
                     adminlevel(p['name'])
                     if session.login == 5:
@@ -643,11 +649,15 @@ class tuning():
             for p in rymdadmins:
                 print(p)
                 if p['name'] == session.user:
-                    try:
-                        encodepass = p['password'].encode("utf-8")
-                    except:
-                        encodepass = p['password']
-                    if bcrypt.checkpw(i['password'].encode('utf-8'), encodepass) == True:
+                    #try:
+                    #    encodepass = p['password'].encode("utf-8")
+                    #except:
+                    #    encodepass = p['password']
+                    #if bcrypt.checkpw(i['password'].encode('utf-8'), encodepass) == True:
+                    salt=p['password'][:16]
+                    passcode=p['password'][16:]
+                    key=hashlib.scrypt(p['password'].encode(), salt=salt, n=16384, r=8, p=1)
+                    if key == passcode:
                         #check if display name taken
                         for a in rymdadmins:
                             if i.user in a['displayname'] and a['name'] != session.user:
@@ -722,10 +732,15 @@ class forgotpass():
                     if passfilter == True:
                         raise web.seeother('/forgotpass?error=stopresetpass')
                     unencrypted_password = ('%06x' % random.randrange(16**6))
+                    #password = unencrypted_password.encode("utf-8")
+                    #salt = bcrypt.gensalt()
+                    #password_hashed = bcrypt.hashpw(password, salt)
                     password = unencrypted_password.encode("utf-8")
-                    salt = bcrypt.gensalt()
-                    password_hashed = bcrypt.hashpw(password, salt)
-                    thedict={'password':password_hashed}
+                    #salt = bcrypt.gensalt()
+                    salt = os.urandom(16)
+                    #password_hashed = bcrypt.hashpw(password, salt).decode('utf-8')
+                    password_hashed=hashlib.scrypt(password.encode(),salt=salt,n=16384,r=8,p=1)
+                    thedict={'password':salt+password_hashed}
                     savejson('r/users/'+p['name'], thedict)
                     print("lösenordet uppdaterat!")
                     msg = "Your new passcode is: " + unencrypted_password

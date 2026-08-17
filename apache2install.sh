@@ -1,5 +1,11 @@
 #!/bin/bash
 
+echo " THIS SCRIPT WILL INSTALL HEARTRANKED BEEING SERVED WITH APACHE2"
+echo ""
+echo " YOU MUST UNINSTALL ANY OLD DEBIAN python-webpy packages otherwise it won't update"
+echo ""
+echo "also you must install web.py as sudo so apache2 can run it. BLESS!"
+
 ROOT_UID=0   # Root has $UID 0.
 
 if [ "$UID" -eq "$ROOT_UID" ]
@@ -25,8 +31,8 @@ EOF
 
 echo "Installing all dependencies..."
 apt-get update
-sudo apt install apache2 libapache2-mod-wsgi-py3 python3-pip python3-pil python3-bcrypt python3-webpy python3-markdown
-pip3 install webpy-v.0.76.zip
+sudo apt install apache2 libapache2-mod-wsgi-py3 python3-pip python3-pil python3-markdown
+sudo pip3 install webpy-v.0.76.zip --break-system-packages
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 ACONF="/etc/apache2/sites-available/heartranked.conf"
@@ -34,14 +40,13 @@ ACONF="/etc/apache2/sites-available/heartranked.conf"
 echo "Adding local site to /etc/apache2/sites-available/heartranked.conf"
 cat <<'EOF' > $ACONF
 <VirtualHost *:80>
-    ServerName localhost
 EOF
 echo "    DocumentRoot $DIR" >> $ACONF
 echo "    WSGIScriptAlias / $DIR/server.py" >> $ACONF
 echo "    WSGIPassAuthorization On" >> $ACONF
 echo "    AddType text/html .py" >> $ACONF
-echo "    Alias /static $DIR/public_html/" >> $ACONF
-echo "    <Directory $DIR/public_html>" >> $ACONF
+echo "    Alias /static $DIR/static/" >> $ACONF
+echo "    <Directory $DIR/>" >> $ACONF
 cat <<'EOF' >> $ACONF
         Options FollowSymlinks
 	AllowOverride None
