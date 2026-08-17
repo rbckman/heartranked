@@ -60,6 +60,7 @@ postadmin = settings.postadmin
 postadmin_signature = settings.postadmin_signature
 heart=settings.heart
 hearted=settings.hearted
+zipandship=settings.zipandship
 #load msg
 postadmin_msg_new=settings.postadmin_msg_new
 postadmin_msg_new_long=settings.postadmin_msg_new_long
@@ -1587,9 +1588,10 @@ class editor:
                 #symlinkthis(session.postid, session.user)
                 #also zippit here!
                 #os.system('zip -r '+basedir+'p/zipped/'+session.postid+'.zip '+basedir+'p/posts/'+session.postid )
-                os.system('cd '+basedir+'p/posts/ && zip -o -r '+session.postid+'.zip '+session.postid )
-                os.system('mv '+basedir+'p/posts/'+session.postid+'.zip '+basedir+'/p/zipped/')
-                zippitandshippit(session.postid)
+                #os.system('cd '+basedir+'p/posts/ && zip -o -r '+session.postid+'.zip '+session.postid )
+                #os.system('mv '+basedir+'p/posts/'+session.postid+'.zip '+basedir+'/p/zipped/')
+                if zipandship == 'yes' or zipandship == 'True' or zipandship == 'y' or zipandship == 'Y':
+                    zippitandshippit(session.postid)
                 raise web.seeother('/')
                 #db.insert('pawning', pawning=i.remix, name=session.user, timeadded=formattime(datetime.datetime.now()))
             return rendersplash.editor(storage, text, text2, markdown, safe_filename, session.postid, i.public, logged(), session.user, i.combine, i.remix)
@@ -1698,7 +1700,7 @@ def symlinkmedia(mediafile,postid,user):
     symlinkfile = staticdir + 'users/' + user + '/'+fixstatic
     symlinkdir=symlinkfile.rsplit('/',1)[0]
     os.makedirs(symlinkdir, exist_ok=True)
-    os.system('ln -s '+mediafile+' '+symlinkfile)
+    os.system('ln -sf '+mediafile+' '+symlinkfile)
 
 def symlinkthis(postid,user):
     extensions=['zip','pdf','txt','md','mp4','jpeg','jpg','png','gif','wav','flac','mp3','ogg']

@@ -15,6 +15,7 @@ webmaster = "heart@localcow.boya"
 baseurl = "heartranked.com"
 
 standaloneserver="Y"
+zipandship="Y"
 
 heart="🤍"
 hearted="❤️"
