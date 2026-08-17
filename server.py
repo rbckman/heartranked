@@ -105,7 +105,6 @@ def runfirst():
 
 runfirst()
 
-
 def hash_password(password: str) -> bytes:
     # 1. Generate a random, unique salt for each password
     salt = os.urandom(16) 
@@ -682,11 +681,6 @@ class tuning():
             for p in rymdadmins:
                 print(p)
                 if p['name'] == session.user:
-                    #try:
-                    #    encodepass = p['password'].encode("utf-8")
-                    #except:
-                    #    encodepass = p['password']
-                    #if bcrypt.checkpw(i['password'].encode('utf-8'), encodepass) == True:
                     salt=p['password'][:16]
                     passcode=p['password'][16:]
                     key=hashlib.scrypt(p['password'], salt=salt, n=16384, r=8, p=1)
@@ -705,12 +699,6 @@ class tuning():
                             else:
                                 #update with password change
                                 updateuser(i.user,i.newpassword,i.mail)
-                                #password = i.newpassword.encode("utf-8")
-                                #salt = bcrypt.gensalt()
-                                #password_hashed = bcrypt.hashpw(password, salt)
-                                #mail=i.mail.lower()
-                                #thedict={'displayname':i.user,'password':password_hashed,'mail':mail}
-                                #savejson('r/users/'+session.user, thedict)
                                 return web.seeother('/tuning?upd=yes')
                         if '@' not in i.mail:
                             raise web.seeother('/tuning?fail=notmail')
@@ -765,16 +753,10 @@ class forgotpass():
                     if passfilter == True:
                         raise web.seeother('/forgotpass?error=stopresetpass')
                     unencrypted_password = ('%06x' % random.randrange(16**6))
-                    #password = unencrypted_password.encode("utf-8")
-                    #salt = bcrypt.gensalt()
-                    #password_hashed = bcrypt.hashpw(password, salt)
                     password = unencrypted_password.encode("utf-8")
-                    #salt = bcrypt.gensalt()
-                    salt = os.urandom(16)
-                    #password_hashed = bcrypt.hashpw(password, salt).decode('utf-8')
-                    password_hashed=hashlib.scrypt(password,salt=salt,n=16384,r=8,p=1)
-                    thedict={'password':salt+password_hashed}
-                    savejson('r/users/'+p['name'], thedict)
+                    password_hashed=hash_password(password).hex()
+                    thedict={'password':password_hashed}
+                    savejson('r/users/'+session.user, thedict)
                     print("lösenordet uppdaterat!")
                     msg = "Your new passcode is: " + unencrypted_password
                     sendmail(p.mail, 'Heart Ranked Passcode', msg)
