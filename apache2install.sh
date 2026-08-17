@@ -3,7 +3,7 @@
 echo " THIS SCRIPT WILL INSTALL HEARTRANKED BEEING SERVED WITH APACHE2"
 echo " I RECOMMEND INSTALLING HEARTRANKED IN DEFAULT /var/www/ FOLDER to NOT run into write issues."
 echo " YOU MUST UNINSTALL ANY OLD DEBIAN python-webpy packages otherwise it won't update"
-echo " apt purge python3-webpu"
+echo " apt purge python3-webpy"
 
 ROOT_UID=0   # Root has $UID 0.
 

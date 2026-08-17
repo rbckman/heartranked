@@ -306,7 +306,7 @@ def stopflood(ip,referer):
         return False
 
 def getinvitation(secretinvitation):
-    os.makedirs('r/invites/'+session.user+'/',exist_ok=True)
+    os.makedirs(basedir+'r/invites/'+session.user+'/',exist_ok=True)
     invite=loadjson('r/invites/'+session.user+'/'+secretinvitation)
     print(invite)
     if invite['secretinvitekey'] == secretinvitation:
@@ -321,7 +321,7 @@ class trust():
     web.form.Password('password', web.form.notnull, description="passcode:"),
     web.form.Button('Trust'))
     def GET(self):
-        os.makedirs('r/trusted/'+session.user+'/',exist_ok=True)
+        os.makedirs(basedir+'r/trusted/'+session.user+'/',exist_ok=True)
         i = web.input(remove=None)
         if i.remove != None:
             os.system('rm '+basedir+'r/trusted/'+session.user+'/'+i.remove)
@@ -596,7 +596,7 @@ class invites():
     web.form.Button('Skicka'))
     def GET(self):
         if session.login > 2:
-            os.makedirs('r/invites/'+session.user+'/',exist_ok=True)
+            os.makedirs(basedir+'r/invites/'+session.user+'/',exist_ok=True)
             invites=[]
             v = get_files_by_time('r/invites/'+session.user,newest_first=True) 
             if v:
