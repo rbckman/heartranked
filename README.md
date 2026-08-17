@@ -35,7 +35,7 @@ once it runs it will print the web address. open your favorite web browser.
 
 write in address `0.0.0.0:8080` is standard.
 
-login. congratz you are a heartranked local cowboy.
+login with username `op` and passcode `blessyou`. congratz! you are a heartranked local cowboy.
 
 click `op` to change passcode. `blessyou` is default.
 
