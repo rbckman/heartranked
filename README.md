@@ -40,4 +40,5 @@ login. congratz you are a heartranked local cowboy.
 click `op` to change passcode. `blessyou` is default.
 
 ![heartranked](/static/heartranked.jpg)
-![heartranked-editor](/static/heartranked-editor.jpeg)
+
+![heartranked-editor](/static/heartranked-editor.jpg)
