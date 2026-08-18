@@ -105,7 +105,6 @@ def runfirst():
 
 runfirst()
 
-
 def hash_password(password: str) -> bytes:
     # 1. Generate a random, unique salt for each password
     salt = os.urandom(16) 
@@ -340,7 +339,8 @@ class trust():
         stopflood(ip, referer)
         loginform = self.form()
         i = web.input()
-        thedict={'servername':i.servername, 'port':i.port, 'user':i.user, 'password':i.password}
+        password_hashed=hash_password(i.password).hex()
+        thedict={'servername':i.servername, 'port':i.port, 'user':i.user, 'password':password_hashed}
         savejson('r/trusted/'+session.user+'/'+i.servername,thedict)
         return web.seeother('/trust')
 
@@ -682,15 +682,8 @@ class tuning():
             for p in rymdadmins:
                 print(p)
                 if p['name'] == session.user:
-                    #try:
-                    #    encodepass = p['password'].encode("utf-8")
-                    #except:
-                    #    encodepass = p['password']
-                    #if bcrypt.checkpw(i['password'].encode('utf-8'), encodepass) == True:
-                    salt=p['password'][:16]
-                    passcode=p['password'][16:]
-                    key=hashlib.scrypt(p['password'], salt=salt, n=16384, r=8, p=1)
-                    if key == passcode:
+                    passcode=bytes.fromhex(p['password'])
+                    if verify_password(passcode,i.password):
                         #check if display name taken
                         for a in rymdadmins:
                             if i.user in a['displayname'] and a['name'] != session.user:
@@ -705,12 +698,6 @@ class tuning():
                             else:
                                 #update with password change
                                 updateuser(i.user,i.newpassword,i.mail)
-                                #password = i.newpassword.encode("utf-8")
-                                #salt = bcrypt.gensalt()
-                                #password_hashed = bcrypt.hashpw(password, salt)
-                                #mail=i.mail.lower()
-                                #thedict={'displayname':i.user,'password':password_hashed,'mail':mail}
-                                #savejson('r/users/'+session.user, thedict)
                                 return web.seeother('/tuning?upd=yes')
                         if '@' not in i.mail:
                             raise web.seeother('/tuning?fail=notmail')
@@ -765,16 +752,10 @@ class forgotpass():
                     if passfilter == True:
                         raise web.seeother('/forgotpass?error=stopresetpass')
                     unencrypted_password = ('%06x' % random.randrange(16**6))
-                    #password = unencrypted_password.encode("utf-8")
-                    #salt = bcrypt.gensalt()
-                    #password_hashed = bcrypt.hashpw(password, salt)
                     password = unencrypted_password.encode("utf-8")
-                    #salt = bcrypt.gensalt()
-                    salt = os.urandom(16)
-                    #password_hashed = bcrypt.hashpw(password, salt).decode('utf-8')
-                    password_hashed=hashlib.scrypt(password,salt=salt,n=16384,r=8,p=1)
-                    thedict={'password':salt+password_hashed}
-                    savejson('r/users/'+p['name'], thedict)
+                    password_hashed=hash_password(password).hex()
+                    thedict={'password':password_hashed}
+                    savejson('r/users/'+session.user, thedict)
                     print("lösenordet uppdaterat!")
                     msg = "Your new passcode is: " + unencrypted_password
                     sendmail(p.mail, 'Heart Ranked Passcode', msg)
@@ -1531,7 +1512,8 @@ def zippitandshippit(postid):
         for a in allowedchar:
             if '.'+a in t['servername']: #is webaddress use https
                 url='https://'+t['servername']+':'+t['port']
-        trustedlogin = ['curl','-X','POST', url+'/login', '-i', '-b', basedir+'/sessions/sessions-'+session.user, '-c',basedir+'/sessions/sessions-'+session.user, '-d', 'user='+t['user'], '-d', 'password='+t['password']]
+        passcode=bytes.fromhex(t['password'])
+        trustedlogin = ['curl','-X','POST', url+'/login', '-i', '-b', basedir+'/sessions/sessions-'+session.user, '-c',basedir+'/sessions/sessions-'+session.user, '-d', 'user='+t['user'], '-d', 'password='+passcode]
         subprocess.check_output(trustedlogin)
         #OK GOT EM COOKIES LES DO IT DO IT DO IT SHIPPIT!
         shippit = ['curl','-X', 'POST', '--verbose', '--header', 'Content-Type: multipart/form-data', '-F', 'files=@'+basedir+'p/zipped/'+postid+'.zip;type=application/zip', '-b', basedir+'/sessions/sessions-'+session.user, '-c',basedir+'/sessions/sessions-'+session.user, url+'/upload']
