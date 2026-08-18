@@ -30,7 +30,7 @@ EOF
 
 echo "Installing all dependencies..."
 apt-get update
-sudo apt install apache2 python3-pip python3-pil python3-markdown
+sudo apt install apache2 zip python3-pip python3-pil python3-markdown
 sudo pip3 install webpy-v.0.76.zip --break-system-packages
 sudo apt install libapache2-mod-wsgi-py3
 
