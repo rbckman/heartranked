@@ -1512,6 +1512,7 @@ def zippitandshippit(postid):
         for a in allowedchar:
             if '.'+a in t['servername']: #is webaddress use https
                 url='https://'+t['servername']+':'+t['port']
+        passcode=t['password']
         trustedlogin = ['curl','-X','POST', url+'/login', '-i', '-b', basedir+'/sessions/sessions-'+session.user, '-c',basedir+'/sessions/sessions-'+session.user, '-d', 'user='+t['user'], '-d', 'password='+passcode]
         subprocess.check_output(trustedlogin)
         #OK GOT EM COOKIES LES DO IT DO IT DO IT SHIPPIT!
