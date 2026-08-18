@@ -682,10 +682,8 @@ class tuning():
             for p in rymdadmins:
                 print(p)
                 if p['name'] == session.user:
-                    salt=p['password'][:16]
-                    passcode=p['password'][16:]
-                    key=hashlib.scrypt(p['password'], salt=salt, n=16384, r=8, p=1)
-                    if key == passcode:
+                    passcode=bytes.fromhex(p['password'])
+                    if verify_password(passcode,i.password):
                         #check if display name taken
                         for a in rymdadmins:
                             if i.user in a['displayname'] and a['name'] != session.user:
