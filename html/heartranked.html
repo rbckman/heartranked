@@ -15,7 +15,7 @@ $if rights=='mod' or rights=='admin':
 <div id="visitors">
 last VISITS by COUNTRIES<br>
 $for i in visitors:
-    <img src="static/flags/${i}.png"> 
+    <img src="static/flags/${i}.png" onerror="this.remove()"> 
 <br>
 $unique UNICORNS 🦄 PEACE! ☮️
 <br>
