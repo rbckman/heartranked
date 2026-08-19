@@ -1472,7 +1472,7 @@ class heartranked:
                 if post['creator'] == session.user:
                     os.makedirs(basedir+'u/'+session.user+'/deleted/', exist_ok=True)
                     os.makedirs(basedir+'p/deleted/', exist_ok=True)
-                    os.system('mv '+basedir+'u/'+session.user+'/posts/'+i.remove+' '+basedir+'u/'+session.user+'/posts/deleted/')
+                    os.system('mv '+basedir+'u/'+session.user+'/posts/'+i.remove+' '+basedir+'u/'+session.user+'/deleted/')
                     os.system('mv '+basedir+'p/posts/'+i.remove+' '+basedir+'p/deleted/')
                     print('move to a deleted folder, make backend clean things up for real')
             except:
