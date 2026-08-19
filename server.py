@@ -1746,6 +1746,9 @@ def symlinkthis(postid,user):
 class upload:
     def POST(self):
         if logged():
+            if session.postid == '':
+                session.postid = hashlib.sha256(str(random.getrandbits(256)).encode('utf-8')).hexdigest()[9:36]
+                os.makedirs(basedir+'u/'+session.user+'/posts/'+session.postid,exist_ok=True)
             try:
                 extensions=['zip','pdf','txt','md','mp4','jpeg','jpg','png','gif','wav','flac','mp3','ogg']
                 saved_files = []
