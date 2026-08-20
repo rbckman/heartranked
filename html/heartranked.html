@@ -2,7 +2,7 @@ $def with (markdown, visitors, total, unique, logged, rights, namn, getlikes, fo
 
 <HEAD>
     <meta charset="utf-8">
-    <title>$sitename $siteslogan $siterendered</title>
+    <title>$sitename | $siteslogan | $siterendered</title>
     <link rel="stylesheet" href="static/splash.css?v=159" type="text/css" rel="stylesheet"/>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 </HEAD>
@@ -214,8 +214,10 @@ $else:
 
 <br>
 <br>
-$siteaddress
-$siterendered
+$sitename<br>
+$siteslogan<br>
+$siteaddress<br>
+$siterendered<br>
 <br>
 $if show:
     <a href="/?show=$show#">back up?</a> or <a href="/#$show">go back</a>
