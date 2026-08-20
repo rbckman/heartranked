@@ -42,3 +42,18 @@ click `op` to change passcode. `blessyou` is default.
 ![heartranked](/static/heartranked.jpg)
 
 ![heartranked-editor](/static/heartranked-editor.jpg)
+
+TROUBLESHOOTING
+
+if you have trouble with öäå or if you can't send emojis in heartranked you need to config your servers LANGUAGES in debian it is `/etc/default/locale`
+
+like so:
+
+`LANG=en_US.UTF-8
+LC_ALL=en_US.UTF-8
+LC_CTYPE=en_US.UTF-8
+LANGUAGE=en_US.UTF-8`
+
+and it works.
+
+
