@@ -1919,7 +1919,7 @@ class pull:
                     print('hold on pulling new posts')
                     print(p)
                     print(pullposts[p]['name'])
-                    os.system('wget -o '+basedir+'p/zipped/ https://'+t['servername']+'/static/users/'+pullposts[p]['name']+'/zipped/'+pullposts[p]['postid']+'.zip')
+                    os.system('wget -O '+basedir+'p/zipped/'+pullposts[p]['postid']+'.zip https://'+t['servername']+'/static/users/'+pullposts[p]['name']+'/zipped/'+pullposts[p]['postid']+'.zip')
                     os.system('cd '+basedir+'p/zipped/ && unzip -o '+pullposts[p]['postid']+'.zip -d '+basedir+'u/'+session.user+'/posts/')
                     os.system('cd '+basedir+'p/zipped/ && unzip -o '+pullposts[p]['postid']+'.zip -d '+basedir+'p/posts/')
                     mediafiles = getallmedia(basedir+'p/posts/'+pullposts[p]['postid'],extensions)
