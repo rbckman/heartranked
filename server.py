@@ -1876,8 +1876,7 @@ class pull:
     def GET(self):
         extensions=['zip','pdf','txt','md','mp4','jpeg','jpg','png','gif','wav','flac','mp3','ogg']
         i = web.input(name=None,postid=None) #GET LIST WITH NAME JSON WHY NOT?! 
-        trusted=os.listdir(basedir+'r/trusted/'+session.user+'/')
-        trustedlist=[]
+
         if i.name != None and i.postid != None:
             print(i.name)
             print(i.postid)
@@ -1896,6 +1895,8 @@ class pull:
             return json.dumps(postdict)
         else:
             if logged():
+                trusted=os.listdir(basedir+'r/trusted/'+session.user+'/')
+                trustedlist=[]
                 for t in trusted:
                     trusted=loadjson('r/trusted/'+session.user+'/'+t)
                     trustedlist.append(trusted)
