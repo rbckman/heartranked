@@ -1498,6 +1498,7 @@ class heartranked:
 def zippitandshippit(postid):
     #also zippit here!
     os.makedirs(basedir+'r/trusted/'+session.user+'/', exist_ok=True)
+    os.system('ln -s '+basedir+'p/zipped '+staticdir+'users/'+session.user+'/zipped')
     #os.system('zip -r '+basedir+'p/zipped/'+session.postid+'.zip '+basedir+'p/posts/'+session.postid )
     os.system('cd '+basedir+'p/posts/ && zip -o -r '+postid+'.zip '+postid )
     os.system('mv '+basedir+'p/posts/'+postid+'.zip '+basedir+'/p/zipped/')
@@ -1871,22 +1872,31 @@ class uploads:
             uploaded = getfiles(staticdir+'upload/')
             return render.uploads(uploaded)
 
+def wgetnunzip(urlzip):
+    print('hold on')
+
 class pull:
     def GET(self):
         if logged():
-            i = web.input(name=None,postid=None,passcode=None)
-            posts = get_dirs_by_time(basedir+'p/posts')[postid:]
-            zippandshipp=[]
-            if i.name!=None:
-                users = os.listdir(basedir+'r/users/')
-                for r in users:
-                    if r['name']==i.name:
-                        for p in posts:
-                            if p['creator']==p.name:
-                                zippandshipp.append(p['postid'])
-            print(zippandshipp)
-            for z in zippandshipp:
-                zippitandshippit(z)
+            trusted=os.listdir(basedir+'r/trusted/'+session.user+'/')
+            trustedlist=[]
+            for t in trusted:
+                trusted=loadjson('r/trusted/'+session.user+'/'+t)
+                trustedlist.append(trusted)
+            for i in trustedlist:
+                #i = web.input(name=None,postid=None,passcode=None)
+                posts = get_dirs_by_time(basedir+'p/posts')[i['postid']:]
+                zippandshipp=[]
+                if i['name']!=None:
+                    users = os.listdir(basedir+'r/users/')
+                    for r in users:
+                        if r['name']==i['name']:
+                            for p in posts:
+                                if p['creator']==r['name']:
+                                    pullnunzip.append(p['postid'])
+            print(pullnunzip)
+            for p in pullnunzip:
+                wgetnunzip(p)
 
 #Load from settings
 standalone = settings.standaloneserver
