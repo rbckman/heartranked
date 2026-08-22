@@ -1872,20 +1872,18 @@ class uploads:
             uploaded = getfiles(staticdir+'upload/')
             return render.uploads(uploaded)
 
-def wgetnunzip(urlzip):
-    print('hold on')
-
 class pull:
     def GET(self):
         if logged():
+            i = web.input(name=None,postid=None,passcode=None) #GET LIST WITH NAME JSON WHY NOT?! 
             trusted=os.listdir(basedir+'r/trusted/'+session.user+'/')
             trustedlist=[]
             for t in trusted:
                 trusted=loadjson('r/trusted/'+session.user+'/'+t)
                 trustedlist.append(trusted)
             for i in trustedlist:
-                #i = web.input(name=None,postid=None,passcode=None)
-                posts = get_dirs_by_time(basedir+'p/posts')[i['postid']:]
+                print('pulling from '+i['servername'])
+                posts = get_dirs_by_time(basedir+'p/posts')[i['postid']:] #MUST GET POST LIST FROM SERVER API INSTEAD DUDE
                 zippandshipp=[]
                 if i['name']!=None:
                     users = os.listdir(basedir+'r/users/')
@@ -1893,10 +1891,19 @@ class pull:
                         if r['name']==i['name']:
                             for p in posts:
                                 if p['creator']==r['name']:
-                                    pullnunzip.append(p['postid'])
-            print(pullnunzip)
-            for p in pullnunzip:
-                wgetnunzip(p)
+                                    pullnunzip.append(p)
+                print(pullnunzip)
+                for p in pullnunzip:
+                    print('hold on pulling new posts')
+                    os.system('wget -o '+basedir+'p/zipped/ https://'+i['servername']+'/static/users/'+p['name']+'/zipped/'+p['postid']+'.zip')
+                    os.system('cd '+basedir+'p/zipped/ && unzip -o '++' -d '+basedir+'u/'+session.user+'/posts/')
+                    os.system('cd '+basedir+'p/zipped/ && unzip -o '+soundfile+' -d '+basedir+'p/posts/')
+                    mediafiles = getallmedia(basedir+'p/posts/'+soundfile.split('.zip')[0],extensions)
+                    print('wowoweewaa')
+                    print(basedir+'p/posts/'+soundfile.split('.zip')[0])
+                    print(mediafiles)
+                    for m in mediafiles:
+                        symlinkmedia(m,soundfile.split('.zip')[0],session.user)
 
 #Load from settings
 standalone = settings.standaloneserver
