@@ -1878,32 +1878,43 @@ class pull:
             i = web.input(name=None,postid=None,passcode=None) #GET LIST WITH NAME JSON WHY NOT?! 
             trusted=os.listdir(basedir+'r/trusted/'+session.user+'/')
             trustedlist=[]
-            for t in trusted:
-                trusted=loadjson('r/trusted/'+session.user+'/'+t)
-                trustedlist.append(trusted)
-            for i in trustedlist:
-                print('pulling from '+i['servername'])
+            if i.name != None and i.postid != None:
                 posts = get_dirs_by_time(basedir+'p/posts')[i['postid']:] #MUST GET POST LIST FROM SERVER API INSTEAD DUDE
-                zippandshipp=[]
-                if i['name']!=None:
-                    users = os.listdir(basedir+'r/users/')
-                    for r in users:
-                        if r['name']==i['name']:
-                            for p in posts:
-                                if p['creator']==r['name']:
-                                    pullnunzip.append(p)
-                print(pullnunzip)
-                for p in pullnunzip:
-                    print('hold on pulling new posts')
-                    os.system('wget -o '+basedir+'p/zipped/ https://'+i['servername']+'/static/users/'+p['name']+'/zipped/'+p['postid']+'.zip')
-                    os.system('cd '+basedir+'p/zipped/ && unzip -o '++' -d '+basedir+'u/'+session.user+'/posts/')
-                    os.system('cd '+basedir+'p/zipped/ && unzip -o '+soundfile+' -d '+basedir+'p/posts/')
-                    mediafiles = getallmedia(basedir+'p/posts/'+soundfile.split('.zip')[0],extensions)
-                    print('wowoweewaa')
-                    print(basedir+'p/posts/'+soundfile.split('.zip')[0])
-                    print(mediafiles)
-                    for m in mediafiles:
-                        symlinkmedia(m,soundfile.split('.zip')[0],session.user)
+                postdict={}
+                for p in posts:
+                    postdict.update({i.postid:{'postid': i.postid, 'name': i.name}})
+                web.header('Content-Type', 'application/json')
+                return json.dumps(postdict)
+            if i.postid != None:
+                for t in trusted:
+                    trusted=loadjson('r/trusted/'+session.user+'/'+t)
+                    trustedlist.append(trusted)
+                for t in trustedlist:
+                    print('pulling from '+t['servername'])
+                    #posts = getpostsfromse}erver(
+                    postid = get_dirs_by_time('p/posts/', reverse=True)[0]
+                    pullposts = requests.get('https://'+t['servername']+'pull?name='+t['user']+'&postid='+postid).json()
+
+                    #zippandshipp=[]
+                    #if t['user']!=None:
+                    #    users = os.listdir(basedir+'r/users/')
+                    #    for r in users:
+                    #        if r['name']==t['user']:
+                    #            for p in posts:
+                    #                if p['creator']==r['name']:
+                    #                    pullnunzip.append(p)
+                    print(pullnunzip)
+                    for p in pullposts:
+                        print('hold on pulling new posts')
+                        os.system('wget -o '+basedir+'p/zipped/ https://'+t['servername']+'/static/users/'+p['name']+'/zipped/'+p['postid']+'.zip')
+                        os.system('cd '+basedir+'p/zipped/ && unzip -o '+p['postid']+'.zip -d '+basedir+'u/'+session.user+'/posts/')
+                        os.system('cd '+basedir+'p/zipped/ && unzip -o '+p['postid']+'.zip -d '+basedir+'p/posts/')
+                        mediafiles = getallmedia(basedir+'p/posts/'+p['postid'],extensions)
+                        print('wowoweewaa')
+                        print(basedir+'p/posts/'+p['postid'])
+                        print(mediafiles)
+                        for m in mediafiles:
+                            symlinkmedia(m,p['postid'],session.user)
 
 #Load from settings
 standalone = settings.standaloneserver
