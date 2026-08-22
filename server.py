@@ -1885,11 +1885,11 @@ class pull:
                 try:
                     posts = posts[:posts.index(i.postid)] #MUST GET POST LIST FROM SERVER API INSTEAD DUDE
                 except:
-                    pass
+                    posts = get_dirs_by_time('p/posts/', reverse=True)
                 postdict={}
                 print(posts)
                 for p in posts:
-                    postdict.update({i.postid:{'postid': i.postid, 'name': i.name}})
+                    postdict.update({p['postid']:{'postid': p['postid'], 'name': p['name']}})
                 web.header('Content-Type', 'application/json')
                 return json.dumps(postdict)
             else:
