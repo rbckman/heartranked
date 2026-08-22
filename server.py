@@ -1893,7 +1893,7 @@ class pull:
                     postdict.update({l['postid']:{'postid': l['postid'], 'name': l['creator']}})
                 web.header('Content-Type', 'application/json')
                 web.header('Access-Control-Allow-Origin', '*')  # helps with browser/script access
-                return web.jsonify(postdict)
+                return json.dumps(postdict)
             else:
                 for t in trusted:
                     trusted=loadjson('r/trusted/'+session.user+'/'+t)
