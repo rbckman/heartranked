@@ -1874,6 +1874,7 @@ class uploads:
 
 class pull:
     def GET(self):
+        extensions=['zip','pdf','txt','md','mp4','jpeg','jpg','png','gif','wav','flac','mp3','ogg']
         i = web.input(name=None,postid=None) #GET LIST WITH NAME JSON WHY NOT?! 
         trusted=os.listdir(basedir+'r/trusted/'+session.user+'/')
         trustedlist=[]
@@ -1900,18 +1901,12 @@ class pull:
             for t in trustedlist:
                 print('pulling from '+t['servername'])
                 #posts = getpostsfromse}erver(
-                postid = get_dirs_by_time('p/posts/', reverse=True)[0]
-                pullposts = requests.get('https://'+t['servername']+'/pull?name='+t['user']+'&postid='+postid)
+                #postid = get_dirs_by_time('p/posts/', reverse=True)[0]
+                postid=''
+                pullposts = requests.get('https://'+t['servername']+'/pull?name='+t['user']+'&postid='+postid).json()
+                print('https://'+t['servername']+'/pull?name='+t['user']+'&postid='+postid)
                 print(pullposts)
-                print('sdasddffffffffffffff')
-                pullposts.raise_for_status()  # raises an error for bad status codes
-                # Try to parse as JSON
-                try:
-                    posts = pullposts.json()
-                    print(json.dumps(posts))
-                except requests.exceptions.JSONDecodeError:
-                    print("Response is not valid JSON.")
-                    print("Raw content:", pullposts.text)
+                print('FUUUUUUUUUUU')
                 #zippandshipp=[]
                 #if t['user']!=None:
                 #    users = os.listdir(basedir+'r/users/')
@@ -1920,17 +1915,19 @@ class pull:
                 #            for p in posts:
                 #                if p['creator']==r['name']:
                 #                    pullnunzip.append(p)
-                for p in posts:
+                for p in pullposts:
                     print('hold on pulling new posts')
-                    os.system('wget -o '+basedir+'p/zipped/ https://'+t['servername']+'/static/users/'+p['name']+'/zipped/'+p['postid']+'.zip')
-                    os.system('cd '+basedir+'p/zipped/ && unzip -o '+p['postid']+'.zip -d '+basedir+'u/'+session.user+'/posts/')
-                    os.system('cd '+basedir+'p/zipped/ && unzip -o '+p['postid']+'.zip -d '+basedir+'p/posts/')
-                    mediafiles = getallmedia(basedir+'p/posts/'+p['postid'],extensions)
+                    print(p)
+                    print(pullposts[p]['name'])
+                    os.system('wget -o '+basedir+'p/zipped/ https://'+t['servername']+'/static/users/'+pullposts[p]['name']+'/zipped/'+pullposts[p]['postid']+'.zip')
+                    os.system('cd '+basedir+'p/zipped/ && unzip -o '+pullposts[p]['postid']+'.zip -d '+basedir+'u/'+session.user+'/posts/')
+                    os.system('cd '+basedir+'p/zipped/ && unzip -o '+pullposts[p]['postid']+'.zip -d '+basedir+'p/posts/')
+                    mediafiles = getallmedia(basedir+'p/posts/'+pullposts[p]['postid'],extensions)
                     print('wowoweewaa')
-                    print(basedir+'p/posts/'+p['postid'])
+                    print(basedir+'p/posts/'+pullposts[p]['postid'])
                     print(mediafiles)
                     for m in mediafiles:
-                        symlinkmedia(m,p['postid'],session.user)
+                        symlinkmedia(m,pullposts[p]['postid'],session.user)
 
 #Load from settings
 standalone = settings.standaloneserver
