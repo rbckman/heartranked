@@ -1882,9 +1882,11 @@ class pull:
                 print(i.name)
                 print(i.postid)
                 posts = get_dirs_by_time('p/posts/', reverse=True)
-                posts = posts[:posts.index(i.postid)] #MUST GET POST LIST FROM SERVER API INSTEAD DUDE
+                try:
+                    posts = posts[:posts.index(i.postid)] #MUST GET POST LIST FROM SERVER API INSTEAD DUDE
+                except:
+                    pass
                 postdict={}
-                print('sdasddffffffffffffff')
                 print(posts)
                 for p in posts:
                     postdict.update({i.postid:{'postid': i.postid, 'name': i.name}})
@@ -1898,7 +1900,9 @@ class pull:
                     print('pulling from '+t['servername'])
                     #posts = getpostsfromse}erver(
                     postid = get_dirs_by_time('p/posts/', reverse=True)[0]
-                    pullposts = requests.get('https://'+t['servername']+'/pull?name='+t['user']+'&postid='+postid).json()
+                    pullposts = requests.get('https://'+t['servername']+'/pull?name='+t['user']+'&postid='+postid)
+                    print(pullposts)
+                    print('sdasddffffffffffffff')
                     #zippandshipp=[]
                     #if t['user']!=None:
                     #    users = os.listdir(basedir+'r/users/')
@@ -1907,7 +1911,6 @@ class pull:
                     #            for p in posts:
                     #                if p['creator']==r['name']:
                     #                    pullnunzip.append(p)
-                    print(pullnunzip)
                     for p in pullposts:
                         print('hold on pulling new posts')
                         os.system('wget -o '+basedir+'p/zipped/ https://'+t['servername']+'/static/users/'+p['name']+'/zipped/'+p['postid']+'.zip')
