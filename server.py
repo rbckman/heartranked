@@ -1895,39 +1895,42 @@ class pull:
             web.header('Access-Control-Allow-Origin', '*')  # helps with browser/script access
             return json.dumps(postdict)
         else:
-            for t in trusted:
-                trusted=loadjson('r/trusted/'+session.user+'/'+t)
-                trustedlist.append(trusted)
-            for t in trustedlist:
-                print('pulling from '+t['servername'])
-                #posts = getpostsfromse}erver(
-                #postid = get_dirs_by_time('p/posts/', reverse=True)[0]
-                postid=''
-                pullposts = requests.get('https://'+t['servername']+'/pull?name='+t['user']+'&postid='+postid).json()
-                print('https://'+t['servername']+'/pull?name='+t['user']+'&postid='+postid)
-                print(pullposts)
-                print('FUUUUUUUUUUU')
-                #zippandshipp=[]
-                #if t['user']!=None:
-                #    users = os.listdir(basedir+'r/users/')
-                #    for r in users:
-                #        if r['name']==t['user']:
-                #            for p in posts:
-                #                if p['creator']==r['name']:
-                #                    pullnunzip.append(p)
-                for p in pullposts:
-                    print('hold on pulling new posts')
-                    print(p)
-                    print(pullposts[p]['name'])
-                    os.system('wget -O '+basedir+'p/zipped/'+pullposts[p]['postid']+'.zip https://'+t['servername']+'/static/users/'+pullposts[p]['name']+'/zipped/'+pullposts[p]['postid']+'.zip')
-                    os.system('cd '+basedir+'p/zipped/ && unzip -o '+pullposts[p]['postid']+'.zip -d '+basedir+'u/'+session.user+'/posts/')
-                    os.system('cd '+basedir+'p/zipped/ && unzip -o '+pullposts[p]['postid']+'.zip -d '+basedir+'p/posts/')
-                    mediafiles = getallmedia(basedir+'p/posts/'+pullposts[p]['postid'],extensions)
-                    print('wowoweewaa')
-                    print(basedir+'p/posts/'+pullposts[p]['postid'])
-                    print(mediafiles)
-                    for m in mediafiles:
-                        symlinkmedia(m,pullposts[p]['postid'],session.user)
+            if logged():
+                for t in trusted:
+                    trusted=loadjson('r/trusted/'+session.user+'/'+t)
+                    trustedlist.append(trusted)
+                for t in trustedlist:
+                    print('pulling from '+t['servername'])
+                    #posts = getpostsfromse}erver(
+                    #postid = get_dirs_by_time('p/posts/', reverse=True)[0]
+                    postid=''
+                    pullposts = requests.get('https://'+t['servername']+'/pull?name='+t['user']+'&postid='+postid).json()
+                    print('https://'+t['servername']+'/pull?name='+t['user']+'&postid='+postid)
+                    print(pullposts)
+                    print('FUUUUUUUUUUU')
+                    #zippandshipp=[]
+                    #if t['user']!=None:
+                    #    users = os.listdir(basedir+'r/users/')
+                    #    for r in users:
+                    #        if r['name']==t['user']:
+                    #            for p in posts:
+                    #                if p['creator']==r['name']:
+                    #                    pullnunzip.append(p)
+                    for p in pullposts:
+                        print('hold on pulling new posts')
+                        print(p)
+                        print(pullposts[p]['name'])
+                        os.system('wget -O '+basedir+'p/zipped/'+pullposts[p]['postid']+'.zip https://'+t['servername']+'/static/users/'+pullposts[p]['name']+'/zipped/'+pullposts[p]['postid']+'.zip')
+                        os.system('cd '+basedir+'p/zipped/ && unzip -o '+pullposts[p]['postid']+'.zip -d '+basedir+'u/'+session.user+'/posts/')
+                        os.system('cd '+basedir+'p/zipped/ && unzip -o '+pullposts[p]['postid']+'.zip -d '+basedir+'p/posts/')
+                        mediafiles = getallmedia(basedir+'p/posts/'+pullposts[p]['postid'],extensions)
+                        print('wowoweewaa')
+                        print(basedir+'p/posts/'+pullposts[p]['postid'])
+                        print(mediafiles)
+                        for m in mediafiles:
+                            symlinkmedia(m,pullposts[p]['postid'],session.user)
+            else:
+                print('no access!')
 
 #Load from settings
 standalone = settings.standaloneserver
