@@ -1889,7 +1889,8 @@ class pull:
                 postdict={}
                 print(posts)
                 for p in posts:
-                    postdict.update({p['postid']:{'postid': p['postid'], 'name': p['name']}})
+                    l=loadjson('p/posts/'+p+'/meta')
+                    postdict.update({l['postid']:{'postid': l['postid'], 'name': l['creator']}})
                 web.header('Content-Type', 'application/json')
                 return json.dumps(postdict)
             else:
