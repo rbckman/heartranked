@@ -1874,64 +1874,63 @@ class uploads:
 
 class pull:
     def GET(self):
-        if logged():
-            i = web.input(name=None,postid=None) #GET LIST WITH NAME JSON WHY NOT?! 
-            trusted=os.listdir(basedir+'r/trusted/'+session.user+'/')
-            trustedlist=[]
-            if i.name != None and i.postid != None:
-                print(i.name)
-                print(i.postid)
+        i = web.input(name=None,postid=None) #GET LIST WITH NAME JSON WHY NOT?! 
+        trusted=os.listdir(basedir+'r/trusted/'+session.user+'/')
+        trustedlist=[]
+        if i.name != None and i.postid != None:
+            print(i.name)
+            print(i.postid)
+            posts = get_dirs_by_time('p/posts/', reverse=True)
+            try:
+                posts = posts[:posts.index(i.postid)] #MUST GET POST LIST FROM SERVER API INSTEAD DUDE
+            except:
                 posts = get_dirs_by_time('p/posts/', reverse=True)
+            postdict={}
+            print(posts)
+            for p in posts:
+                l=loadjson('p/posts/'+p+'/meta')
+                postdict.update({l['postid']:{'postid': l['postid'], 'name': l['creator']}})
+            web.header('Content-Type', 'application/json')
+            web.header('Access-Control-Allow-Origin', '*')  # helps with browser/script access
+            return json.dumps(postdict)
+        else:
+            for t in trusted:
+                trusted=loadjson('r/trusted/'+session.user+'/'+t)
+                trustedlist.append(trusted)
+            for t in trustedlist:
+                print('pulling from '+t['servername'])
+                #posts = getpostsfromse}erver(
+                postid = get_dirs_by_time('p/posts/', reverse=True)[0]
+                pullposts = requests.get('https://'+t['servername']+'/pull?name='+t['user']+'&postid='+postid)
+                print(pullposts)
+                print('sdasddffffffffffffff')
+                pullposts.raise_for_status()  # raises an error for bad status codes
+                # Try to parse as JSON
                 try:
-                    posts = posts[:posts.index(i.postid)] #MUST GET POST LIST FROM SERVER API INSTEAD DUDE
-                except:
-                    posts = get_dirs_by_time('p/posts/', reverse=True)
-                postdict={}
-                print(posts)
+                    posts = pullposts.json()
+                    print(json.dumps(posts))
+                except requests.exceptions.JSONDecodeError:
+                    print("Response is not valid JSON.")
+                    print("Raw content:", pullposts.text)
+                #zippandshipp=[]
+                #if t['user']!=None:
+                #    users = os.listdir(basedir+'r/users/')
+                #    for r in users:
+                #        if r['name']==t['user']:
+                #            for p in posts:
+                #                if p['creator']==r['name']:
+                #                    pullnunzip.append(p)
                 for p in posts:
-                    l=loadjson('p/posts/'+p+'/meta')
-                    postdict.update({l['postid']:{'postid': l['postid'], 'name': l['creator']}})
-                web.header('Content-Type', 'application/json')
-                web.header('Access-Control-Allow-Origin', '*')  # helps with browser/script access
-                return json.dumps(postdict)
-            else:
-                for t in trusted:
-                    trusted=loadjson('r/trusted/'+session.user+'/'+t)
-                    trustedlist.append(trusted)
-                for t in trustedlist:
-                    print('pulling from '+t['servername'])
-                    #posts = getpostsfromse}erver(
-                    postid = get_dirs_by_time('p/posts/', reverse=True)[0]
-                    pullposts = requests.get('https://'+t['servername']+'/pull?name='+t['user']+'&postid='+postid)
-                    print(pullposts)
-                    print('sdasddffffffffffffff')
-                    pullposts.raise_for_status()  # raises an error for bad status codes
-                    # Try to parse as JSON
-                    try:
-                        posts = pullposts.json()
-                        print(json.dumps(posts))
-                    except requests.exceptions.JSONDecodeError:
-                        print("Response is not valid JSON.")
-                        print("Raw content:", pullposts.text)
-                    #zippandshipp=[]
-                    #if t['user']!=None:
-                    #    users = os.listdir(basedir+'r/users/')
-                    #    for r in users:
-                    #        if r['name']==t['user']:
-                    #            for p in posts:
-                    #                if p['creator']==r['name']:
-                    #                    pullnunzip.append(p)
-                    for p in posts:
-                        print('hold on pulling new posts')
-                        os.system('wget -o '+basedir+'p/zipped/ https://'+t['servername']+'/static/users/'+p['name']+'/zipped/'+p['postid']+'.zip')
-                        os.system('cd '+basedir+'p/zipped/ && unzip -o '+p['postid']+'.zip -d '+basedir+'u/'+session.user+'/posts/')
-                        os.system('cd '+basedir+'p/zipped/ && unzip -o '+p['postid']+'.zip -d '+basedir+'p/posts/')
-                        mediafiles = getallmedia(basedir+'p/posts/'+p['postid'],extensions)
-                        print('wowoweewaa')
-                        print(basedir+'p/posts/'+p['postid'])
-                        print(mediafiles)
-                        for m in mediafiles:
-                            symlinkmedia(m,p['postid'],session.user)
+                    print('hold on pulling new posts')
+                    os.system('wget -o '+basedir+'p/zipped/ https://'+t['servername']+'/static/users/'+p['name']+'/zipped/'+p['postid']+'.zip')
+                    os.system('cd '+basedir+'p/zipped/ && unzip -o '+p['postid']+'.zip -d '+basedir+'u/'+session.user+'/posts/')
+                    os.system('cd '+basedir+'p/zipped/ && unzip -o '+p['postid']+'.zip -d '+basedir+'p/posts/')
+                    mediafiles = getallmedia(basedir+'p/posts/'+p['postid'],extensions)
+                    print('wowoweewaa')
+                    print(basedir+'p/posts/'+p['postid'])
+                    print(mediafiles)
+                    for m in mediafiles:
+                        symlinkmedia(m,p['postid'],session.user)
 
 #Load from settings
 standalone = settings.standaloneserver
