@@ -1875,7 +1875,7 @@ class uploads:
 class pull:
     def GET(self):
         if logged():
-            i = web.input(name=None,postid=None,passcode=None) #GET LIST WITH NAME JSON WHY NOT?! 
+            i = web.input(name=None,postid=None) #GET LIST WITH NAME JSON WHY NOT?! 
             trusted=os.listdir(basedir+'r/trusted/'+session.user+'/')
             trustedlist=[]
             if i.name != None and i.postid != None:
@@ -1885,7 +1885,7 @@ class pull:
                     postdict.update({i.postid:{'postid': i.postid, 'name': i.name}})
                 web.header('Content-Type', 'application/json')
                 return json.dumps(postdict)
-            if i.postid != None:
+            else:
                 for t in trusted:
                     trusted=loadjson('r/trusted/'+session.user+'/'+t)
                     trustedlist.append(trusted)
