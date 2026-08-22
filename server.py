@@ -1904,6 +1904,14 @@ class pull:
                     pullposts = requests.get('https://'+t['servername']+'/pull?name='+t['user']+'&postid='+postid)
                     print(pullposts)
                     print('sdasddffffffffffffff')
+                    pullposts.raise_for_status()  # raises an error for bad status codes
+                    # Try to parse as JSON
+                    try:
+                        posts = pullposts.json()
+                        print(json.dumps(posts))
+                    except requests.exceptions.JSONDecodeError:
+                        print("Response is not valid JSON.")
+                        print("Raw content:", pullposts.text)
                     #zippandshipp=[]
                     #if t['user']!=None:
                     #    users = os.listdir(basedir+'r/users/')
@@ -1912,7 +1920,7 @@ class pull:
                     #            for p in posts:
                     #                if p['creator']==r['name']:
                     #                    pullnunzip.append(p)
-                    for p in pullposts:
+                    for p in posts:
                         print('hold on pulling new posts')
                         os.system('wget -o '+basedir+'p/zipped/ https://'+t['servername']+'/static/users/'+p['name']+'/zipped/'+p['postid']+'.zip')
                         os.system('cd '+basedir+'p/zipped/ && unzip -o '+p['postid']+'.zip -d '+basedir+'u/'+session.user+'/posts/')
