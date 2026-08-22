@@ -78,6 +78,8 @@ session = web.session.Session(app,store,initializer={'login':0, 'privilege':0, '
 
 allowedchar = 'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'
 
+datetimeformat="%Y-%m-%d %H:%M:%S"
+
 # --- Parameters (often called N, r, p) ---
 # N (n): CPU/Memory cost factor. Must be a power of 2 (e.g., 2**14 = 16384).
 # r: Block size factor (typically 8).
@@ -846,6 +848,16 @@ def get_dirs_by_time(path, reverse=False):
             reverse=reverse,
         )
 
+def get_posts_by_time(path,reverse):
+    posts = os.listdir(path)
+    timebased=[]
+    for p in posts:
+        l=loadjson('p/posts/'+p+'/meta')
+        timebased.append((l['postid'],l['timeadded']))
+    fmt = datetimeformat
+    sorted_posts = sorted(timebased, key=lambda x: datetime.datetime.strptime(x[1], fmt),reverse=reverse)
+    return sorted_posts
+
 def get_files_by_time(directory: str = ".", newest_first: bool = True):
     path = Path(basedir+directory) 
     #Get all files (exclude directories and hidden files if you want)
@@ -1041,7 +1053,7 @@ def pushcombines(postid):
         return ''
 
 def formattime(timeadded):
-    return timeadded.strftime("%Y-%m-%d %H:%M:%S")
+    return timeadded.strftime(datetimeformat)
 
 def sort_by_name_then_time(path):
     sortedposts=[]
@@ -1166,9 +1178,12 @@ def getfeed():
     elif feedbase == "time" and timebase == "today":
         one_day_before = now - datetime.timedelta(days=1)
         #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY ID DESC LIMIT 1000;")
-        posts = get_dirs_by_time('p/posts/', reverse=True)
+        #posts = get_dirs_by_time('p/posts/', reverse=True)
+        posts = get_posts_by_time(basedir+'p/posts/',reverse=True)
+        print('fuuuuuuuuuu')
         print(posts)
         for p in posts:
+            p=p[0]
             #check modtime here day
             lastupdate = os.path.getmtime(basedir+'p/posts/'+p+'/meta')
             if datetime.datetime.fromtimestamp(lastupdate) > one_day_before:
@@ -1180,8 +1195,10 @@ def getfeed():
     elif feedbase == "time" and timebase == "week":
         one_day_before = now - datetime.timedelta(weeks=1)
         #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY ID DESC LIMIT 1000;")
-        posts = get_dirs_by_time('p/posts/', reverse=True)
+        #posts = get_dirs_by_time('p/posts/', reverse=True)
+        posts = get_posts_by_time(basedir+'p/posts/',reverse=True)
         for p in posts:
+            p=p[0]
             #check modtime here day
             lastupdate = os.path.getmtime(basedir+'p/posts/'+p+'/meta')
             if datetime.datetime.fromtimestamp(lastupdate) > one_day_before:
@@ -1193,8 +1210,10 @@ def getfeed():
     elif feedbase == "time" and timebase == "month":
         one_day_before = now - datetime.timedelta(weeks=4)
         #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY ID DESC LIMIT 1000;")
-        posts = get_dirs_by_time('p/posts/', reverse=True)
+        #posts = get_dirs_by_time('p/posts/', reverse=True)
+        posts = get_posts_by_time(basedir+'p/posts/',reverse=True)
         for p in posts:
+            p=p[0]
             #check modtime here day
             lastupdate = os.path.getmtime(basedir+'p/posts/'+p+'/meta')
             if datetime.datetime.fromtimestamp(lastupdate) > one_day_before:
@@ -1206,8 +1225,10 @@ def getfeed():
     elif feedbase == "time" and timebase == "year":
         one_day_before = now - datetime.timedelta(weeks=54)
         #goodies = db.query("SELECT * FROM published WHERE timeadded BETWEEN '"+one_day_before+"' AND '"+now+"' ORDER BY ID DESC LIMIT 1000;")
-        posts = get_dirs_by_time('p/posts/', reverse=True)
+        #posts = get_dirs_by_time('p/posts/', reverse=True)
+        posts = get_posts_by_time(basedir+'p/posts/',reverse=True)
         for p in posts:
+            p=p[0]
             #check modtime here day
             lastupdate = os.path.getmtime(basedir+'p/posts/'+p+'/meta')
             if datetime.datetime.fromtimestamp(lastupdate) > one_day_before:
@@ -1218,8 +1239,10 @@ def getfeed():
                     goodies.append(l)
     elif feedbase == "time" and timebase == "" or  feedbase == "time" and timebase == "all":
         #goodies = db.query("SELECT * FROM published ORDER BY ID DESC LIMIT 1000;")
-        posts = get_dirs_by_time('p/posts/', reverse=True)
+        #posts = get_dirs_by_time('p/posts/', reverse=True)
+        posts = get_posts_by_time(basedir+'p/posts/',reverse=True)
         for p in posts:
+            p=p[0]
             l=loadjson('p/posts/'+p+'/meta')
             if usr=='':
                 goodies.append(l)
@@ -1930,6 +1953,8 @@ class pull:
                         print(mediafiles)
                         for m in mediafiles:
                             symlinkmedia(m,pullposts[p]['postid'],session.user)
+                #finally render rank
+                rankrender()
             else:
                 print('no access!')
 
