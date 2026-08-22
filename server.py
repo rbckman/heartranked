@@ -1879,8 +1879,13 @@ class pull:
             trusted=os.listdir(basedir+'r/trusted/'+session.user+'/')
             trustedlist=[]
             if i.name != None and i.postid != None:
-                posts = get_dirs_by_time(basedir+'p/posts')[i['postid']:] #MUST GET POST LIST FROM SERVER API INSTEAD DUDE
+                print(i.name)
+                print(i.postid)
+                posts = get_dirs_by_time('p/posts/', reverse=True)
+                posts = posts[:posts.index(i.postid)] #MUST GET POST LIST FROM SERVER API INSTEAD DUDE
                 postdict={}
+                print('sdasddffffffffffffff')
+                print(posts)
                 for p in posts:
                     postdict.update({i.postid:{'postid': i.postid, 'name': i.name}})
                 web.header('Content-Type', 'application/json')
@@ -1893,8 +1898,7 @@ class pull:
                     print('pulling from '+t['servername'])
                     #posts = getpostsfromse}erver(
                     postid = get_dirs_by_time('p/posts/', reverse=True)[0]
-                    pullposts = requests.get('https://'+t['servername']+'pull?name='+t['user']+'&postid='+postid).json()
-
+                    pullposts = requests.get('https://'+t['servername']+'/pull?name='+t['user']+'&postid='+postid).json()
                     #zippandshipp=[]
                     #if t['user']!=None:
                     #    users = os.listdir(basedir+'r/users/')
