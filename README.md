@@ -13,7 +13,7 @@ web.py was written by Aaron Swartz and has since had a strong dedicated followin
 
 INSTALL HEARTRANKED LOCALLY AND RUN IT
 
-`git clone https://git.tarina.org/heartranked`
+`git clone https://github.com/rbckman/heartranked`
 
 `cd heartranked`
 
