@@ -175,7 +175,9 @@ $else:
         $ choose_feed = False
         $for c in comboposts:
             $if c['postid'] and choose_feed == False:
+                <div id="comboposts">
                 <small>🌍 <a href="/?show=$g['postid']&feedbase=time#comboposts">time</a> ❤️ <a href="/?show=$g['postid']&feedbase=heart#comboposts">heart</a> ⚭ <a href="/?show=$g['postid']&feedbase=combo#comboposts">combo</a> for <a href="/?show=$g['postid']&feedbase=today#comboposts">day</a> <a href="/?show=$g['postid']&timebase=week#comboposts">week</a> <a href="/?show=$g['postid']&timebase=month#comboposts">month</a> <a href="/?show=$g['postid']&timebase=year#comboposts">year</a> <a href="/?show=$g['postid']&timebase=all#comboposts">all</a></small>
+                </div>
                 $ choose_feed = True
             <div class="post" id="$c['soundname']">
             <br>
