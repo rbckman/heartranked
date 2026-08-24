@@ -175,8 +175,7 @@ $else:
         $ choose_feed = False
         $for c in comboposts:
             $if c['postid'] and choose_feed == False:
-                $#<small><a href="/?show=$g['postid']&feedbase=timebased">timebased 🌍</a> <a href="/?show=$g['postid']&feedbase=heart1day">heartbased ❤️ day</a> <a href="/?show=$g['postid']&feedbase=heart1week">week</a> <a href="/?show=$g['postid']&feedbase=heart1month">month</a> <a href="/?show=$g['postid']&feedbase=heart1year">year</a> <a href="/?show=$g['postid']&feedbase=alltime">alltime</a></small>
-                <small>🌍 <a href="/?show=$g['postid']&feedbase=time">time</a> ❤️ <a href="/?show=$g['postid']&feedbase=heart">heart</a> ⚭ <a href="/?show=$g['postid']&feedbase=combo">combo</a> for <a href="/?show=$g['postid']&feedbase=today">day</a> <a href="/?show=$g['postid']&timebase=week">week</a> <a href="/?show=$g['postid']&timebase=month">month</a> <a href="/?show=$g['postid']&timebase=year">year</a> <a href="/?show=$g['postid']&timebase=all">all</a></small>
+                <small>🌍 <a href="/?show=$g['postid']&feedbase=time#comboposts">time</a> ❤️ <a href="/?show=$g['postid']&feedbase=heart#comboposts">heart</a> ⚭ <a href="/?show=$g['postid']&feedbase=combo#comboposts">combo</a> for <a href="/?show=$g['postid']&feedbase=today#comboposts">day</a> <a href="/?show=$g['postid']&timebase=week#comboposts">week</a> <a href="/?show=$g['postid']&timebase=month#comboposts">month</a> <a href="/?show=$g['postid']&timebase=year#comboposts">year</a> <a href="/?show=$g['postid']&timebase=all#comboposts">all</a></small>
                 $ choose_feed = True
             <div class="post" id="$c['soundname']">
             <br>

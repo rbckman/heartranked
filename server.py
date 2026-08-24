@@ -1053,7 +1053,9 @@ def pushcombines(postid):
         return ''
 
 def formattime(timeadded):
-    return timeadded.strftime(datetimeformat)
+    current_time = time.gmtime()
+    str_time = time.strftime(datetimeformat, current_time)
+    return str_time
 
 def sort_by_name_then_time(path):
     sortedposts=[]
