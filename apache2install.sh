@@ -31,8 +31,9 @@ EOF
 echo "Installing all dependencies..."
 apt-get update
 sudo apt install apache2 zip python3-pip python3-pil python3-markdown
-sudo pip3 install webpy-v.0.76.zip --break-system-packages
-sudo apt install libapache2-mod-wsgi-py3
+sudo pip3 install webpy-v.0.76.zip --break-system-packages #don't worry won't break
+sudo pip3 install mutagen --break-system-packages #same
+sudo apt install libapache2-mod-wsgi-py3 #sometime this has trouble turning on. check with a2enmod
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 ACONF="/etc/apache2/sites-available/heartranked.conf"

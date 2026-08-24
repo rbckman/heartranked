@@ -25,8 +25,9 @@ EOF
 
 echo "Installing all dependencies..."
 apt-get update
-sudo apt install python3 python3-pip python3-pil python3-bcrypt python3-webpy python3-markdown zip
+sudo apt install wget python3 python3-pip python3-pil python3-markdown zip
 pip3 install webpy-v.0.76.zip
+pip3 install mutagen
 
 cat <<'EOF'
                        .-.
