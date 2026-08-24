@@ -4,9 +4,7 @@ heartranked runs on web.py. it's python for the internet.
 
 to not make things complicated I downloaded the latest webpy to this cloned repo.
 
-the install script will take care of it installing it. If you don't believe me you can download the latest webpy yourself from [https://webpy.org](https://webpy.org)
-
-or you can install your distributions version of web.py
+the install script will take care of it installing it.
 
 web.py was written by Aaron Swartz and has since had a strong dedicated following due to it's simplistic architecture.
 [http://www.aaronsw.com/](http://www.aaronsw.com/)
