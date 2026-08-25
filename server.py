@@ -525,7 +525,7 @@ class like:
                 except:
                     l=0
                 l=l+1
-                thedict={'hearts':l,'name':session.user,'mail':mail,'displayname':displayname,'timeadded':formattime()}
+                thedict={'hearts':l}
                 savejson('p/posts/'+postid+'/meta',thedict)
                 os.system('rm '+basedir+'p/heartrank/'+postid+'-'+str(int(l-1)).zfill(16))
                 os.system('cp '+basedir+'p/posts/'+postid+'/meta '+basedir+'p/heartrank/'+postid+'-'+str(int(l)).zfill(16))
@@ -539,7 +539,7 @@ class like:
                     l=0
                 if l > 0:
                     l=l-1
-                    thedict={'hearts':l,'name':session.user,'mail':mail,'displayname':displayname,'timeadded':formattime()}
+                    thedict={'hearts':l}
                     savejson('p/posts/'+postid+'/meta',thedict)
                     deletepost(basedir+'u/'+session.user+'/posts/'+postid+'/hearts/'+session.user)
                     deletepost(basedir+'p/posts/'+postid+'/hearts/'+session.user)
