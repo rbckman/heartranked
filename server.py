@@ -529,6 +529,7 @@ class like:
                 savejson('p/posts/'+postid+'/meta',thedict)
                 os.system('rm '+basedir+'p/heartrank/'+postid+'-'+str(int(l-1)).zfill(16))
                 os.system('cp '+basedir+'p/posts/'+postid+'/meta '+basedir+'p/heartrank/'+postid+'-'+str(int(l)).zfill(16))
+                thedict={'hearts':l,'name':session.user,'mail':mail,'displayname':displayname,'timeadded':formattime()}
                 savejson('p/posts/'+postid+'/hearts/'+session.user, thedict)
                 savejson('u/'+session.user+'/posts/'+postid+'/hearts/'+session.user, thedict)
                 user_likes = True
