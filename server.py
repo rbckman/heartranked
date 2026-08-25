@@ -1036,7 +1036,7 @@ def pushcombines(postid):
     else:
         return ''
 
-def formattime(timeadded):
+def formattime():
     current_time = time.gmtime()
     str_time = time.strftime(datetimeformat, current_time)
     return str_time
