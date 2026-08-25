@@ -1501,7 +1501,7 @@ class editor:
                     text2=''
                     session.postid = hashlib.sha256(str(random.getrandbits(256)).encode('utf-8')).hexdigest()[9:36]
                     os.makedirs(basedir+'u/'+session.user+'/posts/'+session.postid, exist_ok=True)
-                    thedict={'postid':session.postid, 'siteurl':siteurl, 'timeadded':formattime()), 'creator':session.user, 'combine':i.combine}
+                    thedict={'postid':session.postid, 'siteurl':siteurl, 'timeadded':formattime(), 'creator':session.user, 'combine':i.combine}
                     savejson('u/'+session.user+'/posts/'+session.postid+'/meta',thedict)
             if i.remix != None:
                 if session.user:
