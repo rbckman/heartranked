@@ -14,7 +14,6 @@ import subprocess
 import web
 import hashlib
 import random
-import settings
 import markdown
 import re
 import unicodedata
