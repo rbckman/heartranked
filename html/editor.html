@@ -1,4 +1,4 @@
-$def with (storage, text, text2, markdown, safe_filename, soundlink, public, logged, user, combine, remix) 
+$def with (storage, text, text2, markdown, safe_filename, soundlink, public, logged, user, combine, remix, saveto) 
 
 <link rel="stylesheet" href="static/splash.css?v=133" type="text/css" rel="stylesheet"/>
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -266,6 +266,8 @@ function uploadSingleFile(file, progressBar, statusEl) {
 <textarea id="editor">$text</textarea>
 <small id="count">255 characters remaining</small>
 <textarea id="editor2">$text2</textarea>
+$if saveto != '':
+    saving to file $saveto
 $if soundlink:
     <a href="/editor?edit=$soundlink"><code>/editor?edit=$soundlink</code></a></br>
 <div id="status"></div>

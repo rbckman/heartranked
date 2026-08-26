@@ -46,8 +46,8 @@ urls = (
     '/upload', 'upload',
     '/rendered', 'rendered',
     '/uploads?', 'uploads',
-    '/pull?', 'pull',
-    '/config', 'config')
+    '/p?', 'pull',
+    '/c?', 'config')
 
 #Load from settings
 webmaster = settings.webmaster
@@ -74,7 +74,7 @@ store = web.session.DiskStore(basedir + 'sessions')
 render = web.template.render(templatedir, base="base")
 renderop = web.template.render(templatedir, base="op")
 rendersplash = web.template.render(templatedir, base="splash")
-session = web.session.Session(app,store,initializer={'login':0, 'privilege':0, 'bag':[], 'sessionkey':'empty','postid':'','backurl':'','user':'','search':'', 'bildsida':'', 'feedbase':'', 'timebase':'', 'usrfeed':''})
+session = web.session.Session(app,store,initializer={'login':0, 'privilege':0, 'bag':[], 'sessionkey':'empty','postid':'','backurl':'','user':'','search':'', 'bildsida':'', 'feedbase':'', 'timebase':'', 'usrfeed':'', 'saveto':''})
 
 allowedchar = 'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'
 
@@ -159,6 +159,10 @@ class createpost:
 
 def savetext(thename, description):
     with open(basedir+thename, "w") as f:
+        f.write(description)
+
+def savetofile(thename, description):
+    with open(basedirthename, "w") as f:
         f.write(description)
 
 def loadtext(thename):
@@ -1495,7 +1499,10 @@ storage = {"content": ""}
 class editor:
     def GET(self):
         if logged():
-            i = web.input(publish=None, public=None, new=None, combine=None, remix=None)
+            i = web.input(publish=None, public=None, new=None, combine=None, remix=None, saveto='')
+            if i.saveto != '':
+                if session.login == 5:
+                    session.saveto=i.saveto
             if i.combine != None:
                 if session.user:
                     text=''
@@ -1555,6 +1562,9 @@ class editor:
             else:
                 text = ''
                 text2 = ''
+            if i.saveto != '':
+                text=i.saveto
+                text2=loadtext(i.saveto)
             if i.new == 'yes':
                 session.postid = ''
                 raise web.seeother('/editor')
@@ -1580,6 +1590,7 @@ class editor:
                 thedict={'soundname':soundname}
                 savejson('u/'+session.user+'/posts/'+session.postid+'/meta',thedict)
                 os.system('cp -r '+basedir+'u/'+session.user+'/posts/'+session.postid+' '+basedir+'p/posts/')
+                session.saveto=''       
                 #symlinkthis(session.postid, session.user)
                 #also zippit here!
                 #os.system('zip -r '+basedir+'p/zipped/'+session.postid+'.zip '+basedir+'p/posts/'+session.postid )
@@ -1588,7 +1599,7 @@ class editor:
                 if zipandship == 'yes' or zipandship == 'True' or zipandship == 'y' or zipandship == 'Y':
                     zippitandshippit(session.postid)
                 raise web.seeother('/')
-            return rendersplash.editor(storage, text, text2, markdown, safe_filename, session.postid, i.public, logged(), session.user, i.combine, i.remix)
+            return rendersplash.editor(storage, text, text2, markdown, safe_filename, session.postid, i.public, logged(), session.user, i.combine, i.remix, session.saveto)
 
 class savepost:
     def POST(self):
@@ -1609,6 +1620,8 @@ class savepost:
             savetext('u/'+session.user+'/posts/'+session.postid+'/intro', text)
             savetext('u/'+session.user+'/posts/'+session.postid+'/post', text2)
             print('post saved!')
+        if session.saveto != '':
+            savetext(text1, text2)
         return "ok"  # simple response
 
 class imageapi:
@@ -1837,7 +1850,6 @@ class pull:
     def GET(self):
         extensions=['zip','pdf','txt','md','mp4','jpeg','jpg','png','gif','wav','flac','mp3','ogg']
         i = web.input(name=None,postid=None) #GET LIST WITH NAME JSON WHY NOT?! 
-
         if i.name != None and i.postid != None:
             print(i.name)
             print(i.postid)
@@ -1895,6 +1907,14 @@ class pull:
                 rankrender()
             else:
                 print('no access!')
+
+class config:
+    def GET(self):
+        if logged():
+            if session.login == 5:
+                i = web.input(do=None)
+                if i.do!=None:
+                    raise web.seeother('/editor?saveto='+i.do)
 
 #Load from settings
 standalone = settings.standaloneserver
