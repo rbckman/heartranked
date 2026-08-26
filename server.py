@@ -42,7 +42,7 @@ urls = (
     "/tuning?", "tuning",
     '/editor?', 'editor',
     '/save', 'savepost',
-    '/upload', 'upload',
+    '/upload/(.*)?', 'upload',
     '/rendered', 'rendered',
     '/uploads?', 'uploads',
     '/p?', 'pull',
@@ -1494,7 +1494,7 @@ def zippitandshippit(postid):
         trustedlogin = ['curl','-X','POST', url+'/login', '-i', '-b', basedir+'/sessions/sessions-'+session.user, '-c',basedir+'/sessions/sessions-'+session.user, '-d', 'user='+t['user'], '-d', 'password='+passcode]
         subprocess.check_output(trustedlogin)
         #OK GOT EM COOKIES LES DO IT DO IT DO IT SHIPPIT!
-        shippit = ['curl','-X', 'POST', '--verbose', '--header', 'Content-Type: multipart/form-data', '-F', 'files=@'+basedir+'p/zipped/'+postid+'.zip;type=application/zip', '-b', basedir+'/sessions/sessions-'+session.user, '-c',basedir+'/sessions/sessions-'+session.user, url+'/upload']
+        shippit = ['curl','-X', 'POST', '--verbose', '--header', 'Content-Type: multipart/form-data', '-F', 'files=@'+basedir+'p/zipped/'+postid+'.zip;type=application/zip', '-b', basedir+'/sessions/sessions-'+session.user, '-c',basedir+'/sessions/sessions-'+session.user, url+'/upload/ship']
         subprocess.check_output(shippit)
 
 storage = {"content": ""}
@@ -1724,7 +1724,7 @@ def symlinkthis(postid,user):
 #symlinkthis('cd449464ec08fc7aa967d9b2795')
 
 class upload:
-    def POST(self):
+    def POST(self, mode):
         if logged():
             if session.postid == '':
                 session.postid = hashlib.sha256(str(random.getrandbits(256)).encode('utf-8')).hexdigest()[9:36]
@@ -1756,7 +1756,7 @@ class upload:
                         filetype = imgname.split('.')[-1].lower()
                         soundfile=safe_name
                         print(filetype)
-                        if filetype == 'zip':
+                        if filetype == 'zip' and mode == 'ship':
                             print('incoming!')
                             usersound = basedir + 'u/' + session.user + '/zipped/'
                             os.system('mkdir -p ' + usersound)
@@ -1769,6 +1769,11 @@ class upload:
                             print(mediafiles)
                             for m in mediafiles:
                                 symlinkmedia(m,soundfile.split('.zip')[0],session.user)
+                        elif filetype == 'zip':
+                            usersound = basedir + 'u/' + session.user + '/posts/'+session.postid+'/docs/'
+                            os.system('mkdir -p ' + usersound)
+                            os.system('mv ' + imgdir + soundfile + ' ' + usersound + soundfile)
+                            symlinkmedia(usersound + soundfile,session.postid,session.user)
                         elif filetype == 'pdf' or filetype == 'txt' or filetype == 'md':
                             usersound = basedir + 'u/' + session.user + '/posts/'+session.postid+'/docs/'
                             os.system('mkdir -p ' + usersound)
@@ -1886,7 +1891,6 @@ class pull:
                     pullposts = requests.get('https://'+t['servername']+'/pull?name='+t['user']+'&postid='+postid).json()
                     print('https://'+t['servername']+'/pull?name='+t['user']+'&postid='+postid)
                     print(pullposts)
-                    print('FUUUUUUUUUUU')
                     #zippandshipp=[]
                     #if t['user']!=None:
                     #    users = os.listdir(basedir+'r/users/')

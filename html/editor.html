@@ -228,7 +228,7 @@ function uploadSingleFile(file, progressBar, statusEl) {
     formData.append('files', file);   // same key as backend
 
     const xhr = new XMLHttpRequest();
-    xhr.open('POST', '/upload', true);
+    xhr.open('POST', '/upload/drop', true);
 
     xhr.upload.onprogress = (e) => {
       if (e.lengthComputable) {
