@@ -38,8 +38,8 @@ else
 fi
 
 # 6. Initialize tracking paths natively so web.py server loop starts immediately
-echo "Building functional directory tree structures..."
-mkdir -p p/posts p/zipped p/comborank p/heartrank p/deleted u/ r/visitors r/invites r/trusted r/users r/stopflood r/stopresetpass sessions
+#echo "Building functional directory tree structures..."
+#mkdir -p p/posts p/zipped p/comborank p/heartrank p/deleted u/ r/visitors r/invites r/trusted r/users r/stopflood r/stopresetpass #sessions
 
 cat <<'EOF'
                        .-.
