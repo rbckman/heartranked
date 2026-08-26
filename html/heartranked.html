@@ -1,9 +1,12 @@
-$def with (markdown, visitors, total, unique, logged, rights, namn, getlikes, formattime, feedbase, totbilder, limit, offset, bildpersida, search, bilder, searchform, getcombines, timebase, getfeed, getcombofeed, userimage, postexist, show, loadjson, loadtext, len, heart, hearted, sitename, siteslogan, siterendered, siteaddress, usrfeed)
+$def with (markdown, visitors, total, unique, logged, rights, namn, getlikes, formattime, feedbase, totbilder, limit, offset, bildpersida, search, bilder, searchform, getcombines, timebase, getfeed, getcombofeed, userimage, postexist, show, loadjson, loadtext, len, heart, hearted, sitename, siteslogan, siterendered, siteaddress, usrfeed, theme)
+
+$if theme == '':
+    $ theme="splash.css"
 
 <HEAD>
     <meta charset="utf-8">
     <title>$sitename | $siteslogan | $siterendered</title>
-    <link rel="stylesheet" href="static/splash.css?v=159" type="text/css" rel="stylesheet"/>
+    <link rel="stylesheet" href="static/$theme?v=$theme type="text/css" rel="stylesheet"/>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 </HEAD>
 

@@ -59,6 +59,7 @@ postadmin_signature = settings.postadmin_signature
 heart=settings.heart
 hearted=settings.hearted
 zipandship=settings.zipandship
+theme=settings.theme
 #load msg
 postadmin_msg_new=settings.postadmin_msg_new
 postadmin_msg_new_long=settings.postadmin_msg_new_long
@@ -73,7 +74,7 @@ store = web.session.DiskStore(basedir + 'sessions')
 render = web.template.render(templatedir, base="base")
 renderop = web.template.render(templatedir, base="op")
 rendersplash = web.template.render(templatedir, base="splash")
-session = web.session.Session(app,store,initializer={'login':0, 'privilege':0, 'bag':[], 'sessionkey':'empty','postid':'','backurl':'','user':'','search':'', 'bildsida':'', 'feedbase':'', 'timebase':'', 'usrfeed':'', 'saveto':''})
+session = web.session.Session(app,store,initializer={'login':0, 'privilege':0, 'bag':[], 'sessionkey':'empty','postid':'','backurl':'','user':'','search':'', 'bildsida':'', 'feedbase':'', 'timebase':'', 'usrfeed':'', 'saveto':'', 'theme':''})
 
 allowedchar = 'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'
 
@@ -1360,9 +1361,9 @@ class heartranked:
         try:
             bilder_totalt=os.listdir(basedir+'p/posts/')
             tot = len(bilder_totalt)
-            print('bilder alltsomallt: ' + str(tot))
+            #print('bilder alltsomallt: ' + str(tot))
         except:
-            print("inga bilder")
+            #print("inga bilder")
             tot = 0
         #print('session search: ' + session.search)
         try:
@@ -1388,7 +1389,7 @@ class heartranked:
                 pass
             try:
                 print(search_result)
-                print('sökta bilder: ' + str(tot))
+                #print('sökta bilder: ' + str(tot))
             except:
                 pass
         try:
@@ -1405,7 +1406,7 @@ class heartranked:
         limit = session.bildsida + bildpersida
         offset = session.bildsida
         #EOF search
-        print(session.bildsida)
+        #print(session.bildsida)
         bilder=[]
         if session.search == '':
             posts=os.listdir(basedir+'p/posts/')
@@ -1463,7 +1464,9 @@ class heartranked:
             rights = 'mod'
         else:
             rights = 'spacer'
-        return rendersplash.heartranked(markdown, visitors, total, unique, logged, rights, session.user, getlikes, formattime, feedbase, tot, limit, offset, bildpersida, session.search, bilder, searchform, getcombines, timebase, getfeed, getcombofeed, userimage, postexist, i.show, loadjson, loadtext, len, heart, hearted, sitename, siteslogan, siterendered, siteurl, session.usrfeed)
+        if session.theme != theme:
+            session.theme = theme
+        return rendersplash.heartranked(markdown, visitors, total, unique, logged, rights, session.user, getlikes, formattime, feedbase, tot, limit, offset, bildpersida, session.search, bilder, searchform, getcombines, timebase, getfeed, getcombofeed, userimage, postexist, i.show, loadjson, loadtext, len, heart, hearted, sitename, siteslogan, siterendered, siteurl, session.usrfeed, theme)
     def POST(self):
         searchform = self.form()
         i = web.input()

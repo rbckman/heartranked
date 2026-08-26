@@ -16,6 +16,7 @@ baseurl = "heartranked.com"
 
 standaloneserver="Y"
 zipandship="Y"
+theme='splash.css'
 
 heart="🤍"
 hearted="❤️"
