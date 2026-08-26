@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  heartranked:
+    build: .
+    container_name: heartranked_node
+    ports:
+      - "8080:8080"
+    volumes:
+      # Absolute data persistence mapping for local sqlite alternative folders
+      - ./p:/app/p
+      - ./u:/app/u
+      - ./r:/app/r
+      - ./sessions:/app/sessions
+      - ./settings.py:/app/settings.py
+    restart: unless-stopped
