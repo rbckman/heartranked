@@ -436,6 +436,7 @@ function isdocs(filename) {
     const lower = filename.toLowerCase(); 
     return lower.endsWith('.txt') ||
            lower.endsWith('.pdf') ||
+           lower.endsWith('.zip') ||
            lower.endsWith('.md')  ||
            lower.endsWith('.readme');
 }
@@ -459,7 +460,7 @@ function insertAtCursor(text) {
                              + insertlen
                              + lastActiveTextarea.value.substring(end);
     }
-    if (isfilm(text)) {
+    else if (isfilm(text)) {
         const insertlen = "<video controls='controls'><source src=/static/users/$user/films/"+text+"></video>\n";
         lastActiveTextarea.value = lastActiveTextarea.value.substring(0, start) 
                              + insertlen
