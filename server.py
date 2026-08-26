@@ -1569,6 +1569,9 @@ class editor:
                 session.postid = ''
                 raise web.seeother('/editor')
             if i.publish == 'yes' and text != '' and i.public == None and logged() and len(text) < 256:
+                if session.saveto != '':
+                    session.saveto=''       
+                    raise web.seeother('/')
                 c=loadjson('u/'+session.user+'/posts/'+session.postid+'/meta')
                 if 'combine' in c:
                     if c['combine'] != '':
@@ -1590,7 +1593,6 @@ class editor:
                 thedict={'soundname':soundname}
                 savejson('u/'+session.user+'/posts/'+session.postid+'/meta',thedict)
                 os.system('cp -r '+basedir+'u/'+session.user+'/posts/'+session.postid+' '+basedir+'p/posts/')
-                session.saveto=''       
                 #symlinkthis(session.postid, session.user)
                 #also zippit here!
                 #os.system('zip -r '+basedir+'p/zipped/'+session.postid+'.zip '+basedir+'p/posts/'+session.postid )
@@ -1606,22 +1608,23 @@ class savepost:
         data = json.loads(web.data())
         text = data.get("text", "")
         text2 = data.get("text2", "")
-        if session.postid == '':
-            session.postid = hashlib.sha256(str(random.getrandbits(256)).encode('utf-8')).hexdigest()[9:36]
-            os.makedirs(basedir+'u/'+session.user+'/posts/'+session.postid,exist_ok=True)
-            thedict={'postid':session.postid, 'siteurl':siteurl, 'timeadded':formattime(), 'creator':session.user}
-            savejson('u/'+session.user+'/posts/'+session.postid+'/meta',thedict)
-            savetext('u/'+session.user+'/posts/'+session.postid+'/intro', text)
-            savetext('u/'+session.user+'/posts/'+session.postid+'/post', text2)
-        else:
-            os.makedirs(basedir+'u/'+session.user+'/posts/'+session.postid,exist_ok=True)
-            thedict={'postid':session.postid, 'siteurl':siteurl, 'timeadded':formattime(), 'creator':session.user}
-            savejson('u/'+session.user+'/posts/'+session.postid+'/meta',thedict)
-            savetext('u/'+session.user+'/posts/'+session.postid+'/intro', text)
-            savetext('u/'+session.user+'/posts/'+session.postid+'/post', text2)
-            print('post saved!')
         if session.saveto != '':
-            savetext(text1, text2)
+            savetext(text, text2)
+        else:
+            if session.postid == '':
+                session.postid = hashlib.sha256(str(random.getrandbits(256)).encode('utf-8')).hexdigest()[9:36]
+                os.makedirs(basedir+'u/'+session.user+'/posts/'+session.postid,exist_ok=True)
+                thedict={'postid':session.postid, 'siteurl':siteurl, 'timeadded':formattime(), 'creator':session.user}
+                savejson('u/'+session.user+'/posts/'+session.postid+'/meta',thedict)
+                savetext('u/'+session.user+'/posts/'+session.postid+'/intro', text)
+                savetext('u/'+session.user+'/posts/'+session.postid+'/post', text2)
+            else:
+                os.makedirs(basedir+'u/'+session.user+'/posts/'+session.postid,exist_ok=True)
+                thedict={'postid':session.postid, 'siteurl':siteurl, 'timeadded':formattime(), 'creator':session.user}
+                savejson('u/'+session.user+'/posts/'+session.postid+'/meta',thedict)
+                savetext('u/'+session.user+'/posts/'+session.postid+'/intro', text)
+                savetext('u/'+session.user+'/posts/'+session.postid+'/post', text2)
+                print('post saved!')
         return "ok"  # simple response
 
 class imageapi:
