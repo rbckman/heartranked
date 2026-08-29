@@ -71,8 +71,8 @@ h2
 {	
 	padding: 0px;
 	margin: 0px;
-	font-size: 40pt;
-	line-height: 40px;
+	font-size: 30pt;
+	line-height: 30px;
 	font-family: 'Latin-Mono-Italic', sans-serif;
 	font-weight: normal;
 }
@@ -82,8 +82,8 @@ h3
 {	
 	padding: 0px;
 	margin: 0px;
-	font-size: 50pt;
-	line-height: 50px;
+	font-size: 40pt;
+	line-height: 40px;
 	color:#f8f9fa;
         text-transform:uppercase;
 	font-family: 'Roberta', sans-serif;
